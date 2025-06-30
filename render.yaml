@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: erp-flask-app
+    name: erp-management-system
     env: python
-    buildCommand: ""
+    buildCommand: "gunicorn app:app"
     startCommand: python app.py
     envVars:
       - key: FLASK_ENV
