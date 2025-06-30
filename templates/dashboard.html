@@ -35,6 +35,7 @@
         }
         .card:hover {
             transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
@@ -42,7 +43,7 @@
     <div class="sidebar">
         <h4 class="text-center py-3">ERP Modules</h4>
         <a href="/project-sites">Projects & Sites</a>
-        <a href="#">Accounts</a>
+        <a href="/accounts">Accounts</a>
         <a href="#">Sales</a>
         <a href="#">Clients</a>
         <a href="#">Documents</a>
@@ -50,7 +51,6 @@
         <a href="/transport">Transport</a>
         <a href="/production">Production</a>
         <a href="#">Support</a>
-        <a href="#">Transport</a>
         <a href="#">Purchase</a>
         <a href="#">Analytics</a>
         <a href="#">Audit Logs</a>
@@ -62,30 +62,41 @@
         <h2>Welcome {{ username }}!</h2>
         <p>Select a module from the sidebar to begin.</p>
 
-        <div class="col-md-4">
-  <div class="card shadow-sm p-3">
-    <h5>Transport</h5>
-    <p>Manage logistics and vehicle assignments</p>
-    <a href="/transport" class="btn btn-primary">Open</a>
-  </div>
-</div>
-<div class="col-md-4">
-  <div class="card shadow-sm p-3">
-    <h5>Production</h5>
-    <p>Track production processes and outputs</p>
-    <a href="/production" class="btn btn-primary">Open</a>
-  </div>
-</div>
-
         <div class="row mt-4">
             <div class="col-md-4 mb-3">
-                <div class="card p-3 shadow">
+                <div class="card p-3 shadow-sm">
                     <h5>Projects & Sites</h5>
                     <p>Manage all your active projects and site data.</p>
                     <a href="/project-sites" class="btn btn-primary">Open</a>
                 </div>
             </div>
-            <!-- Add more module cards here -->
+
+            <div class="col-md-4 mb-3">
+                <div class="card p-3 shadow-sm">
+                    <h5>Accounts</h5>
+                    <p>Track income, expenses, and financial data.</p>
+                    <a href="/accounts" class="btn btn-success">Open</a>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card p-3 shadow-sm">
+                    <h5>Transport</h5>
+                    <p>Manage logistics and vehicle assignments.</p>
+                    <a href="/transport" class="btn btn-warning">Open</a>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card p-3 shadow-sm">
+                    <h5>Production</h5>
+                    <p>Track production processes and outputs.</p>
+                    <a href="/production" class="btn btn-info">Open</a>
+                </div>
+            </div>
+
+            <!-- You can keep adding more module cards here -->
+
         </div>
     </div>
 </body>
