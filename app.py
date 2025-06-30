@@ -91,6 +91,18 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect('/login')
 
+@app.route('/transport')
+def transport():
+    if 'user' not in session:
+        return redirect('/login')
+    return render_template('transport.html')
+
+@app.route('/production')
+def production():
+    if 'user' not in session:
+        return redirect('/login')
+    return render_template('production.html')
+
 # ---------- Dashboard ----------
 @app.route('/dashboard')
 def dashboard():
