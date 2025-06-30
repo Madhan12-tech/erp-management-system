@@ -40,16 +40,16 @@ def init_db():
         )
     ''')
 
-    # Accounts Table
-c.execute('''
-    CREATE TABLE IF NOT EXISTS accounts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT,
-        amount REAL,
-        date TEXT,
-        description TEXT
-    )
-''')
+    # ✅ FIXED: Accounts table is now correctly inside the function
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT,
+            amount REAL,
+            date TEXT,
+            description TEXT
+        )
+    ''')
 
     conn.commit()
     conn.close()
@@ -122,7 +122,6 @@ def projects_sites():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
-    # Insert new record
     if request.method == 'POST':
         project_name = request.form['project_name']
         site_location = request.form['site_location']
@@ -141,7 +140,6 @@ def projects_sites():
         ''', (project_name, site_location, start_date, end_date, status, budget, design_engineer, site_engineer, team_members))
         conn.commit()
 
-    # Fetch all records
     c.execute('SELECT * FROM project_sites')
     data = c.fetchall()
 
@@ -150,7 +148,6 @@ def projects_sites():
     generated_id = f"PROJ{1000 + next_id}"
 
     conn.close()
-
     return render_template('project_sites.html', data=data, generated_id=generated_id)
 
 # ---------- Export to Excel ----------
