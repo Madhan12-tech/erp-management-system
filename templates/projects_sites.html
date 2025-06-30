@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Projects | ERP System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background-color: #f9f9fb; }
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background-color: #1c1f26;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 1rem;
+      color: white;
+    }
+    .nav-link { color: white; border-radius: 8px; }
+    .nav-link:hover { background-color: #343a40; }
+    .main-content { margin-left: 260px; padding: 2rem; }
+    .progress-bar { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h4>🚀 ERP System</h4>
+  <ul class="nav flex-column mt-4">
+
+<li class="nav-item">
+  <a class="nav-link active" href="{{ url_for('projects_sites') }}">🏗️ Projects</a>
+</li>
+
+  <!-- Add other nav links here -->
+  </ul>
+</div>
+
+<div class="main-content">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>🏗️ Project Management</h3>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">➕ Add Project</button>
+  </div>
+  <!-- Search & Export Controls -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search project name, client, type..." />
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-outline-dark" onclick="window.print()">🖨️ Print</button>
+      <button class="btn btn-outline-success" onclick="exportExcel()">📊 Excel</button>
+      <button class="btn btn-outline-danger" onclick="exportPDF()">📄 PDF</button>
+    </div>
+  </div>
+
+  <!-- Projects Table -->
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Client</th>
+          <th>Budget</th>
+          <th>Status</th>
+          <th>Progress</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="projectTableBody">
+        <!-- Dynamic rows will be added here -->
+      </tbody>
+    </table>
+  </div>
+<!-- Add Project Modal -->
+<div class="modal fade" id="addProjectModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <form id="projectForm">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">➕ Add New Project</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Project ID</label>
+              <input type="text" class="form-control" id="projId" readonly>
+            </div>
+            <div class="col-md-4">
+              <label>Project Name</label>
+              <input type="text" class="form-control" id="projName" required>
+            </div>
+            <div class="col-md-4">
+              <label>Project Type</label>
+              <select class="form-select" id="projType">
+                <option>Residential</option>
+                <option>Commercial</option>
+                <option>Industrial</option>
+                <option>Government</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Client</label>
+              <input type="text" class="form-control" id="projClient">
+            </div>
+            <div class="col-md-4">
+              <label>Budget (₹)</label>
+              <input type="number" class="form-control" id="projBudget" min="0">
+            </div>
+            <div class="col-md-4">
+              <label>Status</label>
+              <select class="form-select" id="projStatus">
+                <option>Planned</option>
+                <option>Ongoing</option>
+                <option>Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Progress (%)</label>
+              <input type="number" class="form-control" id="projProgress" min="0" max="100">
+            </div>
+            <div class="col-md-4">
+              <label>Start Date</label>
+              <input type="date" class="form-control" id="projStart">
+            </div>
+            <div class="col-md-4">
+              <label>End Date</label>
+              <input type="date" class="form-control" id="projEnd">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>Assigned Engineers / Team</label>
+              <select class="form-select" id="projTeam" multiple>
+                <option>Arun</option>
+                <option>Madhan</option>
+                <option>Sneha</option>
+                <option>Ravi</option>
+                <option>Anjali</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label>Location</label>
+              <input type="text" class="form-control" id="projLocation">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Milestone: Kickoff</label>
+              <input type="date" class="form-control" id="milestoneKickoff">
+            </div>
+            <div class="col-md-4">
+              <label>Milestone: Review</label>
+              <input type="date" class="form-control" id="milestoneReview">
+            </div>
+            <div class="col-md-4">
+              <label>Milestone: Handover</label>
+              <input type="date" class="form-control" id="milestoneHandover">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>Upload Document (PDF, Drawing)</label>
+              <input type="file" class="form-control" id="projDoc" accept=".pdf,.doc,.dwg">
+            </div>
+            <div class="col-md-6">
+              <label>Project Incharge</label>
+              <input type="text" class="form-control" id="projIncharge">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label>Notes / Internal History</label>
+            <textarea class="form-control" id="projNotes" rows="3" placeholder="Write project context, goals, risks, updates..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-success" type="submit">💾 Save</button>
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+  const role = "management"; // switch to 'employee' for limited access
+
+  function generateProjectId() {
+    const prefix = "PRJ";
+    const date = new Date();
+    const timestamp = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+    const rand = Math.floor(100 + Math.random() * 900);
+    return `${prefix}${timestamp}${rand}`;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById('addProjectModal');
+    modal.addEventListener('show.bs.modal', () => {
+      document.getElementById('projId').value = generateProjectId();
+    });
+
+    document.getElementById("projectForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const id = projId.value;
+      const name = projName.value;
+      const type = projType.value;
+      const client = projClient.value;
+      const budget = projBudget.value;
+      const progress = projProgress.value;
+      const status = projStatus.value;
+      const team = Array.from(projTeam.selectedOptions).map(o => o.value).join(", ");
+      const start = projStart.value;
+      const end = projEnd.value;
+      const location = projLocation.value;
+      const incharge = projIncharge.value;
+      const notes = projNotes.value;
+      const doc = projDoc.files[0]?.name || "No File";
+      const milestone1 = milestoneKickoff.value;
+      const milestone2 = milestoneReview.value;
+      const milestone3 = milestoneHandover.value;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${id}</td>
+        <td>${name}</td>
+        <td>${type}</td>
+        <td>${client}</td>
+        <td>₹${parseInt(budget).toLocaleString()}</td>
+        <td>
+          <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success" style="width: ${progress}%">${progress}%</div>
+          </div>
+        </td>
+        <td><span class="badge bg-${statusColor(status)}">${status}</span></td>
+        <td>${team}</td>
+        <td>${start}</td>
+        <td>${end}</td>
+        <td>${incharge}</td>
+        <td>
+          <button class="btn btn-sm btn-info mb-1" onclick='viewProject(${JSON.stringify({
+            id, name, type, client, budget, progress, status, team,
+            start, end, location, incharge, notes, doc, milestone1, milestone2, milestone3
+          })})'>👁️</button>
+          ${role === "management" ? `
+            <button class="btn btn-sm btn-warning" onclick="editRow(this)">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">🗑️</button>` : ''}
+        </td>
+      `;
+      document.getElementById("projectTableBody").appendChild(row);
+      bootstrap.Modal.getInstance(modal).hide();
+      this.reset();
+    });
+
+    document.getElementById("searchInput").addEventListener("input", function () {
+      const filter = this.value.toLowerCase();
+      const rows = document.querySelectorAll("#projectTableBody tr");
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+      });
+    });
+  });
+
+  function statusColor(status) {
+    if (status === "Planned") return "secondary";
+    if (status === "Ongoing") return "warning";
+    if (status === "Completed") return "success";
+    return "info";
+  }
+
+  function deleteRow(btn) {
+    btn.closest("tr").remove();
+  }
+
+  function editRow(btn) {
+    const cells = btn.closest("tr").children;
+    projId.value = cells[0].innerText;
+    projName.value = cells[1].innerText;
+    projType.value = cells[2].innerText;
+    projClient.value = cells[3].innerText;
+    projBudget.value = parseInt(cells[4].innerText.replace(/[^0-9]/g, ''));
+    projProgress.value = cells[5].querySelector(".progress-bar").innerText.replace("%", "");
+    projStatus.value = cells[6].innerText.trim();
+    projTeam.value = cells[7].innerText;
+    projStart.value = cells[8].innerText;
+    projEnd.value = cells[9].innerText;
+    projIncharge.value = cells[10].innerText;
+    btn.closest("tr").remove();
+    const modal = new bootstrap.Modal(document.getElementById('addProjectModal'));
+    modal.show();
+  }
+
+  function viewProject(data) {
+    let html = `
+      <h5>${data.name} (${data.id})</h5>
+      <p><b>Type:</b> ${data.type}</p>
+      <p><b>Client:</b> ${data.client}</p>
+      <p><b>Budget:</b> ₹${parseInt(data.budget).toLocaleString()}</p>
+      <p><b>Status:</b> ${data.status}</p>
+      <p><b>Progress:</b> ${data.progress}%</p>
+      <p><b>Team:</b> ${data.team}</p>
+      <p><b>Duration:</b> ${data.start} to ${data.end}</p>
+      <p><b>Milestones:</b><br>
+        🟢 Kickoff: ${data.milestone1 || '-'}<br>
+        🔵 Review: ${data.milestone2 || '-'}<br>
+        ✅ Handover: ${data.milestone3 || '-'}</p>
+      <p><b>Incharge:</b> ${data.incharge}</p>
+      <p><b>Location:</b> ${data.location}</p>
+      <p><b>Notes:</b> ${data.notes}</p>
+      <p><b>Document:</b> ${data.doc}</p>
+    `;
+    const modalHtml = `
+      <div class="modal fade" id="viewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title">📄 Project Full Details</h5>
+              <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">${html}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const viewModal = new bootstrap.Modal(document.getElementById('viewModal'));
+    viewModal.show();
+    document.getElementById('viewModal').addEventListener('hidden.bs.modal', function () {
+      this.remove();
+    });
+  }
+
+  function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Projects List", 14, 10);
+    doc.autoTable({
+      html: 'table',
+      startY: 20,
+      theme: 'grid'
+    });
+    doc.save("projects.pdf");
+  }
+
+  function exportExcel() {
+    const table = document.querySelector("table");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Projects" });
+    XLSX.writeFile(wb, "projects.xlsx");
+  }
+</script>
+
+</body>
+</html>
