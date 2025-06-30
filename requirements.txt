@@ -1,6 +1,6 @@
-Flask==3.0.3
-gunicorn==21.2.0
-reportlab==4.0.4
-openpyxl==3.1.2
-xlsxwriter==3.1.9
-pandas==2.1.4  # <- Lightweight and safe
+Flask
+gunicorn
+reportlab
+openpyxl
+xlsxwriter
+pandas
