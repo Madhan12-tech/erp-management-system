@@ -185,7 +185,7 @@ def accounts():
     c.execute('SELECT * FROM accounts ORDER BY date DESC')
     data = c.fetchall()
     conn.close()
-    return render_template('accounts.html', data=data)
+    return render_template('accounts_purchase.html', data=data)
 
 # ---------- Workforce ----------
 @app.route('/workforce', methods=['GET', 'POST'])
