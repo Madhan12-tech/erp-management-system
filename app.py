@@ -73,10 +73,9 @@ def dashboard():
     return render_template('dashboard.html')
 
 
-
 @app.route('/add-project-site', methods=['POST'])
 def add_project_site():
-    if 'user' not in session:
+    if 'name' not in session:
         return redirect('/login')
 
     project_name = request.form['project_name']
@@ -84,7 +83,7 @@ def add_project_site():
     client = request.form['client']
     status = request.form['status']
     
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS projects_sites (
@@ -102,21 +101,20 @@ def add_project_site():
 
     flash("Project site added successfully!", "success")
     return redirect('/projects-sites')
-    return render_template('project_sites.html', user=session['user'])
+
 @app.route('/projects-sites')
 def projects_sites():
-    if 'user' not in session:
+    if 'name' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS projects_sites (id INTEGER PRIMARY KEY AUTOINCREMENT, project_name TEXT, site_location TEXT, client TEXT, status TEXT)')
     c.execute('SELECT * FROM projects_sites')
     projects = c.fetchall()
     conn.close()
 
-    return render_template('project_sites.html', projects=projects, user=session['user'])
-
+    return render_template('project_sites.html', projects=projects, user=session['name'])
 
 
 @app.route('/logout')
