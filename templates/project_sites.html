@@ -1,161 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Projects & Sites</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <style>
-    body {
-      padding: 30px;
-    }
-    .table th, .table td {
-      vertical-align: middle;
-    }
-    .modal-header {
-      background-color: #0d6efd;
-      color: white;
-    }
-  </style>
 </head>
-<body>
+<body class="bg-light">
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Projects & Sites Management</h2>
-    <div>
-      <a href="/export_excel" class="btn btn-success me-2">Export Excel</a>
-      <a href="/export_pdf" class="btn btn-danger">Export PDF</a>
+<div class="container py-4">
+  <h2 class="mb-4">Project & Site Management</h2>
+
+  <!-- Add Project Button -->
+  <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#projectModal">+ Add Project</button>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover bg-white">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Project Name</th>
+          <th>Site Location</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          <td>PROJ{{ row[0]|int + 1000 }}</td>
+          <td>{{ row[1] }}</td>
+          <td>{{ row[2] }}</td>
+          <td>{{ row[3] }}</td>
+          <td>{{ row[4] }}</td>
+          <td>{{ row[5] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Export Buttons -->
+  <div class="mt-3">
+    <a href="/export_excel" class="btn btn-success">Export to Excel</a>
+    <a href="/export_pdf" class="btn btn-danger">Export to PDF</a>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <form method="POST">
+        <h4 class="modal-title mb-3">Add New Project</h4>
+
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label>Project ID</label>
+            <input type="text" class="form-control" name="project_id" value="{{ generated_id }}" readonly>
+          </div>
+          <div class="col-md-6">
+            <label>Project Name</label>
+            <input type="text" class="form-control" name="project_name" required>
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label>Site Location</label>
+            <input type="text" class="form-control" name="site_location" required>
+          </div>
+          <div class="col-md-6">
+            <label>Budget (₹)</label>
+            <input type="number" class="form-control" name="budget" placeholder="Estimated budget" required>
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label>Start Date</label>
+            <input type="date" class="form-control" name="start_date">
+          </div>
+          <div class="col-md-6">
+            <label>End Date</label>
+            <input type="date" class="form-control" name="end_date">
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label>Assign to Design Engineer</label>
+            <input type="text" class="form-control" name="design_engineer" placeholder="Engineer name">
+          </div>
+          <div class="col-md-6">
+            <label>Assign to Site Engineer</label>
+            <input type="text" class="form-control" name="site_engineer" placeholder="Engineer name">
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label>Team Members</label>
+          <textarea class="form-control" name="team_members" placeholder="List of team members"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>Status</label>
+          <select class="form-select" name="status">
+            <option value="Planned">Planned</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary">Save Project</button>
+        </div>
+      </form>
     </div>
   </div>
-
-  <!-- Buttons -->
-  <div class="mb-4">
-    <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#projectModal">Add Project</button>
-    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#siteModal">Add Site</button>
-  </div>
-
-  <!-- Live Table -->
-  <table class="table table-bordered table-striped">
-    <thead class="table-dark">
-      <tr>
-        <th>ID</th>
-        <th>Project Name</th>
-        <th>Site Location</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in data %}
-      <tr>
-        <td>{{ row[0] }}</td>
-        <td>{{ row[1] }}</td>
-        <td>{{ row[2] }}</td>
-        <td>{{ row[3] }}</td>
-        <td>{{ row[4] }}</td>
-        <td>{{ row[5] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <!-- Project Modal -->
-  <div class="modal fade" id="projectModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <form method="POST" action="/project-sites">
-          <div class="modal-header">
-            <h5 class="modal-title">Add Project</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Project Name</label>
-              <input type="text" name="project_name" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Auto Project ID</label>
-              <input type="text" class="form-control" value="PROJ{{ loop.index + 1000 }}" readonly>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Assign Design Engineer</label>
-              <input type="text" class="form-control" name="design_engineer" placeholder="Name or ID">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Assign Site Engineer</label>
-              <input type="text" class="form-control" name="site_engineer">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Team Involved</label>
-              <input type="text" class="form-control" name="team_members">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Budget</label>
-              <input type="number" class="form-control" name="budget">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Start Date</label>
-              <input type="date" class="form-control" name="start_date">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">End Date</label>
-              <input type="date" class="form-control" name="end_date">
-            </div>
-            <div class="col-12">
-              <label class="form-label">Status</label>
-              <select class="form-select" name="status">
-                <option>Planned</option>
-                <option>Ongoing</option>
-                <option>Completed</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save Project</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Site Modal -->
-  <div class="modal fade" id="siteModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <form>
-          <div class="modal-header">
-            <h5 class="modal-title">Add Site</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Site Location</label>
-              <input type="text" class="form-control" name="site_location">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Area</label>
-              <input type="text" class="form-control" name="area">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Site In-Charge</label>
-              <input type="text" class="form-control" name="site_incharge">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Site Status</label>
-              <select class="form-select" name="site_status">
-                <option>Not Started</option>
-                <option>Under Construction</option>
-                <option>Ready</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-secondary">Save Site</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
