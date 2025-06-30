@@ -24,15 +24,19 @@ def init_db():
         )
     ''')
 
-    # Projects and Sites table
+    # Projects and Sites table (combined)
     c.execute('''
         CREATE TABLE IF NOT EXISTS project_sites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_name TEXT NOT NULL,
+            project_name TEXT,
             site_location TEXT NOT NULL,
             start_date TEXT,
             end_date TEXT,
-            status TEXT
+            status TEXT,
+            design_engineer TEXT,
+            site_engineer TEXT,
+            team_name TEXT,
+            budget REAL
         )
     ''')
 
@@ -91,18 +95,6 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect('/login')
 
-@app.route('/transport')
-def transport():
-    if 'user' not in session:
-        return redirect('/login')
-    return render_template('transport.html')
-
-@app.route('/production')
-def production():
-    if 'user' not in session:
-        return redirect('/login')
-    return render_template('production.html')
-
 # ---------- Dashboard ----------
 @app.route('/dashboard')
 def dashboard():
@@ -120,18 +112,22 @@ def projects_sites():
     c = conn.cursor()
 
     if request.method == 'POST':
-        try:
-            project_name = request.form['project_name']
-            site_location = request.form['site_location']
-            start_date = request.form['start_date']
-            end_date = request.form['end_date']
-            status = request.form['status']
-            c.execute('INSERT INTO project_sites (project_name, site_location, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
-                      (project_name, site_location, start_date, end_date, status))
-            conn.commit()
-            flash("Project added successfully!", "success")
-        except Exception as e:
-            flash(f"Error: {e}", "danger")
+        project_name = request.form.get('project_name')
+        site_location = request.form.get('site_location')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        status = request.form.get('status')
+        design_engineer = request.form.get('design_engineer')
+        site_engineer = request.form.get('site_engineer')
+        team_name = request.form.get('team_name')
+        budget = request.form.get('budget')
+
+        c.execute('''
+            INSERT INTO project_sites 
+            (project_name, site_location, start_date, end_date, status, design_engineer, site_engineer, team_name, budget)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (project_name, site_location, start_date, end_date, status, design_engineer, site_engineer, team_name, budget))
+        conn.commit()
 
     c.execute('SELECT * FROM project_sites')
     data = c.fetchall()
@@ -142,9 +138,6 @@ def projects_sites():
 # ---------- Export to Excel ----------
 @app.route('/export_excel')
 def export_excel():
-    if 'user' not in session:
-        return redirect('/login')
-
     conn = sqlite3.connect('users.db')
     df = pd.read_sql_query("SELECT * FROM project_sites", conn)
     conn.close()
@@ -157,9 +150,6 @@ def export_excel():
 # ---------- Export to PDF ----------
 @app.route('/export_pdf')
 def export_pdf():
-    if 'user' not in session:
-        return redirect('/login')
-
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('SELECT * FROM project_sites')
@@ -176,7 +166,7 @@ def export_pdf():
     y -= 30
 
     for row in data:
-        pdf.drawString(50, y, f"ID: {row[0]}, Project: {row[1]}, Location: {row[2]}, Start: {row[3]}, End: {row[4]}, Status: {row[5]}")
+        pdf.drawString(40, y, f"ID:{row[0]}, Project:{row[1]}, Site:{row[2]}, Start:{row[3]}, End:{row[4]}, Status:{row[5]}, Budget:{row[9]}")
         y -= 20
         if y < 50:
             pdf.showPage()
