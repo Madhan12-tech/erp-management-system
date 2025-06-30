@@ -40,6 +40,17 @@ def init_db():
         )
     ''')
 
+    # Accounts Table
+c.execute('''
+    CREATE TABLE IF NOT EXISTS accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT,
+        amount REAL,
+        date TEXT,
+        description TEXT
+    )
+''')
+
     conn.commit()
     conn.close()
 
@@ -182,6 +193,71 @@ def export_pdf():
     pdf.save()
     buffer.seek(0)
     return send_file(buffer, download_name="project_sites.pdf", as_attachment=True)
+
+# ---------- Accounts ----------
+@app.route('/accounts', methods=['GET', 'POST'])
+def accounts():
+    if 'user' not in session:
+        return redirect('/login')
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    if request.method == 'POST':
+        acc_type = request.form['type']
+        amount = request.form['amount']
+        date = request.form['date']
+        desc = request.form['description']
+        c.execute('INSERT INTO accounts (type, amount, date, description) VALUES (?, ?, ?, ?)',
+                  (acc_type, amount, date, desc))
+        conn.commit()
+
+    c.execute('SELECT * FROM accounts')
+    data = c.fetchall()
+    conn.close()
+
+    return render_template('accounts.html', data=data)
+
+# ---------- Export Accounts Excel ----------
+@app.route('/export_accounts_excel')
+def export_accounts_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query("SELECT * FROM accounts", conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Accounts')
+    output.seek(0)
+    return send_file(output, download_name="accounts.xlsx", as_attachment=True)
+
+# ---------- Export Accounts PDF ----------
+@app.route('/export_accounts_pdf')
+def export_accounts_pdf():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM accounts')
+    data = c.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    y = height - 40
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(220, y, "Accounts Report")
+    y -= 30
+    pdf.setFont("Helvetica", 10)
+
+    for row in data:
+        pdf.drawString(40, y, f"ID: {row[0]}, Type: {row[1]}, ₹{row[2]}, Date: {row[3]}, Desc: {row[4]}")
+        y -= 20
+        if y < 60:
+            pdf.showPage()
+            y = height - 40
+
+    pdf.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="accounts.pdf", as_attachment=True)
 
 # ---------- Run App ----------
 if __name__ == '__main__':
