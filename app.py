@@ -40,20 +40,26 @@ def init_db():
         )
     ''')
 
-    # Extended Accounts & Purchase table
+    # Accounts Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT,
-            category TEXT,
-            vendor_name TEXT,
-            invoice_number TEXT,
             amount REAL,
-            tax REAL,
-            total REAL,
             date TEXT,
-            description TEXT,
-            assigned_by TEXT
+            description TEXT
+        )
+    ''')
+
+    # Purchase Table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_name TEXT,
+            vendor TEXT,
+            quantity INTEGER,
+            rate REAL,
+            date TEXT
         )
     ''')
 
@@ -119,7 +125,7 @@ def dashboard():
         return redirect('/login')
     return render_template('dashboard.html', username=session['user'])
 
-# ---------- Projects & Sites ----------
+# ---------- Projects & Sites Module ----------
 @app.route('/project-sites', methods=['GET', 'POST'])
 def projects_sites():
     if 'user' not in session:
@@ -151,47 +157,10 @@ def projects_sites():
     next_id = len(data) + 1
     generated_id = f"PROJ{1000 + next_id}"
     conn.close()
+
     return render_template('project_sites.html', data=data, generated_id=generated_id)
 
-# ---------- Export to Excel ----------
-@app.route('/export_excel')
-def export_excel():
-    conn = sqlite3.connect('users.db')
-    df = pd.read_sql_query("SELECT * FROM project_sites", conn)
-    conn.close()
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Projects & Sites')
-    output.seek(0)
-    return send_file(output, download_name="project_sites.xlsx", as_attachment=True)
-
-# ---------- Export to PDF ----------
-@app.route('/export_pdf')
-def export_pdf():
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM project_sites')
-    data = c.fetchall()
-    conn.close()
-    buffer = BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    y = height - 40
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(100, y, "Projects & Sites Report")
-    pdf.setFont("Helvetica", 10)
-    y -= 30
-    for row in data:
-        pdf.drawString(50, y, f"ID: PROJ{1000+row[0]}, Project: {row[1]}, Location: {row[2]}, Start: {row[3]}, End: {row[4]}, Status: {row[5]}")
-        y -= 20
-        if y < 50:
-            pdf.showPage()
-            y = height - 40
-    pdf.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="project_sites.pdf", as_attachment=True)
-
-# ---------- Accounts ----------
+# ---------- Accounts & Purchase ----------
 @app.route('/accounts', methods=['GET', 'POST'])
 def accounts():
     if 'user' not in session:
@@ -201,30 +170,37 @@ def accounts():
     c = conn.cursor()
 
     if request.method == 'POST':
-        data = (
-            request.form['type'],
-            request.form.get('category', ''),
-            request.form.get('vendor_name', ''),
-            request.form.get('invoice_number', ''),
-            float(request.form['amount']),
-            float(request.form.get('tax', 0)),
-            float(request.form['amount']) + float(request.form.get('tax', 0)),
-            request.form['date'],
-            request.form.get('description', ''),
-            request.form.get('assigned_by', '')
-        )
-        c.execute('''
-            INSERT INTO accounts 
-            (type, category, vendor_name, invoice_number, amount, tax, total, date, description, assigned_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', data)
+        form_type = request.form.get('form_type')
+
+        if form_type == 'accounts':
+            acc_type = request.form['type']
+            amount = request.form['amount']
+            date = request.form['date']
+            desc = request.form['description']
+            c.execute('INSERT INTO accounts (type, amount, date, description) VALUES (?, ?, ?, ?)',
+                      (acc_type, amount, date, desc))
+
+        elif form_type == 'purchase':
+            item_name = request.form['item_name']
+            vendor = request.form['vendor']
+            qty = request.form['quantity']
+            rate = request.form['rate']
+            date = request.form['date']
+            c.execute('INSERT INTO purchases (item_name, vendor, quantity, rate, date) VALUES (?, ?, ?, ?, ?)',
+                      (item_name, vendor, qty, rate, date))
+
         conn.commit()
 
-    c.execute('SELECT * FROM accounts ORDER BY date DESC')
-    data = c.fetchall()
-    conn.close()
-    return render_template('accounts.html', data=data)
+    c.execute('SELECT * FROM accounts')
+    accounts_data = c.fetchall()
 
+    c.execute('SELECT * FROM purchases')
+    purchase_data = c.fetchall()
+
+    conn.close()
+    return render_template('accounts_purchase.html', accounts=accounts_data, purchases=purchase_data)
+
+# ---------- Export ----------
 @app.route('/export_accounts_excel')
 def export_accounts_excel():
     conn = sqlite3.connect('users.db')
@@ -232,9 +208,9 @@ def export_accounts_excel():
     conn.close()
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Accounts & Purchase')
+        df.to_excel(writer, index=False, sheet_name='Accounts')
     output.seek(0)
-    return send_file(output, download_name="accounts_purchase.xlsx", as_attachment=True)
+    return send_file(output, download_name="accounts.xlsx", as_attachment=True)
 
 @app.route('/export_accounts_pdf')
 def export_accounts_pdf():
@@ -243,24 +219,27 @@ def export_accounts_pdf():
     c.execute('SELECT * FROM accounts')
     data = c.fetchall()
     conn.close()
+
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     y = height - 40
     pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(220, y, "Accounts & Purchase Report")
+    pdf.drawString(220, y, "Accounts Report")
     y -= 30
-    pdf.setFont("Helvetica", 9)
+    pdf.setFont("Helvetica", 10)
+
     for row in data:
-        pdf.drawString(30, y, f"ID: {row[0]}, Type: {row[1]}, Vendor: {row[3]}, ₹{row[5]} + Tax: {row[6]} = ₹{row[7]}")
+        pdf.drawString(40, y, f"ID: {row[0]}, Type: {row[1]}, ₹{row[2]}, Date: {row[3]}, Desc: {row[4]}")
         y -= 20
         if y < 60:
             pdf.showPage()
             y = height - 40
+
     pdf.save()
     buffer.seek(0)
-    return send_file(buffer, download_name="accounts_purchase.pdf", as_attachment=True)
+    return send_file(buffer, download_name="accounts.pdf", as_attachment=True)
 
+# ---------- Run App ----------
 if __name__ == '__main__':
     app.run(debug=True)
-    
