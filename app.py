@@ -4,6 +4,7 @@ import pandas as pd
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
@@ -13,7 +14,6 @@ def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
-    # Users table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +24,6 @@ def init_db():
         )
     ''')
 
-    # Project & Sites table
     c.execute('''
         CREATE TABLE IF NOT EXISTS project_sites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,26 +39,36 @@ def init_db():
         )
     ''')
 
-    # Accounts Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT,
+            category TEXT,
+            vendor_name TEXT,
+            invoice_number TEXT,
             amount REAL,
+            tax REAL,
+            total REAL,
             date TEXT,
-            description TEXT
+            description TEXT,
+            assigned_by TEXT
         )
     ''')
 
-    # Purchase Table
     c.execute('''
-        CREATE TABLE IF NOT EXISTS purchases (
+        CREATE TABLE IF NOT EXISTS workforce (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            item_name TEXT,
-            vendor TEXT,
-            quantity INTEGER,
-            rate REAL,
-            date TEXT
+            emp_name TEXT,
+            emp_id TEXT,
+            department TEXT,
+            role TEXT,
+            doj TEXT,
+            salary REAL,
+            attendance INTEGER,
+            leaves INTEGER,
+            performance TEXT,
+            bonus REAL,
+            total_pay REAL
         )
     ''')
 
@@ -68,7 +77,7 @@ def init_db():
 
 init_db()
 
-# ---------- Authentication Routes ----------
+# ---------- Auth ----------
 @app.route('/')
 def home():
     return redirect('/login')
@@ -102,8 +111,7 @@ def register():
         try:
             conn = sqlite3.connect('users.db')
             c = conn.cursor()
-            c.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-                      (name, email, password, role))
+            c.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', (name, email, password, role))
             conn.commit()
             conn.close()
             flash('Registration successful!', 'success')
@@ -125,39 +133,34 @@ def dashboard():
         return redirect('/login')
     return render_template('dashboard.html', username=session['user'])
 
-# ---------- Projects & Sites Module ----------
+# ---------- Projects & Sites ----------
 @app.route('/project-sites', methods=['GET', 'POST'])
-def projects_sites():
+def project_sites():
     if 'user' not in session:
         return redirect('/login')
-
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-
     if request.method == 'POST':
-        project_name = request.form['project_name']
-        site_location = request.form['site_location']
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-        status = request.form['status']
-        budget = request.form['budget']
-        design_engineer = request.form['design_engineer']
-        site_engineer = request.form['site_engineer']
-        team_members = request.form['team_members']
-
+        data = (
+            request.form['project_name'],
+            request.form['site_location'],
+            request.form['start_date'],
+            request.form['end_date'],
+            request.form['status'],
+            float(request.form['budget']),
+            request.form['design_engineer'],
+            request.form['site_engineer'],
+            request.form['team_members']
+        )
         c.execute('''
             INSERT INTO project_sites 
             (project_name, site_location, start_date, end_date, status, budget, design_engineer, site_engineer, team_members)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (project_name, site_location, start_date, end_date, status, budget, design_engineer, site_engineer, team_members))
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
         conn.commit()
-
     c.execute('SELECT * FROM project_sites')
     data = c.fetchall()
-    next_id = len(data) + 1
-    generated_id = f"PROJ{1000 + next_id}"
+    generated_id = f"PROJ{1000 + len(data) + 1}"
     conn.close()
-
     return render_template('project_sites.html', data=data, generated_id=generated_id)
 
 # ---------- Accounts & Purchase ----------
@@ -165,42 +168,68 @@ def projects_sites():
 def accounts():
     if 'user' not in session:
         return redirect('/login')
-
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-
     if request.method == 'POST':
-        form_type = request.form.get('form_type')
-
-        if form_type == 'accounts':
-            acc_type = request.form['type']
-            amount = request.form['amount']
-            date = request.form['date']
-            desc = request.form['description']
-            c.execute('INSERT INTO accounts (type, amount, date, description) VALUES (?, ?, ?, ?)',
-                      (acc_type, amount, date, desc))
-
-        elif form_type == 'purchase':
-            item_name = request.form['item_name']
-            vendor = request.form['vendor']
-            qty = request.form['quantity']
-            rate = request.form['rate']
-            date = request.form['date']
-            c.execute('INSERT INTO purchases (item_name, vendor, quantity, rate, date) VALUES (?, ?, ?, ?, ?)',
-                      (item_name, vendor, qty, rate, date))
-
+        form = request.form
+        amount = float(form['amount'])
+        tax = float(form.get('tax', 0))
+        total = amount + tax
+        c.execute('''
+            INSERT INTO accounts 
+            (type, category, vendor_name, invoice_number, amount, tax, total, date, description, assigned_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (form['type'], form['category'], form['vendor_name'], form['invoice_number'],
+             amount, tax, total, form['date'], form['description'], form['assigned_by']))
         conn.commit()
-
-    c.execute('SELECT * FROM accounts')
-    accounts_data = c.fetchall()
-
-    c.execute('SELECT * FROM purchases')
-    purchase_data = c.fetchall()
-
+    c.execute('SELECT * FROM accounts ORDER BY date DESC')
+    data = c.fetchall()
     conn.close()
-    return render_template('accounts_purchase.html', accounts=accounts_data, purchases=purchase_data)
+    return render_template('accounts.html', data=data)
 
-# ---------- Export ----------
+# ---------- Workforce ----------
+@app.route('/workforce', methods=['GET', 'POST'])
+def workforce():
+    if 'user' not in session:
+        return redirect('/login')
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    if request.method == 'POST':
+        form = request.form
+        base_salary = float(form['salary'])
+        attendance = int(form['attendance'])
+        leaves = int(form['leaves'])
+        bonus = float(form.get('bonus', 0))
+        daily_salary = base_salary / 30
+        working_days = 30 - leaves
+        total_pay = (daily_salary * attendance) + bonus
+        data = (
+            form['emp_name'], form['emp_id'], form['department'], form['role'],
+            form['doj'], base_salary, attendance, leaves,
+            form['performance'], bonus, total_pay
+        )
+        c.execute('''
+            INSERT INTO workforce 
+            (emp_name, emp_id, department, role, doj, salary, attendance, leaves, performance, bonus, total_pay)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
+        conn.commit()
+    c.execute('SELECT * FROM workforce')
+    data = c.fetchall()
+    conn.close()
+    return render_template('workforce.html', data=data)
+
+# ---------- Export Routes ----------
+@app.route('/export_projects_excel')
+def export_projects_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query("SELECT * FROM project_sites", conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Projects')
+    output.seek(0)
+    return send_file(output, download_name="projects.xlsx", as_attachment=True)
+
 @app.route('/export_accounts_excel')
 def export_accounts_excel():
     conn = sqlite3.connect('users.db')
@@ -212,34 +241,17 @@ def export_accounts_excel():
     output.seek(0)
     return send_file(output, download_name="accounts.xlsx", as_attachment=True)
 
-@app.route('/export_accounts_pdf')
-def export_accounts_pdf():
+@app.route('/export_workforce_excel')
+def export_workforce_excel():
     conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM accounts')
-    data = c.fetchall()
+    df = pd.read_sql_query("SELECT * FROM workforce", conn)
     conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Workforce')
+    output.seek(0)
+    return send_file(output, download_name="workforce.xlsx", as_attachment=True)
 
-    buffer = BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    y = height - 40
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(220, y, "Accounts Report")
-    y -= 30
-    pdf.setFont("Helvetica", 10)
-
-    for row in data:
-        pdf.drawString(40, y, f"ID: {row[0]}, Type: {row[1]}, ₹{row[2]}, Date: {row[3]}, Desc: {row[4]}")
-        y -= 20
-        if y < 60:
-            pdf.showPage()
-            y = height - 40
-
-    pdf.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="accounts.pdf", as_attachment=True)
-
-# ---------- Run App ----------
+# ---------- Run ----------
 if __name__ == '__main__':
     app.run(debug=True)
