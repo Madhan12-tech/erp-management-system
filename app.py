@@ -8,7 +8,7 @@ from reportlab.lib.pagesizes import A4
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
-# ---------- DB Initialization ----------
+# ---------- Database Initialization ----------
 def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
@@ -24,19 +24,19 @@ def init_db():
         )
     ''')
 
-    # Projects and Sites table (combined)
+    # Project & Sites table
     c.execute('''
         CREATE TABLE IF NOT EXISTS project_sites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_name TEXT,
+            project_name TEXT NOT NULL,
             site_location TEXT NOT NULL,
             start_date TEXT,
             end_date TEXT,
             status TEXT,
+            budget REAL,
             design_engineer TEXT,
             site_engineer TEXT,
-            team_name TEXT,
-            budget REAL
+            team_members TEXT
         )
     ''')
 
@@ -45,7 +45,7 @@ def init_db():
 
 init_db()
 
-# ---------- Authentication ----------
+# ---------- Authentication Routes ----------
 @app.route('/')
 def home():
     return redirect('/login')
@@ -102,7 +102,7 @@ def dashboard():
         return redirect('/login')
     return render_template('dashboard.html', username=session['user'])
 
-# ---------- Projects & Sites ----------
+# ---------- Projects & Sites Module ----------
 @app.route('/project-sites', methods=['GET', 'POST'])
 def projects_sites():
     if 'user' not in session:
@@ -111,29 +111,36 @@ def projects_sites():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
+    # Insert new record
     if request.method == 'POST':
-        project_name = request.form.get('project_name')
-        site_location = request.form.get('site_location')
-        start_date = request.form.get('start_date')
-        end_date = request.form.get('end_date')
-        status = request.form.get('status')
-        design_engineer = request.form.get('design_engineer')
-        site_engineer = request.form.get('site_engineer')
-        team_name = request.form.get('team_name')
-        budget = request.form.get('budget')
+        project_name = request.form['project_name']
+        site_location = request.form['site_location']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        status = request.form['status']
+        budget = request.form['budget']
+        design_engineer = request.form['design_engineer']
+        site_engineer = request.form['site_engineer']
+        team_members = request.form['team_members']
 
         c.execute('''
             INSERT INTO project_sites 
-            (project_name, site_location, start_date, end_date, status, design_engineer, site_engineer, team_name, budget)
+            (project_name, site_location, start_date, end_date, status, budget, design_engineer, site_engineer, team_members)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (project_name, site_location, start_date, end_date, status, design_engineer, site_engineer, team_name, budget))
+        ''', (project_name, site_location, start_date, end_date, status, budget, design_engineer, site_engineer, team_members))
         conn.commit()
 
+    # Fetch all records
     c.execute('SELECT * FROM project_sites')
     data = c.fetchall()
+
+    # Generate next project ID
+    next_id = len(data) + 1
+    generated_id = f"PROJ{1000 + next_id}"
+
     conn.close()
 
-    return render_template('project_sites.html', data=data)
+    return render_template('project_sites.html', data=data, generated_id=generated_id)
 
 # ---------- Export to Excel ----------
 @app.route('/export_excel')
@@ -166,7 +173,7 @@ def export_pdf():
     y -= 30
 
     for row in data:
-        pdf.drawString(40, y, f"ID:{row[0]}, Project:{row[1]}, Site:{row[2]}, Start:{row[3]}, End:{row[4]}, Status:{row[5]}, Budget:{row[9]}")
+        pdf.drawString(50, y, f"ID: PROJ{1000+row[0]}, Project: {row[1]}, Location: {row[2]}, Start: {row[3]}, End: {row[4]}, Status: {row[5]}")
         y -= 20
         if y < 50:
             pdf.showPage()
@@ -176,7 +183,6 @@ def export_pdf():
     buffer.seek(0)
     return send_file(buffer, download_name="project_sites.pdf", as_attachment=True)
 
-# ---------- Run ----------
+# ---------- Run App ----------
 if __name__ == '__main__':
     app.run(debug=True)
-    
