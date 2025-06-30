@@ -72,11 +72,7 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html')
 
-@app.route('/projects-sites')
-def projects_sites():
-    if 'user' not in session:
-        return redirect('/login')
-    return render_template('project_sites.html', user=session['user'])
+
 
 @app.route('/add-project-site', methods=['POST'])
 def add_project_site():
@@ -106,6 +102,7 @@ def add_project_site():
 
     flash("Project site added successfully!", "success")
     return redirect('/projects-sites')
+    return render_template('project_sites.html', user=session['user'])
 @app.route('/projects-sites')
 def projects_sites():
     if 'user' not in session:
