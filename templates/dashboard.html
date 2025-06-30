@@ -10,32 +10,35 @@
             display: flex;
             min-height: 100vh;
             overflow-x: hidden;
+            background: #f4f4f4;
         }
         .sidebar {
             width: 220px;
             background: #343a40;
             color: white;
+            flex-shrink: 0;
         }
         .sidebar a {
             color: white;
             display: block;
             padding: 15px;
             text-decoration: none;
+            font-weight: 500;
         }
         .sidebar a:hover {
             background: #495057;
         }
         .content {
-            flex: 1;
+            flex-grow: 1;
             padding: 30px;
-            background: #f8f9fa;
         }
         .card {
-            transition: 0.3s;
+            transition: transform 0.2s ease-in-out;
+            border-radius: 16px;
         }
         .card:hover {
             transform: scale(1.02);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -43,60 +46,49 @@
     <div class="sidebar">
         <h4 class="text-center py-3">ERP Modules</h4>
         <a href="/project-sites">Projects & Sites</a>
-        <a href="/accounts">Accounts</a>
+        <a href="/accounts">Accounts & Purchase</a>
+        <a href="/workforce">Workforce / HR</a>
         <a href="#">Sales</a>
         <a href="#">Clients</a>
         <a href="#">Documents</a>
         <a href="#">Notifications</a>
-        <a href="/transport">Transport</a>
-        <a href="/production">Production</a>
+        <a href="#">Transport</a>
+        <a href="#">Production</a>
         <a href="#">Support</a>
-        <a href="#">Purchase</a>
         <a href="#">Analytics</a>
         <a href="#">Audit Logs</a>
-        <a href="#">Workforce</a>
         <a href="/logout" class="text-danger">Logout</a>
     </div>
 
     <div class="content">
-        <h2>Welcome {{ username }}!</h2>
-        <p>Select a module from the sidebar to begin.</p>
+        <h2 class="mb-4">Welcome, {{ username }}!</h2>
+        <div class="row g-4">
 
-        <div class="row mt-4">
-            <div class="col-md-4 mb-3">
-                <div class="card p-3 shadow-sm">
+            <div class="col-md-4">
+                <div class="card shadow-sm p-4 bg-light">
                     <h5>Projects & Sites</h5>
-                    <p>Manage all your active projects and site data.</p>
+                    <p>Manage active projects, engineers and budgets.</p>
                     <a href="/project-sites" class="btn btn-primary">Open</a>
                 </div>
             </div>
 
-            <div class="col-md-4 mb-3">
-                <div class="card p-3 shadow-sm">
-                    <h5>Accounts</h5>
-                    <p>Track income, expenses, and financial data.</p>
+            <div class="col-md-4">
+                <div class="card shadow-sm p-4 bg-light">
+                    <h5>Accounts & Purchase</h5>
+                    <p>Track financials, vendors, taxes, and reports.</p>
                     <a href="/accounts" class="btn btn-success">Open</a>
                 </div>
             </div>
 
-            <div class="col-md-4 mb-3">
-                <div class="card p-3 shadow-sm">
-                    <h5>Transport</h5>
-                    <p>Manage logistics and vehicle assignments.</p>
-                    <a href="/transport" class="btn btn-warning">Open</a>
+            <div class="col-md-4">
+                <div class="card shadow-sm p-4 bg-light">
+                    <h5>Workforce / HR</h5>
+                    <p>Manage employee records, salary, and payroll.</p>
+                    <a href="/workforce" class="btn btn-warning">Open</a>
                 </div>
             </div>
 
-            <div class="col-md-4 mb-3">
-                <div class="card p-3 shadow-sm">
-                    <h5>Production</h5>
-                    <p>Track production processes and outputs.</p>
-                    <a href="/production" class="btn btn-info">Open</a>
-                </div>
-            </div>
-
-            <!-- You can keep adding more module cards here -->
-
+            <!-- Add more cards for other modules as needed -->
         </div>
     </div>
 </body>
