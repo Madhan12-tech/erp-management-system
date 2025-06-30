@@ -108,14 +108,18 @@ def projects_sites():
     c = conn.cursor()
 
     if request.method == 'POST':
-        project_name = request.form['project_name']
-        site_location = request.form['site_location']
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-        status = request.form['status']
-        c.execute('INSERT INTO project_sites (project_name, site_location, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
-                  (project_name, site_location, start_date, end_date, status))
-        conn.commit()
+        try:
+            project_name = request.form['project_name']
+            site_location = request.form['site_location']
+            start_date = request.form['start_date']
+            end_date = request.form['end_date']
+            status = request.form['status']
+            c.execute('INSERT INTO project_sites (project_name, site_location, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
+                      (project_name, site_location, start_date, end_date, status))
+            conn.commit()
+            flash("Project added successfully!", "success")
+        except Exception as e:
+            flash(f"Error: {e}", "danger")
 
     c.execute('SELECT * FROM project_sites')
     data = c.fetchall()
@@ -126,6 +130,9 @@ def projects_sites():
 # ---------- Export to Excel ----------
 @app.route('/export_excel')
 def export_excel():
+    if 'user' not in session:
+        return redirect('/login')
+
     conn = sqlite3.connect('users.db')
     df = pd.read_sql_query("SELECT * FROM project_sites", conn)
     conn.close()
@@ -138,6 +145,9 @@ def export_excel():
 # ---------- Export to PDF ----------
 @app.route('/export_pdf')
 def export_pdf():
+    if 'user' not in session:
+        return redirect('/login')
+
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('SELECT * FROM project_sites')
@@ -167,3 +177,4 @@ def export_pdf():
 # ---------- Run ----------
 if __name__ == '__main__':
     app.run(debug=True)
+    
