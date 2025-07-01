@@ -1,22 +1,24 @@
+# app.py
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
-from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 from io import BytesIO
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import letter
 import os
 
 app = Flask(__name__)
-app.secret_key = 'vanes_secret_key'
+app.secret_key = 'your_secret_key_here'
 
-# -------------------- Database Initialization --------------------
+# ------------------------- Database Setup ----------------------------
+
 def init_db():
     conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
+    c = conn.cursor()
 
-    # Users table
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
@@ -24,17 +26,19 @@ def init_db():
         role TEXT NOT NULL
     )''')
 
-    # Vendors table
-    cursor.execute('''CREATE TABLE IF NOT EXISTS vendors (
+    c.execute('''CREATE TABLE IF NOT EXISTS vendors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        vendor_id TEXT NOT NULL UNIQUE,
-        name TEXT NOT NULL,
+        vendor_id TEXT,
+        name TEXT,
         email TEXT,
         phone TEXT,
-        address TEXT,
-        gst TEXT,
         company TEXT,
-        remarks TEXT
+        address TEXT,
+        city TEXT,
+        state TEXT,
+        country TEXT,
+        gst TEXT,
+        pan TEXT
     )''')
 
     conn.commit()
@@ -42,34 +46,8 @@ def init_db():
 
 init_db()
 
-# -------------------- Register --------------------
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        confirm = request.form['confirm_password']
-        role = request.form['role']
+# ------------------------- Authentication ----------------------------
 
-        if password != confirm:
-            flash("Passwords do not match", "danger")
-            return redirect(url_for('register'))
-
-        hashed_password = generate_password_hash(password)
-        try:
-            conn = sqlite3.connect('database.db')
-            conn.execute("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-                         (name, email, hashed_password, role))
-            conn.commit()
-            flash("Registered successfully", "success")
-            return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash("Email already exists", "danger")
-            return redirect(url_for('register'))
-   return render_template('login.html')
-
-# -------------------- Login --------------------
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -87,111 +65,137 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid credentials", "danger")
+
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form.get('confirm_password')
+        role = request.form['role']
+
+        if password != confirm_password:
+            flash("Passwords do not match", "danger")
+            return redirect(url_for('register'))
+
+        hashed = generate_password_hash(password)
+        try:
+            conn = sqlite3.connect('database.db')
+            conn.execute("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+                         (name, email, hashed, role))
+            conn.commit()
+            conn.close()
+            flash("Registration successful", "success")
             return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash("Email already registered", "warning")
 
-    return render_template('login_register.html')
+    return render_template('register.html')
 
-# -------------------- Dashboard --------------------
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Logged out successfully", "info")
+    return redirect(url_for('login'))
+
+# ------------------------- Dashboard ----------------------------
+
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
-# -------------------- Logout --------------------
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
+# ------------------------- Vendor Management ----------------------------
 
-# -------------------- Vendor Management --------------------
 @app.route('/vendors')
 def vendors():
     if 'user' not in session:
         return redirect(url_for('login'))
     conn = sqlite3.connect('database.db')
-    data = conn.execute("SELECT * FROM vendors").fetchall()
+    rows = conn.execute("SELECT * FROM vendors").fetchall()
     conn.close()
-    return render_template('vendors.html', vendors=data)
+    return render_template('vendors.html', vendors=rows)
 
 @app.route('/add_vendor', methods=['POST'])
 def add_vendor():
-    vendor_id = request.form['vendor_id']
-    name = request.form['name']
-    email = request.form['email']
-    phone = request.form['phone']
-    address = request.form['address']
-    gst = request.form['gst']
-    company = request.form['company']
-    remarks = request.form['remarks']
+    if 'user' not in session:
+        return redirect(url_for('login'))
 
+    form = request.form
     conn = sqlite3.connect('database.db')
-    conn.execute("INSERT INTO vendors (vendor_id, name, email, phone, address, gst, company, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                 (vendor_id, name, email, phone, address, gst, company, remarks))
+    count = conn.execute("SELECT COUNT(*) FROM vendors").fetchone()[0] + 1
+    vendor_id = f"VND{str(count).zfill(4)}"
+    conn.execute('''INSERT INTO vendors (vendor_id, name, email, phone, company, address, city, state, country, gst, pan)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                 (vendor_id, form['name'], form['email'], form['phone'], form['company'], form['address'],
+                  form['city'], form['state'], form['country'], form['gst'], form['pan']))
     conn.commit()
     conn.close()
+    flash("Vendor added successfully", "success")
     return redirect(url_for('vendors'))
 
 @app.route('/delete_vendor/<int:id>')
 def delete_vendor(id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
     conn = sqlite3.connect('database.db')
     conn.execute("DELETE FROM vendors WHERE id = ?", (id,))
     conn.commit()
     conn.close()
+    flash("Vendor deleted", "info")
     return redirect(url_for('vendors'))
 
-# -------------------- Export Functions --------------------
-@app.route('/export_vendors_csv')
+@app.route('/export/vendors/csv')
 def export_vendors_csv():
     conn = sqlite3.connect('database.db')
     df = pd.read_sql_query("SELECT * FROM vendors", conn)
-    conn.close()
-    return send_file(BytesIO(df.to_csv(index=False).encode()),
-                     mimetype='text/csv',
-                     as_attachment=True,
-                     download_name='vendors.csv')
+    output = BytesIO()
+    df.to_csv(output, index=False)
+    output.seek(0)
+    return send_file(output, download_name="vendors.csv", as_attachment=True, mimetype='text/csv')
 
-@app.route('/export_vendors_excel')
+@app.route('/export/vendors/excel')
 def export_vendors_excel():
     conn = sqlite3.connect('database.db')
     df = pd.read_sql_query("SELECT * FROM vendors", conn)
-    conn.close()
     output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Vendors')
+    df.to_excel(output, index=False)
     output.seek(0)
-    return send_file(output,
-                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                     as_attachment=True,
-                     download_name='vendors.xlsx')
+    return send_file(output, download_name="vendors.xlsx", as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-@app.route('/export_vendors_pdf')
+@app.route('/export/vendors/pdf')
 def export_vendors_pdf():
     conn = sqlite3.connect('database.db')
     data = conn.execute("SELECT * FROM vendors").fetchall()
     conn.close()
     output = BytesIO()
-    p = canvas.Canvas(output, pagesize=A4)
-    width, height = A4
-    y = height - 50
-    p.setFont("Helvetica", 12)
-    p.drawString(30, y, "Vendor List")
+    c = canvas.Canvas(output, pagesize=letter)
+    width, height = letter
+
+    y = height - 40
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(30, y, "Vendor List")
+    c.setFont("Helvetica", 10)
     y -= 30
+
     for row in data:
-        line = f"{row[1]} | {row[2]} | {row[3]} | {row[4]}"
-        p.drawString(30, y, line)
+        text = f"{row[1]} | {row[2]} | {row[3]} | {row[4]}"
+        c.drawString(30, y, text)
         y -= 20
         if y < 40:
-            p.showPage()
-            y = height - 50
-    p.save()
-    output.seek(0)
-    return send_file(output,
-                     mimetype='application/pdf',
-                     as_attachment=True,
-                     download_name='vendors.pdf')
+            c.showPage()
+            y = height - 40
 
-# -------------------- Run Server --------------------
+    c.save()
+    output.seek(0)
+    return send_file(output, download_name="vendors.pdf", as_attachment=True, mimetype='application/pdf')
+
+# ------------------------- Run ----------------------------
+
 if __name__ == '__main__':
     app.run(debug=True)
     
