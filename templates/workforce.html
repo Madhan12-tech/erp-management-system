@@ -1,97 +1,86 @@
-<!-- workforce.html - PART 1: Basic Layout and Tabs -->
+<!-- PART 1: Basic Layout and Style -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Workforce Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-.popup {
-  display: none;
-  position: fixed;
-  z-index: 999;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.6);
-}
-
-.popup-content {
-  background-color: #fff;
-  margin: 5% auto;
-  padding: 30px;
-  border: 2px solid #333;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 1000px;
-  max-height: 90%;
-  overflow-y: auto;
-}
-
-.table-container {
-  overflow-x: auto;
-  margin-top: 10px;
-}
-
-.popup-content table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.popup-content th, .popup-content td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
-}
-
-.popup-content th {
-  background-color: #f2f2f2;
-}
-
-button.close {
-  margin-top: 20px;
-}
-
-.popup-buttons {
-  margin-bottom: 20px;
-}
-
-.popup-buttons button {
-  margin: 5px;
-  padding: 10px 15px;
-  font-weight: bold;
-}
-</style>
+    <style>
+        .popup {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+        .popup-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 30px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .popup-content table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .popup-content th, .popup-content td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        .popup-content th {
+            background-color: #f2f2f2;
+        }
+        button.close {
+            margin-top: 20px;
+        }
+        .popup-buttons {
+            margin-bottom: 20px;
+        }
+        .popup-buttons button {
+            margin: 5px;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <div class="container py-4">
-        <h2 class="mb-4">Workforce / HR Management</h2>
-
-        <div class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-primary" onclick="openPopup('payrollPopup')">Payroll</button>
-            <button class="btn btn-secondary" onclick="openPopup('attendancePopup')">Attendance</button>
-            <button class="btn btn-success" onclick="openPopup('leavePopup')">Leave</button>
-            <button class="btn btn-warning" onclick="openPopup('performancePopup')">Performance</button>
-            <button class="btn btn-info" onclick="openPopup('trainingPopup')">Training</button>
-            <button class="btn btn-dark" onclick="openPopup('documentsPopup')">Documents</button>
-            <button class="btn btn-danger" onclick="openPopup('bonusDeductionPopup')">Bonus & Deductions</button>
-        </div>
-
-        <!-- JavaScript to handle popups -->
-        <script>
-            function openPopup(id) {
-                document.getElementById(id).style.display = 'block';
-            }
-            function closePopup(id) {
-                document.getElementById(id).style.display = 'none';
-            }
-        </script>
-        <!-- Payroll Popup -->
+<div class="container py-4">
+    <h2 class="mb-4">Workforce / HR Management</h2>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button class="btn btn-primary" onclick="openPopup('payrollPopup')">Payroll</button>
+        <button class="btn btn-secondary" onclick="openPopup('attendancePopup')">Attendance</button>
+        <button class="btn btn-success" onclick="openPopup('leavePopup')">Leave</button>
+        <button class="btn btn-warning" onclick="openPopup('performancePopup')">Performance</button>
+        <button class="btn btn-info" onclick="openPopup('trainingPopup')">Training</button>
+        <button class="btn btn-dark" onclick="openPopup('documentsPopup')">Documents</button>
+        <button class="btn btn-danger" onclick="openPopup('bonusDeductionPopup')">Bonus & Deductions</button>
+    </div>
+    <script>
+        function openPopup(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+        function closePopup(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+    </script>
+    <!-- Payroll Popup -->
 <div id="payrollPopup" class="popup">
   <div class="popup-content">
     <h3>Payroll Management</h3>
 
-    <form method="POST" action="/add_workforce">
+    <form method="POST" action="/workforce">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="text" name="department" placeholder="Department" required>
       <input type="number" name="salary" placeholder="Salary" required>
@@ -118,7 +107,7 @@ button.close {
           </tr>
         </thead>
         <tbody>
-          {% for row in workforce %}
+          {% for row in data %}
           <tr>
             <td>{{ row[0] }}</td>
             <td>{{ row[1] }}</td>
@@ -145,10 +134,11 @@ button.close {
   <div class="popup-content">
     <h3>Mark Attendance</h3>
 
-    <form method="POST" action="/add_attendance">
+    <form method="POST" action="/hr/attendance">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="date" name="date" required>
       <select name="status" required>
+        <option value="">Select Status</option>
         <option value="Present">Present</option>
         <option value="Absent">Absent</option>
         <option value="Leave">Leave</option>
@@ -187,11 +177,11 @@ button.close {
   <div class="popup-content">
     <h3>Leave Management</h3>
 
-    <form method="POST" action="/add_leave">
+    <form method="POST" action="/hr/leave">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="date" name="from_date" required>
       <input type="date" name="to_date" required>
-      <input type="text" name="reason" placeholder="Reason" required>
+      <input type="text" name="reason" placeholder="Reason for Leave" required>
       <button type="submit">Add Leave</button>
     </form>
 
@@ -227,7 +217,7 @@ button.close {
   <div class="popup-content">
     <h3>Performance Tracking</h3>
 
-    <form method="POST" action="/add_performance">
+    <form method="POST" action="/hr/performance">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="text" name="month" placeholder="Month (e.g., July)" required>
       <input type="number" name="score" placeholder="Performance Score" required>
@@ -262,12 +252,12 @@ button.close {
     <button class="close" onclick="closePopup('performancePopup')">Close</button>
   </div>
 </div>
-<!-- Training Popup -->
+    <!-- Training Popup -->
 <div id="trainingPopup" class="popup">
   <div class="popup-content">
     <h3>Training Records</h3>
 
-    <form method="POST" action="/add_training">
+    <form method="POST" action="/hr/training">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="text" name="topic" placeholder="Training Topic" required>
       <input type="text" name="trainer" placeholder="Trainer Name" required>
@@ -302,12 +292,12 @@ button.close {
     <button class="close" onclick="closePopup('trainingPopup')">Close</button>
   </div>
 </div>
-        <!-- Documents Popup -->
+    <!-- Documents Popup -->
 <div id="documentsPopup" class="popup">
   <div class="popup-content">
     <h3>Upload Employee Documents</h3>
 
-    <form method="POST" action="/add_document">
+    <form method="POST" action="/hr/documents">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="text" name="doc_type" placeholder="Document Type" required>
       <input type="date" name="uploaded_on" required>
@@ -340,12 +330,12 @@ button.close {
     <button class="close" onclick="closePopup('documentsPopup')">Close</button>
   </div>
 </div>
-        <!-- Department Assignment Popup -->
+    <!-- Department Assignment Popup -->
 <div id="departmentPopup" class="popup">
   <div class="popup-content">
     <h3>Assign Department</h3>
 
-    <form method="POST" action="/add_department">
+    <form method="POST" action="/hr/departments">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="text" name="department" placeholder="Department Name" required>
       <button type="submit">Assign</button>
@@ -376,12 +366,12 @@ button.close {
     <button class="close" onclick="closePopup('departmentPopup')">Close</button>
   </div>
 </div>
-        <!-- Bonus Popup -->
+    <!-- Bonus Popup -->
 <div id="bonusPopup" class="popup">
   <div class="popup-content">
     <h3>Employee Bonus</h3>
 
-    <form method="POST" action="/add_bonus">
+    <form method="POST" action="/hr/bonus">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="number" step="0.01" name="bonus" placeholder="Bonus Amount" required>
       <input type="date" name="date" required>
@@ -414,12 +404,12 @@ button.close {
     <button class="close" onclick="closePopup('bonusPopup')">Close</button>
   </div>
 </div>
-        <!-- Deduction Popup -->
+    <!-- Deduction Popup -->
 <div id="deductionPopup" class="popup">
   <div class="popup-content">
     <h3>Employee Deductions</h3>
 
-    <form method="POST" action="/add_deduction">
+    <form method="POST" action="/hr/deductions">
       <input type="text" name="name" placeholder="Employee Name" required>
       <input type="number" step="0.01" name="deduction" placeholder="Deduction Amount" required>
       <input type="text" name="reason" placeholder="Reason" required>
@@ -454,8 +444,9 @@ button.close {
     <button class="close" onclick="closePopup('deductionPopup')">Close</button>
   </div>
 </div>
-        <div class="popup-buttons">
-  <button onclick="openPopup('addEmployeePopup')">+ Add Employee</button>
+    <!-- Action Buttons -->
+<div class="popup-buttons mt-4">
+  <button onclick="openPopup('payrollPopup')">Payroll</button>
   <button onclick="openPopup('attendancePopup')">Attendance</button>
   <button onclick="openPopup('leavePopup')">Leave</button>
   <button onclick="openPopup('performancePopup')">Performance</button>
@@ -464,8 +455,10 @@ button.close {
   <button onclick="openPopup('departmentPopup')">Departments</button>
   <button onclick="openPopup('bonusPopup')">Bonus</button>
   <button onclick="openPopup('deductionPopup')">Deductions</button>
-        </div>
-        <script>
+</div>
+
+<!-- JavaScript to Handle Popup and Filters -->
+<script>
   function openPopup(id) {
     document.getElementById(id).style.display = 'block';
   }
@@ -481,7 +474,7 @@ button.close {
       row.style.display = [...row.cells].some(td => td.innerText.toLowerCase().includes(input)) ? '' : 'none';
     });
   }
-        </script>
-        </body>
+</script>
+
+</body>
 </html>
-        
