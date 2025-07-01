@@ -1,192 +1,162 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+import sqlite3, os
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'vanes_secret_key'
+app.secret_key = 'vanes_secret'
 
-# ---------- DATABASE SETUP ----------
-def init_db():
+# ---------- DATABASE ----------
+def get_db():
     conn = sqlite3.connect('vanes.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
     c = conn.cursor()
 
-    # Users table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            username TEXT UNIQUE,
-            password TEXT,
-            role TEXT
-        )
-    ''')
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT, email TEXT UNIQUE, password TEXT)''')
 
-    # Projects table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS projects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id TEXT,
-            name TEXT,
-            client TEXT,
-            start_date TEXT,
-            end_date TEXT,
-            status TEXT,
-            budget REAL,
-            notes TEXT
-        )
-    ''')
+    c.execute('''CREATE TABLE IF NOT EXISTS projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id TEXT, name TEXT, client TEXT,
+        start TEXT, end TEXT, status TEXT,
+        budget REAL, notes TEXT)''')
 
-    # Sites table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS sites (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            site_id TEXT,
-            name TEXT,
-            location TEXT,
-            supervisor TEXT,
-            linked_project TEXT,
-            status TEXT
-        )
-    ''')
-
-    # Material Requests table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS material_requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id TEXT,
-            item TEXT,
-            quantity INTEGER,
-            status TEXT
-        )
-    ''')
+    c.execute('''CREATE TABLE IF NOT EXISTS sites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        site_id TEXT, name TEXT, location TEXT,
+        linked_project TEXT, supervisor TEXT,
+        status TEXT, notes TEXT)''')
 
     conn.commit()
     conn.close()
 
 init_db()
 
-# ---------- CREATE ADMIN USER ----------
-def insert_admin_user():
-    conn = sqlite3.connect('vanes.db')
-    c = conn.cursor()
-    username = "admin"
-    password = "admin123"
-    hashed_password = generate_password_hash(password)
-    role = "admin"
-    try:
-        c.execute("INSERT INTO users (name, username, password, role) VALUES (?, ?, ?, ?)",
-                  ("Admin", username, hashed_password, role))
-        conn.commit()
-        print("✔ Admin user created: admin / admin123")
-    except:
-        print("✔ Admin already exists")
-    conn.close()
-
-insert_admin_user()
-
-# ---------- ROUTES ----------
+# ---------- AUTH ----------
 @app.route('/')
 def home():
-    return redirect(url_for('login'))
+    return redirect('/login')
 
-# Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        uname = request.form['username']
-        pwd = request.form['password']
+        email = request.form['email']
+        password = request.form['password']
 
-        conn = sqlite3.connect('vanes.db')
-        c = conn.cursor()
-        c.execute("SELECT password FROM users WHERE username = ?", (uname,))
-        row = c.fetchone()
+        conn = get_db()
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         conn.close()
 
-        if row and check_password_hash(row[0], pwd):
-            session['user'] = uname
-            flash("Login successful", "success")
-            return redirect(url_for('dashboard'))
+        if user and check_password_hash(user['password'], password):
+            session['user'] = user['name']
+            return redirect('/dashboard')
         else:
-            flash("Invalid credentials", "danger")
-            return redirect(url_for('login'))
+            flash('Invalid credentials')
+            return redirect('/login')
 
     return render_template('login.html')
 
+@app.route('/register', methods=['POST'])
+def register():
+    name = request.form['name']
+    email = request.form['email']
+    password = generate_password_hash(request.form['password'])
+
+    try:
+        conn = get_db()
+        conn.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                     (name, email, password))
+        conn.commit()
+        conn.close()
+        flash('Account created! Please login.')
+    except:
+        flash('Email already exists.')
+    return redirect('/login')
+
 @app.route('/logout')
 def logout():
-    session.clear()
-    flash("Logged out", "info")
-    return redirect(url_for('login'))
+    session.pop('user', None)
+    return redirect('/login')
 
-# Dashboard with summary counts
+# ---------- DASHBOARD ----------
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
-        return redirect(url_for('login'))
+        return redirect('/login')
+    return render_template('dashboard.html')
 
-    conn = sqlite3.connect('vanes.db')
-    c = conn.cursor()
-
-    c.execute("SELECT COUNT(*) FROM projects")
-    total_projects = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM sites")
-    total_sites = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM users WHERE role = 'engineer'")
-    total_engineers = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM material_requests")
-    total_material_requests = c.fetchone()[0]
-
-    conn.close()
-
-    return render_template('dashboard.html',
-                           total_projects=total_projects,
-                           total_sites=total_sites,
-                           total_engineers=total_engineers,
-                           total_material_requests=total_material_requests)
-
-# Project ID auto-generator
+# ---------- PROJECT MANAGEMENT ----------
 @app.route('/generate_project_id')
 def generate_project_id():
-    conn = sqlite3.connect('vanes.db')
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM projects")
-    count = c.fetchone()[0] + 1
-    conn.close()
-    return {"project_id": f"PROJ-2025-{count:03}"}
+    conn = get_db()
+    count = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0] + 1
+    project_id = f"PROJ-2025-{count:04}"
+    return jsonify({"project_id": project_id})
 
-# Add Project route (form POST)
 @app.route('/add_project', methods=['POST'])
 def add_project():
-    data = request.form
-    conn = sqlite3.connect('vanes.db')
-    c = conn.cursor()
-    c.execute('''INSERT INTO projects (project_id, name, client, start_date, end_date, status, budget, notes)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-              (data['project_id'], data['project_name'], data['client_name'],
-               data['start_date'], data['end_date'], data['status'],
-               data['budget'], data['notes']))
+    data = (
+        request.form['project_id'],
+        request.form['project_name'],
+        request.form['client_name'],
+        request.form['start_date'],
+        request.form['end_date'],
+        request.form['status'],
+        request.form['budget'],
+        request.form['notes']
+    )
+    conn = get_db()
+    conn.execute('''INSERT INTO projects 
+        (project_id, name, client, start, end, status, budget, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', data)
     conn.commit()
     conn.close()
-    flash("Project added successfully", "success")
-    return redirect(url_for('dashboard'))
+    return redirect('/project_sites')
 
-# Project Sites Page (To use popup)
+# ---------- SITE MANAGEMENT ----------
+@app.route('/generate_site_id')
+def generate_site_id():
+    conn = get_db()
+    count = conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0] + 1
+    site_id = f"SITE-2025-{count:04}"
+    return jsonify({"site_id": site_id})
+
+@app.route('/add_site', methods=['POST'])
+def add_site():
+    data = (
+        request.form['site_id'],
+        request.form['site_name'],
+        request.form['location'],
+        request.form['linked_project'],
+        request.form['supervisor'],
+        request.form['status'],
+        request.form['notes']
+    )
+    conn = get_db()
+    conn.execute('''INSERT INTO sites 
+        (site_id, name, location, linked_project, supervisor, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)''', data)
+    conn.commit()
+    conn.close()
+    return redirect('/project_sites')
+
+# ---------- COMBINED MODULE ----------
 @app.route('/project_sites')
 def project_sites():
     if 'user' not in session:
-        return redirect(url_for('login'))
+        return redirect('/login')
 
-    conn = sqlite3.connect('vanes.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM projects")
-    projects = c.fetchall()
+    conn = get_db()
+    projects = conn.execute("SELECT * FROM projects").fetchall()
+    sites = conn.execute("SELECT * FROM sites").fetchall()
     conn.close()
+    return render_template('project_sites.html', projects=projects, sites=sites)
 
-    return render_template('project_sites.html', projects=projects)
-
-# --------------- Run App ---------------
+# ---------- RUN ----------
 if __name__ == '__main__':
     app.run(debug=True)
