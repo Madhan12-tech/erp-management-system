@@ -14,6 +14,7 @@ def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
+    # Users Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,6 +25,7 @@ def init_db():
         )
     ''')
 
+    # Project & Sites Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS project_sites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,6 +41,7 @@ def init_db():
         )
     ''')
 
+    # Extended Accounts & Purchase Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,20 +58,24 @@ def init_db():
         )
     ''')
 
+    # Workforce / HR Table with Auto Payroll
     c.execute('''
         CREATE TABLE IF NOT EXISTS workforce (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            emp_name TEXT,
-            emp_id TEXT,
-            department TEXT,
+            name TEXT,
             role TEXT,
-            doj TEXT,
+            department TEXT,
+            site TEXT,
             salary REAL,
-            attendance INTEGER,
+            days_present INTEGER,
             leaves INTEGER,
-            performance TEXT,
             bonus REAL,
-            total_pay REAL
+            deductions REAL,
+            total_pay REAL,
+            joining_date TEXT,
+            training_status TEXT,
+            performance TEXT,
+            documents TEXT
         )
     ''')
 
@@ -187,71 +194,106 @@ def accounts():
     conn.close()
     return render_template('accounts_purchase.html', data=data)
 
-# ---------- Workforce ----------
+# ---------- Workforce / HR Module ----------
 @app.route('/workforce', methods=['GET', 'POST'])
 def workforce():
     if 'user' not in session:
         return redirect('/login')
+
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
+
+    # Add new workforce entry
     if request.method == 'POST':
-        form = request.form
-        base_salary = float(form['salary'])
-        attendance = int(form['attendance'])
-        leaves = int(form['leaves'])
-        bonus = float(form.get('bonus', 0))
-        daily_salary = base_salary / 30
-        working_days = 30 - leaves
-        total_pay = (daily_salary * attendance) + bonus
-        data = (
-            form['emp_name'], form['emp_id'], form['department'], form['role'],
-            form['doj'], base_salary, attendance, leaves,
-            form['performance'], bonus, total_pay
-        )
+        name = request.form['name']
+        role = request.form['role']
+        department = request.form['department']
+        site = request.form['site']
+        salary = float(request.form['salary'])
+        days_present = int(request.form['days_present'])
+        leaves = int(request.form['leaves'])
+        bonus = float(request.form['bonus'])
+        deductions = float(request.form['deductions'])
+        joining_date = request.form['joining_date']
+        training_status = request.form['training_status']
+        performance = request.form['performance']
+        documents = request.form['documents']
+
+        total_pay = ((salary / 30) * days_present) + bonus - deductions
+
         c.execute('''
             INSERT INTO workforce 
-            (emp_name, emp_id, department, role, doj, salary, attendance, leaves, performance, bonus, total_pay)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
+            (name, role, department, site, salary, days_present, leaves, bonus, deductions, total_pay, joining_date, training_status, performance, documents)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, role, department, site, salary, days_present, leaves, bonus, deductions, total_pay, joining_date, training_status, performance, documents))
         conn.commit()
-    c.execute('SELECT * FROM workforce')
+
+    # Filters
+    filter_site = request.args.get('site')
+    filter_department = request.args.get('department')
+    query = "SELECT * FROM workforce WHERE 1=1"
+    params = []
+
+    if filter_site:
+        query += " AND site = ?"
+        params.append(filter_site)
+    if filter_department:
+        query += " AND department = ?"
+        params.append(filter_department)
+
+    c.execute(query, params)
     data = c.fetchall()
-    conn.close()
-    return render_template('workforce.html', data=data)
 
-# ---------- Export Routes ----------
-@app.route('/export_projects_excel')
-def export_projects_excel():
-    conn = sqlite3.connect('users.db')
-    df = pd.read_sql_query("SELECT * FROM project_sites", conn)
+    c.execute("SELECT DISTINCT site FROM workforce")
+    sites = [row[0] for row in c.fetchall()]
+    c.execute("SELECT DISTINCT department FROM workforce")
+    departments = [row[0] for row in c.fetchall()]
     conn.close()
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Projects')
-    output.seek(0)
-    return send_file(output, download_name="projects.xlsx", as_attachment=True)
 
-@app.route('/export_accounts_excel')
-def export_accounts_excel():
-    conn = sqlite3.connect('users.db')
-    df = pd.read_sql_query("SELECT * FROM accounts", conn)
-    conn.close()
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Accounts')
-    output.seek(0)
-    return send_file(output, download_name="accounts.xlsx", as_attachment=True)
+    return render_template('workforce.html', data=data, sites=sites, departments=departments)
 
+# ---------- Export Workforce to Excel ----------
 @app.route('/export_workforce_excel')
 def export_workforce_excel():
     conn = sqlite3.connect('users.db')
     df = pd.read_sql_query("SELECT * FROM workforce", conn)
     conn.close()
+
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='Workforce')
     output.seek(0)
     return send_file(output, download_name="workforce.xlsx", as_attachment=True)
 
+# ---------- Export Workforce to PDF ----------
+@app.route('/export_workforce_pdf')
+def export_workforce_pdf():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM workforce")
+    data = c.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    y = height - 40
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(220, y, "Workforce Report")
+    y -= 30
+    pdf.setFont("Helvetica", 9)
+
+    for row in data:
+        text = f"{row[0]} | {row[1]} | {row[2]} | {row[3]} | ₹{row[10]:.2f}"
+        pdf.drawString(30, y, text)
+        y -= 20
+        if y < 60:
+            pdf.showPage()
+            y = height - 40
+
+    pdf.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="workforce.pdf", as_attachment=True)
 # ---------- Run ----------
 if __name__ == '__main__':
     app.run(debug=True)
