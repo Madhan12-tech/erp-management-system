@@ -1,0 +1,355 @@
+<!-- inventory.html - PART 1: Basic Layout and Navigation -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 999;
+            overflow-y: auto;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 30px;
+            margin: 5% auto;
+            width: 90%;
+            max-width: 1000px;
+            border-radius: 10px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .close-btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    <h2 class="mb-4">Inventory / Stock Management</h2>
+
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <button class="btn btn-primary" onclick="openPopup('addInventoryPopup')">+ Add Inventory</button>
+        <button class="btn btn-success" onclick="openPopup('stockInPopup')">Stock In</button>
+        <button class="btn btn-warning" onclick="openPopup('stockOutPopup')">Stock Out</button>
+        <button class="btn btn-info" onclick="openPopup('suppliersPopup')">Suppliers</button>
+        <button class="btn btn-secondary" onclick="openPopup('logPopup')">Inventory Log</button>
+        <button class="btn btn-danger" onclick="openPopup('alertsPopup')">Low Stock Alerts</button>
+        <button class="btn btn-dark" onclick="openPopup('reportsPopup')">Reports / Export</button>
+    </div>
+
+    <script>
+        function openPopup(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+        function closePopup(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+    </script>
+</div>
+  <!-- Add Inventory Popup -->
+<div id="addInventoryPopup" class="popup">
+  <div class="popup-content">
+    <h3>Add Inventory Item</h3>
+    <form method="POST" action="/add_inventory">
+      <input type="text" name="item_name" placeholder="Item Name" required>
+      <input type="text" name="category" placeholder="Category" required>
+      <input type="number" name="quantity" placeholder="Quantity" required>
+      <input type="text" name="unit" placeholder="Unit (e.g., pcs, kg)" required>
+      <input type="text" name="supplier" placeholder="Supplier Name">
+      <input type="date" name="purchase_date" placeholder="Purchase Date">
+      <input type="number" step="0.01" name="price_per_unit" placeholder="Price Per Unit">
+      <button type="submit" class="btn btn-success">Add Item</button>
+    </form>
+
+    <hr>
+    <input type="text" id="inventoryFilter" onkeyup="filterTable('inventoryTable', this.value)" placeholder="Search Inventory...">
+    <button onclick="window.location.href='/export_inventory_excel'" class="btn btn-outline-primary">Export Excel</button>
+    <button onclick="window.location.href='/export_inventory_pdf'" class="btn btn-outline-danger">Export PDF</button>
+
+    <div class="table-container mt-3">
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Item</th><th>Category</th><th>Qty</th><th>Unit</th>
+            <th>Supplier</th><th>Purchased On</th><th>Price</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in inventory %}
+          <tr>
+            <td>{{ item[0] }}</td>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[2] }}</td>
+            <td>{{ item[3] }}</td>
+            <td>{{ item[4] }}</td>
+            <td>{{ item[5] }}</td>
+            <td>{{ item[6] }}</td>
+            <td>₹{{ item[7] }}</td>
+            <td><strong>₹{{ item[3]*item[7] }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button class="close btn btn-danger mt-3" onclick="closePopup('addInventoryPopup')">Close</button>
+  </div>
+</div>
+  <!-- Stock Update Popup -->
+<div id="stockUpdatePopup" class="popup">
+  <div class="popup-content">
+    <h3>Update Stock</h3>
+    <form method="POST" action="/update_stock">
+      <input type="text" name="item_name" placeholder="Item Name" required>
+      <input type="number" name="quantity" placeholder="Quantity" required>
+      <select name="update_type" required>
+        <option value="Add">Add Stock</option>
+        <option value="Remove">Remove Stock</option>
+      </select>
+      <input type="text" name="reason" placeholder="Reason (e.g., Restock, Damage)">
+      <input type="date" name="date" required>
+      <button type="submit" class="btn btn-success">Update</button>
+    </form>
+
+    <hr>
+    <input type="text" id="stockFilter" onkeyup="filterTable('stockUpdateTable', this.value)" placeholder="Search Stock Updates...">
+    <button onclick="window.location.href='/export_stock_excel'" class="btn btn-outline-primary">Export Excel</button>
+    <button onclick="window.location.href='/export_stock_pdf'" class="btn btn-outline-danger">Export PDF</button>
+
+    <div class="table-container mt-3">
+      <table id="stockUpdateTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Item</th><th>Qty</th><th>Type</th><th>Reason</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in stock_updates %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button class="close btn btn-danger mt-3" onclick="closePopup('stockUpdatePopup')">Close</button>
+  </div>
+</div>
+  <!-- Supplier Management Popup -->
+<div id="supplierPopup" class="popup">
+  <div class="popup-content">
+    <h3>Supplier Management</h3>
+
+    <form method="POST" action="/add_supplier">
+      <input type="text" name="name" placeholder="Supplier Name" required>
+      <input type="text" name="company" placeholder="Company Name">
+      <input type="email" name="email" placeholder="Email Address">
+      <input type="text" name="phone" placeholder="Phone Number">
+      <input type="text" name="address" placeholder="Address">
+      <button type="submit" class="btn btn-primary">Add Supplier</button>
+    </form>
+
+    <hr>
+    <input type="text" id="supplierFilter" onkeyup="filterTable('supplierTable', this.value)" placeholder="Search Suppliers...">
+    <button onclick="window.location.href='/export_suppliers_excel'" class="btn btn-outline-success">Export Excel</button>
+    <button onclick="window.location.href='/export_suppliers_pdf'" class="btn btn-outline-danger">Export PDF</button>
+
+    <div class="table-container mt-3">
+      <table id="supplierTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in suppliers %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button class="close btn btn-danger mt-3" onclick="closePopup('supplierPopup')">Close</button>
+  </div>
+</div>
+  <!-- Purchase Orders Popup -->
+<div id="purchaseOrderPopup" class="popup">
+  <div class="popup-content">
+    <h3>Purchase Orders</h3>
+
+    <form method="POST" action="/add_purchase_order">
+      <input type="text" name="vendor_name" placeholder="Vendor Name" required>
+      <input type="text" name="product" placeholder="Product Name" required>
+      <input type="number" name="quantity" placeholder="Quantity" required>
+      <input type="number" step="0.01" name="unit_price" placeholder="Unit Price" required>
+      <input type="date" name="order_date" required>
+      <input type="date" name="delivery_date" placeholder="Expected Delivery">
+      <button type="submit" class="btn btn-primary">Add Purchase Order</button>
+    </form>
+
+    <hr>
+    <input type="text" id="purchaseOrderFilter" onkeyup="filterTable('purchaseOrderTable', this.value)" placeholder="Search Purchase Orders...">
+    <button onclick="window.location.href='/export_purchase_orders_excel'" class="btn btn-outline-success">Export Excel</button>
+    <button onclick="window.location.href='/export_purchase_orders_pdf'" class="btn btn-outline-danger">Export PDF</button>
+
+    <div class="table-container mt-3">
+      <table id="purchaseOrderTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Vendor</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Order Date</th><th>Delivery</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in purchase_orders %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>₹{{ row[4] }}</td>
+            <td>₹{{ row[5] }}</td>
+            <td>{{ row[6] }}</td>
+            <td>{{ row[7] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button class="close btn btn-danger mt-3" onclick="closePopup('purchaseOrderPopup')">Close</button>
+  </div>
+</div>
+  <!-- Return Items Popup -->
+<div id="returnItemsPopup" class="popup">
+  <div class="popup-content">
+    <h3>Return Items</h3>
+
+    <form method="POST" action="/add_return_item">
+      <input type="text" name="product_name" placeholder="Product Name" required>
+      <input type="text" name="vendor_name" placeholder="Vendor Name" required>
+      <input type="number" name="quantity" placeholder="Quantity Returned" required>
+      <input type="text" name="reason" placeholder="Reason for Return" required>
+      <input type="date" name="return_date" required>
+      <button type="submit" class="btn btn-primary">Record Return</button>
+    </form>
+
+    <hr>
+    <input type="text" id="returnFilter" onkeyup="filterTable('returnTable', this.value)" placeholder="Search Return Records...">
+    <button onclick="window.location.href='/export_return_items_excel'" class="btn btn-outline-success">Export Excel</button>
+    <button onclick="window.location.href='/export_return_items_pdf'" class="btn btn-outline-danger">Export PDF</button>
+
+    <div class="table-container mt-3">
+      <table id="returnTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Product</th><th>Vendor</th><th>Quantity</th><th>Reason</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in return_items %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button class="close btn btn-danger mt-3" onclick="closePopup('returnItemsPopup')">Close</button>
+  </div>
+</div>
+  <!-- Inventory Adjustments Popup -->
+<div id="adjustmentPopup" class="popup">
+  <div class="popup-content">
+    <h3>Inventory Adjustments (Stock In / Out)</h3>
+
+    <form method="POST" action="/add_adjustment">
+      <input type="text" name="product_name" placeholder="Product Name" required>
+      <select name="adjustment_type" required>
+        <option value="Stock In">Stock In</option>
+        <option value="Stock Out">Stock Out</option>
+      </select>
+      <input type="number" name="quantity" placeholder="Quantity" required>
+      <input type="text" name="reason" placeholder="Reason (e.g., Audit, Damage)" required>
+      <input type="date" name="date" required>
+      <button type="submit" class="btn btn-primary">Add Adjustment</button>
+    </form>
+
+    <hr>
+    <input type="text" id="adjustmentFilter" onkeyup="filterTable('adjustmentTable', this.value)" placeholder="Search Adjustments...">
+    <button onclick="window.location.href='/export_adjustments_excel'" class="btn btn-outline-success">Export Excel</button>
+    <button onclick="window.location.href='/export_adjustments_pdf'" class="btn btn-outline-danger">Export PDF</button>
+
+    <div class="table-container mt-3">
+      <table id="adjustmentTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in adjustments %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button class="close btn btn-danger mt-3" onclick="closePopup('adjustmentPopup')">Close</button>
+  </div>
+</div>
+<!-- Utility Script for Popup & Table Filters -->
+<script>
+  function openPopup(id) {
+    document.getElementById(id).style.display = 'block';
+  }
+
+  function closePopup(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function filterTable(tableId, value) {
+    let input = value.toLowerCase();
+    let rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    rows.forEach(row => {
+      row.style.display = [...row.cells].some(td => td.innerText.toLowerCase().includes(input)) ? '' : 'none';
+    });
+  }
+</script>
+
+</body>
+</html>
