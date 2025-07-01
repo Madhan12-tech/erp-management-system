@@ -2,147 +2,244 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Vendor Management | Ducting ERP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vendor Management</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body {
+    * {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0e1012;
-      color: white;
-      display: flex;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
     }
-    .sidebar {
-      width: 250px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 20px;
+
+    body {
+      background-color: #0f1115;
+      color: white;
       height: 100vh;
-    }
-    .sidebar h2 {
-      margin-bottom: 20px;
-    }
-    .sidebar a {
-      display: block;
-      color: white;
-      text-decoration: none;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      background: rgba(255,255,255,0.1);
-    }
-    .content {
-      flex-grow: 1;
-      padding: 30px;
-      position: relative;
-    }
-    .topbar {
+      overflow: hidden;
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: rgba(255,255,255,0.1);
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    th {
-      background: #1e1e2f;
-    }
-    .btn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      color: white;
-      background: #00b4ff;
-      margin-right: 10px;
-    }
-    .popup-panel {
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: #1c1f26;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-right: 1px solid rgba(255,255,255,0.1);
       position: fixed;
       top: 0;
-      right: 0;
-      width: 400px;
-      height: 100vh;
-      background: #1a1a1a;
-      padding: 20px;
-      overflow-y: auto;
-      z-index: 100;
-      box-shadow: -5px 0 10px rgba(0,0,0,0.5);
+      bottom: 0;
+      left: 0;
     }
-    .popup-header {
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #00b4ff;
+    }
+
+    .sidebar a {
+      text-decoration: none;
+      color: #ccc;
+      padding: 12px 16px;
+      background: #2a2d36;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #00b4ff;
+      color: white;
+    }
+
+    /* Main Content */
+    .main {
+      margin-left: 240px;
+      width: calc(100% - 240px);
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 30px;
     }
-    .close-popup {
-      cursor: pointer;
-      font-size: 20px;
+
+    .header h1 {
+      font-size: 24px;
     }
-    .hidden { display: none; }
-    form label { display: block; margin-top: 10px; }
-    form input, form textarea, form select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 5px;
+
+    .btn {
+      padding: 10px 16px;
       border: none;
-      background: rgba(255,255,255,0.1);
-      color: white;
-    }
-    form button {
-      margin-top: 20px;
+      border-radius: 8px;
       background: #00b4ff;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #009ad1;
+    }
+
+    /* Table Placeholder */
+    .vendor-table {
+      width: 100%;
+      margin-top: 20px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .vendor-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .vendor-table th,
+    .vendor-table td {
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+
+    .vendor-table th {
+      color: #00b4ff;
+    }
+
+    .vendor-table tr:hover {
+      background: rgba(255,255,255,0.05);
     }
   </style>
 </head>
 <body>
+  <!-- Sidebar -->
   <div class="sidebar">
-    <h2>ERP Menu</h2>
+    <h2>ERP Modules</h2>
     <a href="/dashboard">Dashboard</a>
-    <a href="/vendors">Vendor Management</a>
+    <a href="/vendors" class="active">Vendor Management</a>
+    <a href="#">Quotations</a>
+    <a href="#">Workforce</a>
+    <a href="#">Delivery</a>
+    <a href="#">Accounts</a>
     <a href="/logout">Logout</a>
   </div>
 
-  <div class="content">
-    <div class="topbar">
+  <!-- Main Section -->
+  <div class="main">
+    <div class="header">
       <h1>Vendor Management</h1>
-      <div>
-        <button class="btn" onclick="showAddPopup()">Add Vendor</button>
-        <button class="btn" onclick="window.location.href='/vendors/export/csv'">Export CSV</button>
-        <button class="btn" onclick="window.location.href='/vendors/export/excel'">Export Excel</button>
-        <button class="btn" onclick="window.location.href='/vendors/export/pdf'">Export PDF</button>
-      </div>
+      <button class="btn" onclick="openAddVendor()">+ Add Vendor</button>
     </div>
 
-    <table>
+    <div class="vendor-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Vendor ID</th>
+            <th>Name</th>
+            <th>Company</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="vendorData">
+          <!-- Dynamic Rows Will Be Inserted Here -->
+        </tbody>
+      </table>
+    </div>
+    <!-- Export Buttons -->
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      <form method="GET" action="/export/vendors/csv">
+        <button class="btn">Export CSV</button>
+      </form>
+      <form method="GET" action="/export/vendors/excel">
+        <button class="btn">Export Excel</button>
+      </form>
+      <form method="GET" action="/export/vendors/pdf">
+        <button class="btn">Export PDF</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Side Popup -->
+  <div id="vendorPopup" style="
+    position: fixed;
+    top: 0;
+    right: -500px;
+    width: 400px;
+    height: 100%;
+    background: #1e1e24;
+    padding: 30px;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.4);
+    transition: right 0.3s ease;
+    z-index: 9999;
+    overflow-y: auto;
+  ">
+    <h2 style="margin-bottom: 20px;">Add Vendor</h2>
+    <form id="vendorForm" method="POST" action="/add_vendor">
+      <input type="hidden" name="vendor_id" id="vendor_id" />
+      <div style="margin-bottom: 15px;">
+        <label>Name:</label><br />
+        <input type="text" name="name" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label>Company:</label><br />
+        <input type="text" name="company" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label>Phone:</label><br />
+        <input type="text" name="phone" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label>Email:</label><br />
+        <input type="email" name="email" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label>Address:</label><br />
+        <textarea name="address" rows="3" style="width:100%; padding:10px; border-radius:6px; border:none;"></textarea>
+      </div>
+      <button class="btn" type="submit">Save Vendor</button>
+      <button type="button" class="btn" style="background:#666;margin-left:10px;" onclick="closePopup()">Cancel</button>
+    </form>
+  </div>
+  <!-- Vendor Table -->
+  <div class="table-container">
+    <table class="vendor-table">
       <thead>
         <tr>
           <th>ID</th>
           <th>Name</th>
           <th>Company</th>
-          <th>Email</th>
           <th>Phone</th>
-          <th>Status</th>
+          <th>Email</th>
+          <th>Address</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for vendor in vendors %}
         <tr>
-          <td>{{ vendor.id }}</td>
+          <td>{{ vendor.vendor_id }}</td>
           <td>{{ vendor.name }}</td>
           <td>{{ vendor.company }}</td>
-          <td>{{ vendor.email }}</td>
           <td>{{ vendor.phone }}</td>
-          <td>{{ vendor.status }}</td>
+          <td>{{ vendor.email }}</td>
+          <td>{{ vendor.address }}</td>
           <td>
-            <button class="btn" onclick="editVendor({{ vendor | tojson }})">Edit</button>
-            <a href="/delete_vendor/{{ vendor.id }}" class="btn" style="background:#ff4b5c;">Delete</a>
+            <button onclick="editVendor({{ vendor | tojson | safe }})" class="btn">Edit</button>
+            <button onclick="confirmDelete('{{ vendor.vendor_id }}')" class="btn" style="background: #e74c3c;">Delete</button>
           </td>
         </tr>
         {% endfor %}
@@ -150,82 +247,269 @@
     </table>
   </div>
 
-  <!-- Add Vendor Popup -->
-  <div id="addVendorPopup" class="popup-panel hidden">
-    <div class="popup-header">
-      <h2>Add Vendor</h2>
-      <span class="close-popup" onclick="closePopup('addVendorPopup')">&times;</span>
-    </div>
-    <form method="POST" action="/add_vendor">
-      <label>Vendor ID</label>
-      <input type="text" name="vendor_id" value="{{ new_vendor_id }}" readonly>
-      <label>Name</label>
-      <input type="text" name="name" required>
-      <label>Company</label>
-      <input type="text" name="company" required>
-      <label>Email</label>
-      <input type="email" name="email">
-      <label>Phone</label>
-      <input type="text" name="phone">
-      <label>GST Number</label>
-      <input type="text" name="gst_number">
-      <label>Address</label>
-      <textarea name="address"></textarea>
-      <label>Status</label>
-      <select name="status">
-        <option>Active</option>
-        <option>Inactive</option>
-      </select>
-      <button type="submit">Save</button>
-    </form>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    function editVendor(data) {
+      document.getElementById("vendorPopup").style.right = "0";
+      document.getElementById("vendor_id").value = data.vendor_id;
+      document.querySelector("input[name='name']").value = data.name;
+      document.querySelector("input[name='company']").value = data.company;
+      document.querySelector("input[name='phone']").value = data.phone;
+      document.querySelector("input[name='email']").value = data.email;
+      document.querySelector("textarea[name='address']").value = data.address;
+      document.getElementById("vendorForm").action = "/edit_vendor";
+    }
+
+    function confirmDelete(vendorId) {
+      Swal.fire({
+        title: 'Delete Vendor?',
+        text: "This action cannot be undone!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/delete_vendor/" + vendorId;
+        }
+      });
+    }
+  </script>
+  <!-- Filters & Search -->
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Search vendor name, email..." />
+    <select id="sortSelect">
+      <option value="default">Sort By</option>
+      <option value="name">Name</option>
+      <option value="company">Company</option>
+    </select>
+    <select id="limitSelect">
+      <option value="5">Show 5</option>
+      <option value="10" selected>Show 10</option>
+      <option value="25">Show 25</option>
+    </select>
+    <button id="themeToggle" class="btn">🌙 Dark/Light</button>
   </div>
 
-  <!-- Edit Vendor Popup (Dynamically filled) -->
-  <div id="editVendorPopup" class="popup-panel hidden">
-    <div class="popup-header">
-      <h2>Edit Vendor</h2>
-      <span class="close-popup" onclick="closePopup('editVendorPopup')">&times;</span>
-    </div>
-    <form method="POST" action="/edit_vendor">
-      <input type="hidden" name="id" id="edit_id">
-      <label>Name</label>
-      <input type="text" name="name" id="edit_name" required>
-      <label>Company</label>
-      <input type="text" name="company" id="edit_company" required>
-      <label>Email</label>
-      <input type="email" name="email" id="edit_email">
-      <label>Phone</label>
-      <input type="text" name="phone" id="edit_phone">
-      <label>GST Number</label>
-      <input type="text" name="gst_number" id="edit_gst">
-      <label>Address</label>
-      <textarea name="address" id="edit_address"></textarea>
-      <label>Status</label>
-      <select name="status" id="edit_status">
-        <option>Active</option>
-        <option>Inactive</option>
-      </select>
-      <button type="submit">Update</button>
-    </form>
+  <!-- Pagination (dummy UI, functional in backend optional) -->
+  <div class="pagination">
+    <button class="btn">&laquo;</button>
+    <button class="btn active">1</button>
+    <button class="btn">2</button>
+    <button class="btn">3</button>
+    <button class="btn">&raquo;</button>
   </div>
 
   <script>
-    function showAddPopup() {
-      document.getElementById('addVendorPopup').classList.remove('hidden');
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function () {
+      const searchText = this.value.toLowerCase();
+      const rows = document.querySelectorAll('.vendor-table tbody tr');
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        row.style.display = rowText.includes(searchText) ? '' : 'none';
+      });
+    });
+
+    // Sort functionality
+    document.getElementById('sortSelect').addEventListener('change', function () {
+      const rows = Array.from(document.querySelectorAll('.vendor-table tbody tr'));
+      const sortBy = this.value;
+      if (sortBy !== 'default') {
+        rows.sort((a, b) => {
+          const aText = a.querySelector(`td:nth-child(${sortBy === 'name' ? 2 : 3})`).innerText;
+          const bText = b.querySelector(`td:nth-child(${sortBy === 'name' ? 2 : 3})`).innerText;
+          return aText.localeCompare(bText);
+        });
+        const tbody = document.querySelector('.vendor-table tbody');
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+      }
+    });
+
+    // Dark/Light theme toggle
+    const body = document.body;
+    const themeBtn = document.getElementById("themeToggle");
+    themeBtn.addEventListener("click", () => {
+      body.classList.toggle("light-theme");
+    });
+  </script>
+
+  <style>
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
     }
-    function editVendor(vendor) {
-      document.getElementById('edit_id').value = vendor.id;
-      document.getElementById('edit_name').value = vendor.name;
-      document.getElementById('edit_company').value = vendor.company;
-      document.getElementById('edit_email').value = vendor.email;
-      document.getElementById('edit_phone').value = vendor.phone;
-      document.getElementById('edit_gst').value = vendor.gst_number;
-      document.getElementById('edit_address').value = vendor.address;
-      document.getElementById('edit_status').value = vendor.status;
-      document.getElementById('editVendorPopup').classList.remove('hidden');
+
+    .filters input,
+    .filters select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
     }
-    function closePopup(id) {
-      document.getElementById(id).classList.add('hidden');
+
+    .pagination {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 20px;
+    }
+
+    .pagination .btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .pagination .active {
+      background-color: #00b4ff;
+      color: white;
+    }
+
+    /* Light theme override */
+    .light-theme {
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    .light-theme .popup,
+    .light-theme .table-container,
+    .light-theme .filters {
+      background-color: white;
+      color: #333;
+    }
+
+    .light-theme .vendor-table th,
+    .light-theme .vendor-table td {
+      color: #333;
+    }
+  </style>
+  <!-- Export Section -->
+<div class="export-controls">
+  <form method="GET" action="/export/vendors/csv">
+    <button type="submit" class="btn export-btn">⬇️ Export CSV</button>
+  </form>
+  <form method="GET" action="/export/vendors/excel">
+    <button type="submit" class="btn export-btn">📊 Export Excel</button>
+  </form>
+  <form method="GET" action="/export/vendors/pdf">
+    <button type="submit" class="btn export-btn">📄 Export PDF</button>
+  </form>
+</div>
+
+<style>
+  .export-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+  }
+
+  .export-btn {
+    background-color: #00b4ff;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .export-btn:hover {
+    background-color: #0093cc;
+  }
+
+  .light-theme .export-btn {
+    background-color: #333;
+    color: white;
+  }
+
+  .light-theme .export-btn:hover {
+    background-color: #555;
+  }
+</style>
+  </div> <!-- End of main-content -->
+  </div> <!-- End of dashboard -->
+
+  <!-- Popup Background Overlay -->
+  <div id="popupOverlay" class="hidden" onclick="closePopup()"></div>
+
+  <script>
+    function openPopup(id) {
+      const popup = document.getElementById(id);
+      document.getElementById('popupOverlay').classList.remove('hidden');
+      popup.classList.remove('hidden');
+    }
+
+    function closePopup() {
+      document.getElementById('popupOverlay').classList.add('hidden');
+      document.querySelectorAll('.popup-form').forEach(p => p.classList.add('hidden'));
+    }
+
+    // Responsive UI enhancements
+    window.addEventListener('resize', () => {
+      // Add responsive logic here if needed
+    });
+  </script>
+
+  <style>
+    #popupOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 900;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Right-side popup animations */
+    .popup-form {
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+
+</body>
+</html>
+
+  <script>
+    function openAddVendor() {
+      document.getElementById("vendorPopup").style.right = "0";
+      // auto-generate vendor ID (simple demo logic)
+      const idField = document.getElementById("vendor_id");
+      idField.value = "VEN" + Date.now().toString().slice(-6);
+    }
+
+    function closePopup() {
+      document.getElementById("vendorPopup").style.right = "-500px";
+    }
+
+    // Optional: prevent form resubmission
+    if (window.history.replaceState) {
+      window.history.replaceState(null, null, window.location.href);
     }
   </script>
 </body>
