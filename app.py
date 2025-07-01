@@ -1,24 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+import io
 import pandas as pd
-from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from datetime import datetime
-from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = 'vanes_secret_key'
 
-DATABASE = 'database.db'
-
-# ----------- Initialize Database -----------
+# --------- Database Initialization ---------
 def init_db():
-    conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    # Users table for login/register
-    c.execute('''
+    conn = sqlite3.connect('database.db')
+    conn.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -27,62 +21,49 @@ def init_db():
             role TEXT NOT NULL
         )
     ''')
-    # Vendors table
-    c.execute('''
+    conn.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            company TEXT NOT NULL,
-            email TEXT NOT NULL,
-            phone TEXT NOT NULL,
-            tag TEXT NOT NULL DEFAULT 'pending',
-            notes TEXT,
-            created_at TEXT NOT NULL
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            address TEXT,
+            gstin TEXT,
+            status TEXT DEFAULT 'Active'
         )
     ''')
     conn.commit()
     conn.close()
 
-@app.before_first_request
-def setup():
-    init_db()
+# Call init_db once at startup (fixes before_first_request error)
+init_db()
 
-# ----------- Helper: Login Required Decorator -----------
-def login_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'user' not in session:
-            flash("Please log in first.", "warning")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated
-
-# ----------- User Registration -----------
+# --------- User Registration ---------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
         role = request.form.get('role')
+        confirm_password = request.form.get('confirm_password')
 
-        if not all([name, email, password, confirm_password, role]):
-            flash("All fields are required.", "danger")
+        if not all([name, email, password, role, confirm_password]):
+            flash("All fields are required", "danger")
             return redirect(url_for('register'))
 
         if password != confirm_password:
-            flash("Passwords do not match.", "danger")
+            flash("Passwords do not match", "danger")
             return redirect(url_for('register'))
 
         hashed_password = generate_password_hash(password)
 
         try:
-            conn = sqlite3.connect(DATABASE)
+            conn = sqlite3.connect('database.db')
             conn.execute("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
                          (name, email, hashed_password, role))
             conn.commit()
-            flash("Registered successfully! Please login.", "success")
+            flash("Registration successful! Please login.", "success")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             flash("Email already registered.", "danger")
@@ -91,225 +72,141 @@ def register():
             conn.close()
     return render_template('register.html')
 
-# ----------- User Login -----------
+# --------- User Login ---------
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
-        password_input = request.form.get('password')
-
-        conn = sqlite3.connect(DATABASE)
+        password = request.form.get('password')
+        conn = sqlite3.connect('database.db')
         user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         conn.close()
-
-        if user and check_password_hash(user[3], password_input):
-            session['user'] = user[1]   # name
+        if user and check_password_hash(user[3], password):
+            session['user'] = user[1]
             session['role'] = user[4]
-            flash(f"Welcome, {user[1]}!", "success")
+            flash(f"Welcome {user[1]}!", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid email or password.", "danger")
+            flash("Invalid email or password", "danger")
             return redirect(url_for('login'))
-
     return render_template('login.html')
 
-# ----------- Dashboard -----------
+# --------- Dashboard ---------
 @app.route('/dashboard')
-@login_required
 def dashboard():
-    return render_template('dashboard.html', user=session.get('user'))
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', user=session['user'])
 
-# ----------- Logout -----------
+# --------- Logout ---------
 @app.route('/logout')
 def logout():
     session.clear()
-    flash("Logged out successfully.", "info")
+    flash("Logged out successfully", "info")
     return redirect(url_for('login'))
 
-# ----------- Vendor Management Routes -----------
-
+# --------- Vendor Management ---------
 @app.route('/vendors')
-@login_required
 def vendors():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    vendors = conn.execute('SELECT * FROM vendors ORDER BY id DESC').fetchall()
-    conn.close()
-    return render_template('vendors.html', vendors=vendors)
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
 
-@app.route('/vendors/<int:id>')
-@login_required
-def get_vendor(id):
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    vendor = conn.execute('SELECT * FROM vendors WHERE id = ?', (id,)).fetchone()
+    conn = sqlite3.connect('database.db')
+    vendors_list = conn.execute("SELECT * FROM vendors").fetchall()
     conn.close()
-    if vendor:
-        return jsonify(dict(vendor))
-    else:
-        return jsonify({"error": "Vendor not found"}), 404
+    return render_template('vendors.html', vendors=vendors_list)
 
 @app.route('/vendors/add', methods=['POST'])
-@login_required
 def add_vendor():
-    data = request.form
-    name = data.get('name')
-    company = data.get('company')
-    email = data.get('email')
-    phone = data.get('phone')
-    tag = data.get('tag') or 'pending'
-    notes = data.get('notes')
-    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
 
-    if not all([name, company, email, phone]):
-        flash("Please fill all mandatory fields (Name, Company, Email, Phone).", "danger")
-        return redirect(url_for('vendors'))
+    name = request.form.get('name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    address = request.form.get('address')
+    gstin = request.form.get('gstin')
 
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect('database.db')
     try:
-        conn.execute('''
-            INSERT INTO vendors (name, company, email, phone, tag, notes, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (name, company, email, phone, tag, notes, created_at))
+        conn.execute(
+            "INSERT INTO vendors (name, email, phone, address, gstin) VALUES (?, ?, ?, ?, ?)",
+            (name, email, phone, address, gstin)
+        )
         conn.commit()
-        flash("Vendor added successfully!", "success")
-    except Exception as e:
-        flash(f"Error adding vendor: {str(e)}", "danger")
+        flash("Vendor added successfully", "success")
+    except sqlite3.IntegrityError:
+        flash("Vendor email must be unique", "danger")
     finally:
         conn.close()
-
     return redirect(url_for('vendors'))
 
-@app.route('/vendors/edit', methods=['POST'])
-@login_required
-def edit_vendor():
-    data = request.form
-    vid = data.get('id')
-    name = data.get('name')
-    company = data.get('company')
-    email = data.get('email')
-    phone = data.get('phone')
-    tag = data.get('tag')
-    notes = data.get('notes')
-
-    if not all([vid, name, company, email, phone]):
-        flash("Missing data to update vendor.", "danger")
-        return redirect(url_for('vendors'))
-
-    conn = sqlite3.connect(DATABASE)
-    try:
-        conn.execute('''
-            UPDATE vendors SET name=?, company=?, email=?, phone=?, tag=?, notes=?
-            WHERE id=?
-        ''', (name, company, email, phone, tag, notes, vid))
-        conn.commit()
-        flash("Vendor updated successfully!", "success")
-    except Exception as e:
-        flash(f"Error updating vendor: {str(e)}", "danger")
-    finally:
-        conn.close()
-
-    return redirect(url_for('vendors'))
-
-@app.route('/vendors/delete', methods=['POST'])
-@login_required
-def delete_vendor():
-    vid = request.form.get('id')
-    if not vid:
-        flash("Vendor ID missing for deletion.", "danger")
-        return redirect(url_for('vendors'))
-
-    conn = sqlite3.connect(DATABASE)
-    try:
-        conn.execute('DELETE FROM vendors WHERE id = ?', (vid,))
-        conn.commit()
-        flash("Vendor deleted successfully!", "success")
-    except Exception as e:
-        flash(f"Error deleting vendor: {str(e)}", "danger")
-    finally:
-        conn.close()
-
-    return redirect(url_for('vendors'))
-
-@app.route('/vendors/tag', methods=['POST'])
-@login_required
-def update_tag():
-    vid = request.form.get('id')
-    new_tag = request.form.get('tag')
-    if not vid or not new_tag:
-        flash("Vendor ID or new tag missing.", "danger")
-        return redirect(url_for('vendors'))
-
-    conn = sqlite3.connect(DATABASE)
-    try:
-        conn.execute('UPDATE vendors SET tag = ? WHERE id = ?', (new_tag, vid))
-        conn.commit()
-        flash("Vendor tag updated!", "success")
-    except Exception as e:
-        flash(f"Error updating tag: {str(e)}", "danger")
-    finally:
-        conn.close()
-
-    return redirect(url_for('vendors'))
-
-# ----------- Vendor Export Routes -----------
-
-def fetch_all_vendors():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    vendors = conn.execute('SELECT * FROM vendors ORDER BY id DESC').fetchall()
+@app.route('/vendors/delete/<int:vendor_id>')
+def delete_vendor(vendor_id):
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+    conn = sqlite3.connect('database.db')
+    conn.execute("DELETE FROM vendors WHERE id = ?", (vendor_id,))
+    conn.commit()
     conn.close()
-    return [dict(v) for v in vendors]
+    flash("Vendor deleted", "info")
+    return redirect(url_for('vendors'))
 
-@app.route('/vendors/export/csv')
-@login_required
-def export_csv():
-    vendors = fetch_all_vendors()
-    df = pd.DataFrame(vendors)
-    output = BytesIO()
-    df.to_csv(output, index=False)
-    output.seek(0)
-    return send_file(output, mimetype='text/csv', as_attachment=True, download_name='vendors.csv')
-
+# --------- Export Vendors to Excel ---------
 @app.route('/vendors/export/excel')
-@login_required
-def export_excel():
-    vendors = fetch_all_vendors()
-    df = pd.DataFrame(vendors)
-    output = BytesIO()
+def export_vendors_excel():
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    vendors = conn.execute("SELECT id, name, email, phone, address, gstin, status FROM vendors").fetchall()
+    conn.close()
+
+    df = pd.DataFrame(vendors, columns=['ID', 'Name', 'Email', 'Phone', 'Address', 'GSTIN', 'Status'])
+    output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='Vendors')
     output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                     as_attachment=True, download_name='vendors.xlsx')
 
+    return send_file(output, attachment_filename="vendors.xlsx", as_attachment=True)
+
+# --------- Export Vendors to PDF ---------
 @app.route('/vendors/export/pdf')
-@login_required
-def export_pdf():
-    vendors = fetch_all_vendors()
-    output = BytesIO()
-    p = canvas.Canvas(output, pagesize=A4)
+def export_vendors_pdf():
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    vendors = conn.execute("SELECT id, name, email, phone, address, gstin, status FROM vendors").fetchall()
+    conn.close()
+
+    output = io.BytesIO()
+    c = canvas.Canvas(output, pagesize=A4)
     width, height = A4
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(40, height - 50, "Vendors List")
-    p.setFont("Helvetica", 10)
+    y = height - 40
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, "Vendor List")
+    y -= 30
+    c.setFont("Helvetica", 10)
 
-    y = height - 80
-    row_height = 18
     for v in vendors:
-        text = f"{v['id']:3} | {v['name'][:15]:15} | {v['company'][:15]:15} | {v['email'][:20]:20} | {v['phone'][:12]:12} | {v['tag']}"
-        p.drawString(40, y, text)
-        y -= row_height
-        if y < 50:
-            p.showPage()
-            y = height - 50
-            p.setFont("Helvetica", 10)
+        line = f"{v[0]}. {v[1]} | {v[2]} | {v[3]} | {v[4]} | {v[5]} | {v[6]}"
+        c.drawString(40, y, line)
+        y -= 20
+        if y < 40:
+            c.showPage()
+            y = height - 40
 
-    p.save()
+    c.save()
     output.seek(0)
-    return send_file(output, mimetype='application/pdf', as_attachment=True, download_name='vendors.pdf')
-
+    return send_file(output, attachment_filename="vendors.pdf", as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
