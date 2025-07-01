@@ -5,7 +5,7 @@ import sqlite3, os
 app = Flask(__name__)
 app.secret_key = 'vanes_secret_key'
 
-# Database init
+# ---------- Database Initialization ----------
 def init_db():
     conn = sqlite3.connect('database.db')
     conn.execute('''
@@ -18,11 +18,16 @@ def init_db():
     ''')
     conn.close()
 
-@app.before_first_request
-def initialize():
-    init_db()
+# ---------- Only initialize once per app lifetime ----------
+@app.before_request
+def initialize_once():
+    if not hasattr(app, 'db_initialized'):
+        init_db()
+        app.db_initialized = True
 
-# Register route
+# ---------- Routes ----------
+
+# Register Route
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -44,7 +49,7 @@ def register():
 
     return render_template('register.html')
 
-# Login route
+# Login Route
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -64,19 +69,20 @@ def login():
 
     return render_template('login.html')
 
-# Dashboard
+# Dashboard Route
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
-# Logout
+# Logout Route
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     flash("Logged out successfully.", 'info')
     return redirect(url_for('login'))
 
+# ---------- Run Server ----------
 if __name__ == '__main__':
     app.run(debug=True)
