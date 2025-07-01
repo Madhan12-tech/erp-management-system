@@ -13,7 +13,7 @@ def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
-    # Users table
+    # ---------- User Table ----------
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +24,7 @@ def init_db():
         )
     ''')
 
-    # Project & Sites table
+    # ---------- Project Sites Table ----------
     c.execute('''
         CREATE TABLE IF NOT EXISTS project_sites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +40,7 @@ def init_db():
         )
     ''')
 
-    # Accounts & Purchase table
+    # ---------- Accounts Table ----------
     c.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +57,7 @@ def init_db():
         )
     ''')
 
-    # Workforce Payroll
+    # ---------- Workforce Table ----------
     c.execute('''
         CREATE TABLE IF NOT EXISTS workforce (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,173 +74,524 @@ def init_db():
         )
     ''')
 
-    # HR Subtables for popups
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_attendance (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, date TEXT, status TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_leave (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, from_date TEXT, to_date TEXT, reason TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_performance (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, month TEXT, score INTEGER, remarks TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_training (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, topic TEXT, trainer TEXT, date TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, doc_type TEXT, uploaded_on TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_departments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, department TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_bonus (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, bonus REAL, date TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS hr_deductions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT, deduction REAL, reason TEXT, date TEXT
-    )''')
-
-# Product table
+    # ---------- HR Popups ----------
     c.execute('''
-        CREATE TABLE IF NOT EXISTS products (
+        CREATE TABLE IF NOT EXISTS hr_attendance (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            name TEXT, date TEXT, status TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_leave (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, from_date TEXT, to_date TEXT, reason TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_performance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, month TEXT, score INTEGER, remarks TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_training (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, topic TEXT, trainer TEXT, date TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, doc_type TEXT, uploaded_on TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_departments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, department TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_bonus (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, bonus REAL, date TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hr_deductions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, deduction REAL, reason TEXT, date TEXT
+        )
+    ''')
+    # ---------- Inventory Tables ----------
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_code TEXT,
+            item_name TEXT,
             category TEXT,
-            stock INTEGER,
-            price REAL,
+            quantity INTEGER,
+            unit TEXT,
+            location TEXT,
             supplier TEXT,
-            purchase_date TEXT,
-            expiry_date TEXT
+            cost_price REAL,
+            selling_price REAL,
+            added_on TEXT
         )
     ''')
-
-    # Inventory transactions (In/Out)
     c.execute('''
-        CREATE TABLE IF NOT EXISTS transactions (
+        CREATE TABLE IF NOT EXISTS inventory_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER,
-            transaction_type TEXT,  -- 'in' or 'out'
+            item_code TEXT,
+            action TEXT, -- 'IN' or 'OUT'
             quantity INTEGER,
-            date TEXT,
-            FOREIGN KEY (product_id) REFERENCES products(id)
+            reason TEXT,
+            done_by TEXT,
+            date TEXT
         )
     ''')
-
-    # Supplier table
     c.execute('''
-        CREATE TABLE IF NOT EXISTS suppliers (
+        CREATE TABLE IF NOT EXISTS inventory_orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
+            item_code TEXT,
+            order_type TEXT, -- 'Restock' or 'Usage'
+            quantity INTEGER,
+            requested_by TEXT,
+            approved_by TEXT,
+            status TEXT,
+            date TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_suppliers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            supplier_name TEXT,
             contact TEXT,
-            address TEXT,
-            email TEXT
+            email TEXT,
+            address TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_name TEXT UNIQUE
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_locations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            location_name TEXT UNIQUE
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_damages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_code TEXT,
+            quantity INTEGER,
+            reason TEXT,
+            reported_by TEXT,
+            date TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_returns (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_code TEXT,
+            quantity INTEGER,
+            reason TEXT,
+            returned_by TEXT,
+            received_by TEXT,
+            date TEXT
         )
     ''')
 
-    # Purchase Orders
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS purchase_orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER,
-            quantity INTEGER,
-            price REAL,
-            total REAL,
-            order_date TEXT,
-            status TEXT,
-            FOREIGN KEY (product_id) REFERENCES products(id)
-        )
-    ''')
-
-    # Sales Orders
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS sales_orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER,
-            quantity INTEGER,
-            price REAL,
-            total REAL,
-            customer_name TEXT,
-            order_date TEXT,
-            status TEXT,
-            FOREIGN KEY (product_id) REFERENCES products(id)
-        )
-    ''')
-    
     conn.commit()
     conn.close()
 
+# Call DB init once when app starts
 init_db()
 
-# -------- Authentication Routes --------
-@app.route('/')
-def home():
-    return redirect('/login')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('SELECT * FROM users WHERE email=? AND password=?', (email, password))
-        user = c.fetchone()
-        conn.close()
-        if user:
-            session['user'] = user[1]
-            session['role'] = user[4]
-            flash('Login successful!', 'success')
-            return redirect('/dashboard')
-        else:
-            flash('Invalid credentials', 'danger')
-    return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']
-        try:
-            conn = sqlite3.connect('users.db')
-            c = conn.cursor()
-            c.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-                      (name, email, password, role))
-            conn.commit()
-            conn.close()
-            flash('Registration successful!', 'success')
-            return redirect('/login')
-        except sqlite3.IntegrityError:
-            flash('Email already exists.', 'danger')
-    return render_template('register.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash("Logged out successfully.", "info")
-    return redirect('/login')
-
+# ---------------- Dashboard ----------------
 @app.route('/dashboard')
 def dashboard():
-    conn = sqlite3.connect('inventory.db')
+    if 'user' not in session:
+        return redirect('/login')
+    return render_template('dashboard.html', username=session['user'])
+
+# ---------------- Projects & Sites ----------------
+@app.route('/project-sites', methods=['GET', 'POST'])
+def project_sites():
+    if 'user' not in session:
+        return redirect('/login')
+    conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('SELECT COUNT(*) FROM products')
-    total_products = c.fetchone()[0]
-    c.execute('SELECT SUM(stock) FROM products')
-    total_stock = c.fetchone()[0]
+
+    if request.method == 'POST':
+        data = (
+            request.form['project_name'],
+            request.form['site_location'],
+            request.form['start_date'],
+            request.form['end_date'],
+            request.form['status'],
+            request.form['budget'],
+            request.form['design_engineer'],
+            request.form['site_engineer'],
+            request.form['team_members']
+        )
+        c.execute('''
+            INSERT INTO project_sites
+            (project_name, site_location, start_date, end_date, status, budget, design_engineer, site_engineer, team_members)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', data)
+        conn.commit()
+
+    c.execute('SELECT * FROM project_sites')
+    data = c.fetchall()
+    next_id = len(data) + 1
+    generated_id = f"PROJ{1000 + next_id}"
     conn.close()
+    return render_template('project_sites.html', data=data, generated_id=generated_id)
+
+# ---------------- Accounts & Purchase ----------------
+@app.route('/accounts', methods=['GET', 'POST'])
+def accounts():
+    if 'user' not in session:
+        return redirect('/login')
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    if request.method == 'POST':
+        amount = float(request.form['amount'])
+        tax = float(request.form.get('tax', 0))
+        total = amount + tax
+
+        data = (
+            request.form['type'],
+            request.form['category'],
+            request.form['vendor_name'],
+            request.form['invoice_number'],
+            amount,
+            tax,
+            total,
+            request.form['date'],
+            request.form['description'],
+            request.form['assigned_by']
+        )
+        c.execute('''
+            INSERT INTO accounts 
+            (type, category, vendor_name, invoice_number, amount, tax, total, date, description, assigned_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', data)
+        conn.commit()
+
+    c.execute('SELECT * FROM accounts ORDER BY date DESC')
+    data = c.fetchall()
+    conn.close()
+    return render_template('accounts_purchase.html', data=data)
+
+# ---------------- Project Export to Excel ----------------
+@app.route('/export_project_excel')
+def export_project_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query('SELECT * FROM project_sites', conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Projects')
+    output.seek(0)
+    return send_file(output, download_name='projects.xlsx', as_attachment=True)
+
+# ---------------- Accounts Export to Excel ----------------
+@app.route('/export_accounts_excel')
+def export_accounts_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query('SELECT * FROM accounts', conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Accounts')
+    output.seek(0)
+    return send_file(output, download_name='accounts.xlsx', as_attachment=True)
+    # ---------------- Workforce ----------------
+@app.route('/workforce', methods=['GET', 'POST'])
+def workforce():
+    if 'user' not in session:
+        return redirect('/login')
     
-    return render_template('dashboard.html', total_products=total_products, total_stock=total_stock)
-    # ---------- Projects & Sites ----------
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    # Auto payroll calculation
+    if request.method == 'POST':
+        name = request.form['name']
+        department = request.form['department']
+        salary = float(request.form['salary'])
+        present_days = int(request.form['present_days'])
+        leave_days = int(request.form['leave_days'])
+        bonus = float(request.form.get('bonus', 0))
+        deductions = float(request.form.get('deductions', 0))
+        join_date = request.form['join_date']
+        site_assigned = request.form['site_assigned']
+
+        # Salary calculation (assuming 30-day month)
+        per_day = salary / 30
+        total_pay = round((per_day * present_days) + bonus - deductions, 2)
+
+        c.execute('''
+            INSERT INTO workforce 
+            (name, department, salary, present_days, leave_days, bonus, deductions, total_pay, join_date, site_assigned)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, department, salary, present_days, leave_days, bonus, deductions, total_pay, join_date, site_assigned))
+        conn.commit()
+
+    c.execute('SELECT * FROM workforce')
+    data = c.fetchall()
+    conn.close()
+    return render_template('workforce.html', data=data)
+
+# ---------------- Export Workforce Excel ----------------
+@app.route('/export_workforce_excel')
+def export_workforce_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query("SELECT * FROM workforce", conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Workforce')
+    output.seek(0)
+    return send_file(output, download_name="workforce.xlsx", as_attachment=True)
+
+# ---------------- Export Workforce PDF ----------------
+@app.route('/export_workforce_pdf')
+def export_workforce_pdf():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM workforce')
+    data = c.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    y = height - 40
+
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(200, y, "Workforce Report")
+    y -= 30
+    pdf.setFont("Helvetica", 9)
+
+    for row in data:
+        pdf.drawString(40, y, f"{row[0]} | {row[1]} | ₹{row[2]} | Present: {row[3]} | Pay: ₹{row[8]}")
+        y -= 20
+        if y < 60:
+            pdf.showPage()
+            y = height - 40
+
+    pdf.save()
+    buffer.seek(0)
+
+    return send_file(buffer, download_name="workforce_report.pdf", as_attachment=True)
+    # ---------------- Inventory: Check-in ----------------
+@app.route('/inventory/checkin', methods=['POST'])
+def inventory_checkin():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_logs (item_code, action, quantity, reason, done_by, date)
+        VALUES (?, 'IN', ?, ?, ?, ?)
+    ''', (data['item_code'], data['quantity'], data['reason'], data['done_by'], data['date']))
+    c.execute('''
+        UPDATE inventory SET quantity = quantity + ? WHERE item_code = ?
+    ''', (data['quantity'], data['item_code']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Check-out ----------------
+@app.route('/inventory/checkout', methods=['POST'])
+def inventory_checkout():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_logs (item_code, action, quantity, reason, done_by, date)
+        VALUES (?, 'OUT', ?, ?, ?, ?)
+    ''', (data['item_code'], data['quantity'], data['reason'], data['done_by'], data['date']))
+    c.execute('''
+        UPDATE inventory SET quantity = quantity - ? WHERE item_code = ?
+    ''', (data['quantity'], data['item_code']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Orders ----------------
+@app.route('/inventory/orders', methods=['POST'])
+def inventory_orders():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_orders (item_code, order_type, quantity, requested_by, approved_by, status, date)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (data['item_code'], data['order_type'], data['quantity'], data['requested_by'], data['approved_by'], data['status'], data['date']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Damages ----------------
+@app.route('/inventory/damages', methods=['POST'])
+def inventory_damages():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_damages (item_code, quantity, reason, reported_by, date)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (data['item_code'], data['quantity'], data['reason'], data['reported_by'], data['date']))
+    c.execute('''
+        UPDATE inventory SET quantity = quantity - ? WHERE item_code = ?
+    ''', (data['quantity'], data['item_code']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Returns ----------------
+@app.route('/inventory/returns', methods=['POST'])
+def inventory_returns():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_returns (item_code, quantity, reason, returned_by, received_by, date)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (data['item_code'], data['quantity'], data['reason'], data['returned_by'], data['received_by'], data['date']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Transfers ----------------
+@app.route('/inventory/transfers', methods=['POST'])
+def inventory_transfers():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_transfers (item_code, quantity, from_location, to_location, transferred_on)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (data['item_code'], data['quantity'], data['from_location'], data['to_location'], data['transferred_on']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Add New Category ----------------
+@app.route('/inventory/categories', methods=['POST'])
+def inventory_categories():
+    category_name = request.form['category_name']
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('INSERT OR IGNORE INTO inventory_categories (category_name) VALUES (?)', (category_name,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+# ---------------- Inventory: Add New Supplier ----------------
+@app.route('/inventory/suppliers', methods=['POST'])
+def inventory_suppliers():
+    data = request.form
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO inventory_suppliers (supplier_name, contact, email, address)
+        VALUES (?, ?, ?, ?)
+    ''', (data['supplier_name'], data['contact'], data['email'], data['address']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+    # ---------------- Inventory Main Dashboard ----------------
+@app.route('/inventory', methods=['GET', 'POST'])
+def inventory():
+    if 'user' not in session:
+        return redirect('/login')
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    if request.method == 'POST':
+        item_code = request.form['item_code']
+        item_name = request.form['item_name']
+        category = request.form['category']
+        quantity = int(request.form['quantity'])
+        unit = request.form['unit']
+        location = request.form['location']
+        supplier = request.form['supplier']
+        cost_price = float(request.form['cost_price'])
+        selling_price = float(request.form['selling_price'])
+        added_on = request.form['added_on']
+
+        c.execute('''
+            INSERT INTO inventory (item_code, item_name, category, quantity, unit, location, supplier, cost_price, selling_price, added_on)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (item_code, item_name, category, quantity, unit, location, supplier, cost_price, selling_price, added_on))
+
+        conn.commit()
+
+    # Fetch inventory and dropdowns
+    c.execute('SELECT * FROM inventory')
+    inventory_data = c.fetchall()
+    c.execute('SELECT DISTINCT category_name FROM inventory_categories')
+    categories = [row[0] for row in c.fetchall()]
+    c.execute('SELECT DISTINCT location_name FROM inventory_locations')
+    locations = [row[0] for row in c.fetchall()]
+    c.execute('SELECT DISTINCT supplier_name FROM inventory_suppliers')
+    suppliers = [row[0] for row in c.fetchall()]
+
+    conn.close()
+
+    return render_template('inventory.html', data=inventory_data, categories=categories, locations=locations, suppliers=suppliers)
+
+# ---------------- Inventory Export to Excel ----------------
+@app.route('/export_inventory_excel')
+def export_inventory_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query('SELECT * FROM inventory', conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Inventory')
+    output.seek(0)
+    return send_file(output, download_name='inventory_data.xlsx', as_attachment=True)
+
+# ---------------- Inventory Export to PDF ----------------
+@app.route('/export_inventory_pdf')
+def export_inventory_pdf():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM inventory')
+    data = c.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    y = height - 40
+
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(200, y, "Inventory Report")
+    y -= 30
+    pdf.setFont("Helvetica", 9)
+
+    for row in data:
+        pdf.drawString(40, y, f"{row[0]} | {row[1]} | Qty: {row[4]} | Loc: {row[6]} | ₹{row[8]}")
+        y -= 20
+        if y < 60:
+            pdf.showPage()
+            y = height - 40
+
+    pdf.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name='inventory_report.pdf', as_attachment=True)
+    # ---------------- Projects & Sites ----------------
 @app.route('/project-sites', methods=['GET', 'POST'])
 def projects_sites():
     if 'user' not in session:
@@ -267,12 +618,11 @@ def projects_sites():
 
     c.execute('SELECT * FROM project_sites')
     data = c.fetchall()
-    next_id = len(data) + 1
-    generated_id = f"PROJ{1000 + next_id}"
     conn.close()
-    return render_template('project_sites.html', data=data, generated_id=generated_id)
+    return render_template('project_sites.html', data=data)
 
-# ---------- Accounts & Purchase ----------
+
+# ---------------- Accounts & Purchase ----------------
 @app.route('/accounts', methods=['GET', 'POST'])
 def accounts():
     if 'user' not in session:
@@ -303,29 +653,8 @@ def accounts():
     conn.close()
     return render_template('accounts_purchase.html', data=data)
 
-# ---------- Export Functions ----------
-@app.route('/export_project_excel')
-def export_project_excel():
-    conn = sqlite3.connect('users.db')
-    df = pd.read_sql_query('SELECT * FROM project_sites', conn)
-    conn.close()
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Projects & Sites')
-    output.seek(0)
-    return send_file(output, download_name='project_sites.xlsx', as_attachment=True)
 
-@app.route('/export_accounts_excel')
-def export_accounts_excel():
-    conn = sqlite3.connect('users.db')
-    df = pd.read_sql_query('SELECT * FROM accounts', conn)
-    conn.close()
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Accounts & Purchase')
-    output.seek(0)
-    return send_file(output, download_name='accounts_purchase.xlsx', as_attachment=True)
-    # ---------- Workforce Main Page ----------
+# ---------------- Workforce Main ----------------
 @app.route('/workforce', methods=['GET', 'POST'])
 def workforce():
     if 'user' not in session:
@@ -334,7 +663,6 @@ def workforce():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
-    # Auto payroll calculation and insert
     if request.method == 'POST':
         name = request.form['name']
         department = request.form['department']
@@ -346,7 +674,7 @@ def workforce():
         join_date = request.form['join_date']
         site_assigned = request.form['site_assigned']
 
-        # Payroll calculation (assuming 30-day month)
+        # Payroll logic
         per_day_salary = salary / 30
         total_pay = round((per_day_salary * present_days) + bonus - deductions, 2)
 
@@ -357,13 +685,11 @@ def workforce():
         ''', (name, department, salary, present_days, leave_days, bonus, deductions, total_pay, join_date, site_assigned))
         conn.commit()
 
-    # Fetch table
     c.execute('SELECT * FROM workforce')
     data = c.fetchall()
     conn.close()
     return render_template('workforce.html', data=data)
-
-# ---------- HR Feature Routes (10 Popups) ----------
+    # ---------------- HR POPUPS (10 SUBTABLES) ----------------
 @app.route('/hr/attendance', methods=['POST'])
 def hr_attendance():
     data = request.form
@@ -451,7 +777,31 @@ def hr_deductions():
     conn.commit()
     conn.close()
     return jsonify({'success': True})
-    # ---------- Workforce Export to Excel ----------
+
+
+# ---------------- EXPORT TO EXCEL ----------------
+@app.route('/export_project_excel')
+def export_project_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query('SELECT * FROM project_sites', conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Projects & Sites')
+    output.seek(0)
+    return send_file(output, download_name='project_sites.xlsx', as_attachment=True)
+
+@app.route('/export_accounts_excel')
+def export_accounts_excel():
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql_query('SELECT * FROM accounts', conn)
+    conn.close()
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Accounts')
+    output.seek(0)
+    return send_file(output, download_name='accounts_purchase.xlsx', as_attachment=True)
+
 @app.route('/export_workforce_excel')
 def export_workforce_excel():
     conn = sqlite3.connect('users.db')
@@ -463,7 +813,8 @@ def export_workforce_excel():
     output.seek(0)
     return send_file(output, download_name="workforce.xlsx", as_attachment=True)
 
-# ---------- Workforce Export to PDF ----------
+
+# ---------------- EXPORT TO PDF (Workforce only) ----------------
 @app.route('/export_workforce_pdf')
 def export_workforce_pdf():
     conn = sqlite3.connect('users.db')
@@ -471,7 +822,7 @@ def export_workforce_pdf():
     c.execute('SELECT * FROM workforce')
     data = c.fetchall()
     conn.close()
-    
+
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -492,165 +843,9 @@ def export_workforce_pdf():
     pdf.save()
     buffer.seek(0)
     return send_file(buffer, download_name="workforce_report.pdf", as_attachment=True)
-    @app.route('/products', methods=['GET', 'POST'])
-def products():
-    if request.method == 'POST':
-        name = request.form['name']
-        category = request.form['category']
-        stock = int(request.form['stock'])
-        price = float(request.form['price'])
-        supplier = request.form['supplier']
-        purchase_date = request.form['purchase_date']
-        expiry_date = request.form['expiry_date']
-        
-        conn = sqlite3.connect('inventory.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO products 
-            (name, category, stock, price, supplier, purchase_date, expiry_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)''', 
-            (name, category, stock, price, supplier, purchase_date, expiry_date))
-        conn.commit()
-        conn.close()
-        flash('Product added successfully!', 'success')
-        return redirect('/products')
-    
-    conn = sqlite3.connect('inventory.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM products')
-    data = c.fetchall()
-    conn.close()
-    return render_template('products.html', products=data)
-
-app.route('/transactions', methods=['GET', 'POST'])
-def transactions():
-    if request.method == 'POST':
-        product_id = int(request.form['product_id'])
-        transaction_type = request.form['transaction_type']
-        quantity = int(request.form['quantity'])
-        date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        conn = sqlite3.connect('inventory.db')
-        c = conn.cursor()
-        
-        # Update product stock based on transaction type (in or out)
-        if transaction_type == 'in':
-            c.execute('UPDATE products SET stock = stock + ? WHERE id = ?', (quantity, product_id))
-        elif transaction_type == 'out':
-            c.execute('UPDATE products SET stock = stock - ? WHERE id = ?', (quantity, product_id))
-        
-        # Log transaction
-        c.execute('''INSERT INTO transactions (product_id, transaction_type, quantity, date) 
-                    VALUES (?, ?, ?, ?)''', (product_id, transaction_type, quantity, date))
-        
-        conn.commit()
-        conn.close()
-        flash(f'{transaction_type.capitalize()} transaction successful!', 'success')
-        return redirect('/transactions')
-    
-    conn = sqlite3.connect('inventory.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM transactions')
-    transactions_data = c.fetchall()
-    c.execute('SELECT * FROM products')
-    products = c.fetchall()
-    conn.close()
-    return render_template('transactions.html', transactions=transactions_data, products=products)
-    @app.route('/suppliers', methods=['GET', 'POST'])
-def suppliers():
-    if request.method == 'POST':
-        name = request.form['name']
-        contact = request.form['contact']
-        address = request.form['address']
-        email = request.form['email']
-        
-        conn = sqlite3.connect('inventory.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO suppliers (name, contact, address, email) 
-                    VALUES (?, ?, ?, ?)''', (name, contact, address, email))
-        conn.commit()
-        conn.close()
-        flash('Supplier added successfully!', 'success')
-        return redirect('/suppliers')
-    
-    conn = sqlite3.connect('inventory.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM suppliers')
-    data = c.fetchall()
-    conn.close()
-    return render_template('suppliers.html', suppliers=data)
-
-@app.route('/purchase_orders', methods=['GET', 'POST'])
-def purchase_orders():
-    if request.method == 'POST':
-        product_id = int(request.form['product_id'])
-        quantity = int(request.form['quantity'])
-        price = float(request.form['price'])
-        total = quantity * price
-        order_date = datetime.now().strftime('%Y-%m-%d')
-        status = request.form['status']
-        
-        conn = sqlite3.connect('inventory.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO purchase_orders (product_id, quantity, price, total, order_date, status) 
-                    VALUES (?, ?, ?, ?, ?, ?)''', 
-                    (product_id, quantity, price, total, order_date, status))
-        conn.commit()
-        conn.close()
-        flash('Purchase Order created successfully!', 'success')
-        return redirect('/purchase_orders')
-    
-    conn = sqlite3.connect('inventory.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM purchase_orders')
-    data = c.fetchall()
-    conn.close()
-    return render_template('purchase_orders.html', orders=data)
-
-@app.route('/sales_orders', methods=['GET', 'POST'])
-def sales_orders():
-    if request.method == 'POST':
-        product_id = int(request.form['product_id'])
-        quantity = int(request.form['quantity'])
-        price = float(request.form['price'])
-        total = quantity * price
-        customer_name = request.form['customer_name']
-        order_date = datetime.now().strftime('%Y-%m-%d')
-        status = request.form['status']
-        
-        conn = sqlite3.connect('inventory.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO sales_orders (product_id, quantity, price, total, customer_name, order_date, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)''', 
-                    (product_id, quantity, price, total, customer_name, order_date, status))
-        conn.commit()
-        conn.close()
-        flash('Sales Order created successfully!', 'success')
-        return redirect('/sales_orders')
-    
-    conn = sqlite3.connect('inventory.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM sales_orders')
-    data = c.fetchall()
-    conn.close()
-    return render_template('sales_orders.html', orders=data)
-
-app.route('/export_inventory_excel')
-def export_inventory_excel():
-    conn = sqlite3.connect('inventory.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM products')
-    products = c.fetchall()
-    conn.close()
-    
-    import pandas as pd
-    df = pd.DataFrame(products, columns=['ID', 'Name', 'Category', 'Stock', 'Price', 'Supplier', 'Purchase Date', 'Expiry Date'])
-    output = BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
-    
-    return send_file(output, as_attachment=True, download_name="inventory_report.xlsx")
 
 
-# ---------- Run App ----------
+# ---------------- RUN APP ----------------
 if __name__ == '__main__':
     app.run(debug=True)
+    
