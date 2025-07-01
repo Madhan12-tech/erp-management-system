@@ -67,8 +67,7 @@ def register():
         except sqlite3.IntegrityError:
             flash("Email already exists", "danger")
             return redirect(url_for('register'))
-
-    return render_template('login_register.html')
+   return render_template('login.html')
 
 # -------------------- Login --------------------
 @app.route('/', methods=['GET', 'POST'])
