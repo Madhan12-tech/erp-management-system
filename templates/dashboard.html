@@ -1,72 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Dashboard | Vanes ERP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Bootstrap + Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
   <style>
     body {
       background-color: #f8f9fa;
     }
     .sidebar {
       height: 100vh;
-      background: #343a40;
+      background: #212529;
       color: white;
       padding-top: 20px;
     }
     .sidebar a {
       color: #adb5bd;
+      padding: 12px 20px;
       display: block;
-      padding: 10px 20px;
       text-decoration: none;
     }
-    .sidebar a:hover {
-      background-color: #495057;
-      color: white;
-    }
-    .active {
+    .sidebar a:hover, .sidebar .active {
       background-color: #0d6efd;
       color: white !important;
     }
-    .module-content {
-      padding: 30px;
+    .topbar {
+      background-color: white;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .card-box {
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+    .card-box:hover {
+      transform: translateY(-5px);
     }
   </style>
 </head>
-<body>
-
-<div class="container-fluid">
-  <div class="row">
-    
-    <!-- Sidebar -->
-    <div class="col-md-2 sidebar">
-      <h4 class="text-center mb-4">Vanes ERP</h4>
-      <a href="#" class="active" onclick="openModule('projects')"><i class="bi bi-kanban-fill me-2"></i> Projects</a>
-      <a href="#" onclick="openModule('sites')"><i class="bi bi-geo-alt-fill me-2"></i> Sites</a>
-      <a href="/logout" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-md-10 module-content" id="mainContent">
-      <h3>Welcome to Vanes ERP Dashboard</h3>
-      <p>Select a module from the left menu to begin.</p>
-    </div>
-
-  </div>
+<body><div class="container-fluid">
+  <div class="row"><!-- Sidebar -->
+<div class="col-md-2 sidebar">
+  <h4 class="text-center mb-4">Vanes ERP</h4>
+  <a href="#" class="active" onclick="openModule('projects')"><i class="bi bi-kanban-fill me-2"></i> Projects</a>
+  <a href="#" onclick="openModule('sites')"><i class="bi bi-geo-alt-fill me-2"></i> Sites</a>
+  <a href="/logout" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
 </div>
 
-<!-- Hidden triggers for popups -->
-<button type="button" class="d-none" id="openProjectModal" data-bs-toggle="modal" data-bs-target="#projectModal"></button>
-<button type="button" class="d-none" id="openSiteModal" data-bs-toggle="modal" data-bs-target="#siteModal"></button>
+<!-- Main -->
+<div class="col-md-10">
+  <!-- Top Bar -->
+  <div class="topbar d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Welcome, {{ session['user'] }}</h5>
+    <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+  </div>
 
-<!-- JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
+  <!-- Dashboard Content -->
+  <div class="p-4">
+    <h3 class="mb-4">📊 Dashboard Overview</h3>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="card card-box bg-light border-start border-primary border-4">
+          <div class="card-body">
+            <h5>Total Projects</h5>
+            <h3>{{ total_projects }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card card-box bg-light border-start border-success border-4">
+          <div class="card-body">
+            <h5>Active Projects</h5>
+            <h3>{{ active_projects }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card card-box bg-light border-start border-warning border-4">
+          <div class="card-body">
+            <h5>Total Sites</h5>
+            <h3>{{ total_sites }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card card-box bg-light border-start border-danger border-4">
+          <div class="card-body">
+            <h5>Ongoing Sites</h5>
+            <h3>{{ ongoing_sites }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  </div>
+</div><!-- Hidden triggers for modal --><button class="d-none" id="openProjectModal" data-bs-toggle="modal" data-bs-target="#projectModal"></button> <button class="d-none" id="openSiteModal" data-bs-toggle="modal" data-bs-target="#siteModal"></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script>
   function openModule(module) {
     if (module === 'projects') {
       document.getElementById('openProjectModal').click();
@@ -74,7 +109,5 @@
       document.getElementById('openSiteModal').click();
     }
   }
-</script>
-
-</body>
+</script></body>
 </html>
