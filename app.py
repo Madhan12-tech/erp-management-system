@@ -5,7 +5,7 @@ import sqlite3, os
 app = Flask(__name__)
 app.secret_key = 'vanes_secret_key'
 
-# ---------- Database Initialization ----------
+# ---------- Database Setup ----------
 def init_db():
     conn = sqlite3.connect('database.db')
     conn.execute('''
@@ -13,43 +13,49 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
         )
     ''')
     conn.close()
 
-# ---------- Only initialize once per app lifetime ----------
 @app.before_request
 def initialize_once():
     if not hasattr(app, 'db_initialized'):
         init_db()
         app.db_initialized = True
 
-# ---------- Routes ----------
-
-# Register Route
+# ---------- Register ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
-        password = generate_password_hash(request.form['password'])
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        role = request.form['role']
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return redirect(url_for('register'))
+
+        hashed_password = generate_password_hash(password)
 
         try:
             conn = sqlite3.connect('database.db')
-            conn.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-                         (name, email, password))
+            conn.execute("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+                         (name, email, hashed_password, role))
             conn.commit()
-            flash('Registration successful!', 'success')
+            flash("Registered successfully!", "success")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
-            flash('Email already exists.', 'danger')
+            flash("Email already registered.", "danger")
         finally:
             conn.close()
 
     return render_template('register.html')
 
-# Login Route
+# ---------- Login ----------
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -63,24 +69,25 @@ def login():
 
         if user and check_password_hash(user[3], password_input):
             session['user'] = user[1]
+            session['role'] = user[4]
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid credentials!', 'danger')
+            flash("Invalid credentials!", "danger")
 
     return render_template('login.html')
 
-# Dashboard Route
+# ---------- Dashboard ----------
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
-# Logout Route
+# ---------- Logout ----------
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
-    flash("Logged out successfully.", 'info')
+    session.clear()
+    flash("Logged out successfully.", "info")
     return redirect(url_for('login'))
 
 # ---------- Run Server ----------
