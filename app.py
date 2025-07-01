@@ -108,6 +108,72 @@ def init_db():
         name TEXT, deduction REAL, reason TEXT, date TEXT
     )''')
 
+# Product table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            category TEXT,
+            stock INTEGER,
+            price REAL,
+            supplier TEXT,
+            purchase_date TEXT,
+            expiry_date TEXT
+        )
+    ''')
+
+    # Inventory transactions (In/Out)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER,
+            transaction_type TEXT,  -- 'in' or 'out'
+            quantity INTEGER,
+            date TEXT,
+            FOREIGN KEY (product_id) REFERENCES products(id)
+        )
+    ''')
+
+    # Supplier table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS suppliers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            contact TEXT,
+            address TEXT,
+            email TEXT
+        )
+    ''')
+
+    # Purchase Orders
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS purchase_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER,
+            quantity INTEGER,
+            price REAL,
+            total REAL,
+            order_date TEXT,
+            status TEXT,
+            FOREIGN KEY (product_id) REFERENCES products(id)
+        )
+    ''')
+
+    # Sales Orders
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS sales_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER,
+            quantity INTEGER,
+            price REAL,
+            total REAL,
+            customer_name TEXT,
+            order_date TEXT,
+            status TEXT,
+            FOREIGN KEY (product_id) REFERENCES products(id)
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -165,9 +231,15 @@ def logout():
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user' not in session:
-        return redirect('/login')
-    return render_template('dashboard.html', username=session['user'])
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT COUNT(*) FROM products')
+    total_products = c.fetchone()[0]
+    c.execute('SELECT SUM(stock) FROM products')
+    total_stock = c.fetchone()[0]
+    conn.close()
+    
+    return render_template('dashboard.html', total_products=total_products, total_stock=total_stock)
     # ---------- Projects & Sites ----------
 @app.route('/project-sites', methods=['GET', 'POST'])
 def projects_sites():
@@ -420,6 +492,164 @@ def export_workforce_pdf():
     pdf.save()
     buffer.seek(0)
     return send_file(buffer, download_name="workforce_report.pdf", as_attachment=True)
+    @app.route('/products', methods=['GET', 'POST'])
+def products():
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        stock = int(request.form['stock'])
+        price = float(request.form['price'])
+        supplier = request.form['supplier']
+        purchase_date = request.form['purchase_date']
+        expiry_date = request.form['expiry_date']
+        
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO products 
+            (name, category, stock, price, supplier, purchase_date, expiry_date) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+            (name, category, stock, price, supplier, purchase_date, expiry_date))
+        conn.commit()
+        conn.close()
+        flash('Product added successfully!', 'success')
+        return redirect('/products')
+    
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM products')
+    data = c.fetchall()
+    conn.close()
+    return render_template('products.html', products=data)
+
+app.route('/transactions', methods=['GET', 'POST'])
+def transactions():
+    if request.method == 'POST':
+        product_id = int(request.form['product_id'])
+        transaction_type = request.form['transaction_type']
+        quantity = int(request.form['quantity'])
+        date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        
+        # Update product stock based on transaction type (in or out)
+        if transaction_type == 'in':
+            c.execute('UPDATE products SET stock = stock + ? WHERE id = ?', (quantity, product_id))
+        elif transaction_type == 'out':
+            c.execute('UPDATE products SET stock = stock - ? WHERE id = ?', (quantity, product_id))
+        
+        # Log transaction
+        c.execute('''INSERT INTO transactions (product_id, transaction_type, quantity, date) 
+                    VALUES (?, ?, ?, ?)''', (product_id, transaction_type, quantity, date))
+        
+        conn.commit()
+        conn.close()
+        flash(f'{transaction_type.capitalize()} transaction successful!', 'success')
+        return redirect('/transactions')
+    
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM transactions')
+    transactions_data = c.fetchall()
+    c.execute('SELECT * FROM products')
+    products = c.fetchall()
+    conn.close()
+    return render_template('transactions.html', transactions=transactions_data, products=products)
+    @app.route('/suppliers', methods=['GET', 'POST'])
+def suppliers():
+    if request.method == 'POST':
+        name = request.form['name']
+        contact = request.form['contact']
+        address = request.form['address']
+        email = request.form['email']
+        
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO suppliers (name, contact, address, email) 
+                    VALUES (?, ?, ?, ?)''', (name, contact, address, email))
+        conn.commit()
+        conn.close()
+        flash('Supplier added successfully!', 'success')
+        return redirect('/suppliers')
+    
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM suppliers')
+    data = c.fetchall()
+    conn.close()
+    return render_template('suppliers.html', suppliers=data)
+
+@app.route('/purchase_orders', methods=['GET', 'POST'])
+def purchase_orders():
+    if request.method == 'POST':
+        product_id = int(request.form['product_id'])
+        quantity = int(request.form['quantity'])
+        price = float(request.form['price'])
+        total = quantity * price
+        order_date = datetime.now().strftime('%Y-%m-%d')
+        status = request.form['status']
+        
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO purchase_orders (product_id, quantity, price, total, order_date, status) 
+                    VALUES (?, ?, ?, ?, ?, ?)''', 
+                    (product_id, quantity, price, total, order_date, status))
+        conn.commit()
+        conn.close()
+        flash('Purchase Order created successfully!', 'success')
+        return redirect('/purchase_orders')
+    
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM purchase_orders')
+    data = c.fetchall()
+    conn.close()
+    return render_template('purchase_orders.html', orders=data)
+
+@app.route('/sales_orders', methods=['GET', 'POST'])
+def sales_orders():
+    if request.method == 'POST':
+        product_id = int(request.form['product_id'])
+        quantity = int(request.form['quantity'])
+        price = float(request.form['price'])
+        total = quantity * price
+        customer_name = request.form['customer_name']
+        order_date = datetime.now().strftime('%Y-%m-%d')
+        status = request.form['status']
+        
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO sales_orders (product_id, quantity, price, total, customer_name, order_date, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                    (product_id, quantity, price, total, customer_name, order_date, status))
+        conn.commit()
+        conn.close()
+        flash('Sales Order created successfully!', 'success')
+        return redirect('/sales_orders')
+    
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM sales_orders')
+    data = c.fetchall()
+    conn.close()
+    return render_template('sales_orders.html', orders=data)
+
+app.route('/export_inventory_excel')
+def export_inventory_excel():
+    conn = sqlite3.connect('inventory.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM products')
+    products = c.fetchall()
+    conn.close()
+    
+    import pandas as pd
+    df = pd.DataFrame(products, columns=['ID', 'Name', 'Category', 'Stock', 'Price', 'Supplier', 'Purchase Date', 'Expiry Date'])
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+    
+    return send_file(output, as_attachment=True, download_name="inventory_report.xlsx")
+
 
 # ---------- Run App ----------
 if __name__ == '__main__':
