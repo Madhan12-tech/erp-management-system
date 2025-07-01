@@ -2,103 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Register</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register | Ducting ERP</title>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #0e1012, #0f2027);
+    body {
+      font-family: Arial, sans-serif;
+      background: #101820;
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      height: 100vh;
     }
-
     .form-box {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(12px);
-      padding: 40px;
-      border-radius: 20px;
-      width: 340px;
-      box-shadow: 0 0 25px rgba(0, 180, 255, 0.15);
+      background: #1c1c1c;
+      padding: 30px;
+      border-radius: 15px;
+      width: 300px;
     }
-
     .form-box h2 {
       text-align: center;
-      margin-bottom: 20px;
     }
-
-    input, select {
+    input, select, button {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       margin: 10px 0;
+      border-radius: 8px;
       border: none;
-      border-radius: 10px;
-      outline: none;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      font-size: 14px;
     }
-
     button {
-      width: 100%;
-      padding: 12px;
       background: #00b4ff;
-      border: none;
-      border-radius: 10px;
       color: white;
       font-weight: bold;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-
-    button:hover {
-      background: #0099cc;
-    }
-
-    .login-link {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .login-link a {
-      color: #00b4ff;
-      text-decoration: none;
-    }
-
-    .login-link a:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="form-box">
-    <h2>Create Account</h2>
+    <h2>Register</h2>
     <form method="POST" action="/register">
       <input type="text" name="name" placeholder="Full Name" required />
-
-      <input type="email" name="email" placeholder="Email Address" required />
-
-      <input type="password" name="password" placeholder="Password" minlength="6" required />
-
-      <input type="password" name="confirm_password" placeholder="Confirm Password" minlength="6" required />
-
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <input type="password" name="confirm_password" placeholder="Confirm Password" required />
       <select name="role" required>
         <option value="" disabled selected>Select Role</option>
         <option value="admin">Admin</option>
         <option value="vendor">Vendor</option>
         <option value="employee">Employee</option>
       </select>
-
       <button type="submit">Register</button>
     </form>
-
-    <div class="login-link">
-      Already have an account? <a href="{{ url_for('login') }}">Login</a>
-    </div>
   </div>
 </body>
 </html>
