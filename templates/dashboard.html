@@ -6,9 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -110,7 +108,8 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <h2>ERP Modules</h2>
-    <a href="{{ url_for('vendors') }}">Vendor Management</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('vendors') }}">Vendor Management</a>
       <a href="#">Quotations & Invoices</a>
       <a href="#">Workforce</a>
       <a href="#">Delivery Tracking</a>
