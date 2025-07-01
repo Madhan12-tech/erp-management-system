@@ -2,366 +2,231 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Vendor Management | ERP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body, html {
+    body {
       margin: 0;
-      padding: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #0e1012;
       color: white;
-    }
-
-    .container {
       display: flex;
-      height: 100vh;
-      overflow: hidden;
     }
-
     .sidebar {
-      width: 240px;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(8px);
+      width: 250px;
+      background: rgba(255, 255, 255, 0.05);
       padding: 20px;
-      border-right: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      flex-direction: column;
+      height: 100vh;
     }
-
     .sidebar h2 {
-      font-size: 20px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
-
     .sidebar a {
+      display: block;
       color: white;
       text-decoration: none;
-      padding: 10px;
       margin-bottom: 10px;
-      border-radius: 8px;
+      padding: 10px;
+      border-radius: 5px;
       background: rgba(255,255,255,0.1);
-      transition: 0.3s;
     }
-
-    .sidebar a:hover, .sidebar a.active {
-      background: #00b4ff;
-    }
-
     .content {
-      flex: 1;
+      flex-grow: 1;
       padding: 30px;
-      overflow-y: auto;
       position: relative;
     }
-
     .topbar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
-
-    .topbar h1 {
-      margin: 0;
-    }
-
-    .btn {
-      background: #00b4ff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .btn:hover {
-      background: #0099cc;
-    }
-
-    .table-container {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 20px;
-      overflow-x: auto;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      background: rgba(255,255,255,0.1);
     }
-
-    table th, table td {
-      padding: 12px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      text-align: left;
+    th, td {
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
     }
-
-    table th {
-      background-color: rgba(255, 255, 255, 0.07);
+    th {
+      background: #1e1e2f;
     }
-
-    .actions button {
-      margin-right: 6px;
-      padding: 6px 10px;
-      border-radius: 6px;
+    .btn {
+      padding: 10px 15px;
       border: none;
-      color: white;
+      border-radius: 5px;
       cursor: pointer;
+      color: white;
+      background: #00b4ff;
+      margin-right: 10px;
     }
-
-    .edit-btn {
-      background: #f0ad4e;
+    .popup-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 400px;
+      height: 100vh;
+      background: #1a1a1a;
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: -5px 0 10px rgba(0,0,0,0.5);
     }
-
-    .delete-btn {
-      background: #d9534f;
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .close-popup {
+      cursor: pointer;
+      font-size: 20px;
+    }
+    .hidden { display: none; }
+    form label { display: block; margin-top: 10px; }
+    form input, form textarea, form select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    form button {
+      margin-top: 20px;
+      background: #00b4ff;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <h2>ERP Modules</h2>
-      <a href="/dashboard">Dashboard</a>
-      <a href="#" class="active">Vendor Management</a>
-      <a href="#">Quotations</a>
-      <a href="#">Workforce</a>
-      <a href="#">Delivery</a>
-      <a href="#">Attendance</a>
-      <a href="/logout">Logout</a>
+  <div class="sidebar">
+    <h2>ERP Menu</h2>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/vendors">Vendor Management</a>
+    <a href="/logout">Logout</a>
+  </div>
+
+  <div class="content">
+    <div class="topbar">
+      <h1>Vendor Management</h1>
+      <div>
+        <button class="btn" onclick="showAddPopup()">Add Vendor</button>
+        <button class="btn" onclick="window.location.href='/vendors/export/csv'">Export CSV</button>
+        <button class="btn" onclick="window.location.href='/vendors/export/excel'">Export Excel</button>
+        <button class="btn" onclick="window.location.href='/vendors/export/pdf'">Export PDF</button>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="content">
-      <div class="topbar">
-        <h1>Vendor Management</h1>
-        <button class="btn" onclick="openAddPopup()">+ Add Vendor</button>
-      </div>
-      <!-- Search & Export Section -->
-      <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-        <input type="text" id="searchInput" placeholder="Search Vendor..." style="padding: 10px; border-radius: 8px; width: 250px;" onkeyup="filterTable()"/>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vendor in vendors %}
+        <tr>
+          <td>{{ vendor.id }}</td>
+          <td>{{ vendor.name }}</td>
+          <td>{{ vendor.company }}</td>
+          <td>{{ vendor.email }}</td>
+          <td>{{ vendor.phone }}</td>
+          <td>{{ vendor.status }}</td>
+          <td>
+            <button class="btn" onclick="editVendor({{ vendor | tojson }})">Edit</button>
+            <a href="/delete_vendor/{{ vendor.id }}" class="btn" style="background:#ff4b5c;">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-        <div>
-          <button class="btn" onclick="exportCSV()">Export CSV</button>
-          <button class="btn" onclick="exportExcel()">Export Excel</button>
-          <button class="btn" onclick="exportPDF()">Export PDF</button>
-        </div>
-      </div>
+  <!-- Add Vendor Popup -->
+  <div id="addVendorPopup" class="popup-panel hidden">
+    <div class="popup-header">
+      <h2>Add Vendor</h2>
+      <span class="close-popup" onclick="closePopup('addVendorPopup')">&times;</span>
+    </div>
+    <form method="POST" action="/add_vendor">
+      <label>Vendor ID</label>
+      <input type="text" name="vendor_id" value="{{ new_vendor_id }}" readonly>
+      <label>Name</label>
+      <input type="text" name="name" required>
+      <label>Company</label>
+      <input type="text" name="company" required>
+      <label>Email</label>
+      <input type="email" name="email">
+      <label>Phone</label>
+      <input type="text" name="phone">
+      <label>GST Number</label>
+      <input type="text" name="gst_number">
+      <label>Address</label>
+      <textarea name="address"></textarea>
+      <label>Status</label>
+      <select name="status">
+        <option>Active</option>
+        <option>Inactive</option>
+      </select>
+      <button type="submit">Save</button>
+    </form>
+  </div>
 
-      <!-- Vendor Table -->
-      <div class="table-container">
-        <table id="vendorTable">
-          <thead>
-            <tr>
-              <th>Vendor ID</th>
-              <th>Name</th>
-              <th>Company</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>GST No</th>
-              <th>Address</th>
-              <th>Category</th>
-              <th>Rating</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="vendorData">
-            <!-- Populated dynamically -->
-          </tbody>
-        </table>
-      </div>
-      <!-- Right-side Popup Form -->
-      <div class="popup-form" id="vendorPopup">
-        <h2 id="popupTitle">Add Vendor</h2>
-        <form id="vendorForm">
-          <input type="hidden" name="vendor_id" id="vendor_id" />
+  <!-- Edit Vendor Popup (Dynamically filled) -->
+  <div id="editVendorPopup" class="popup-panel hidden">
+    <div class="popup-header">
+      <h2>Edit Vendor</h2>
+      <span class="close-popup" onclick="closePopup('editVendorPopup')">&times;</span>
+    </div>
+    <form method="POST" action="/edit_vendor">
+      <input type="hidden" name="id" id="edit_id">
+      <label>Name</label>
+      <input type="text" name="name" id="edit_name" required>
+      <label>Company</label>
+      <input type="text" name="company" id="edit_company" required>
+      <label>Email</label>
+      <input type="email" name="email" id="edit_email">
+      <label>Phone</label>
+      <input type="text" name="phone" id="edit_phone">
+      <label>GST Number</label>
+      <input type="text" name="gst_number" id="edit_gst">
+      <label>Address</label>
+      <textarea name="address" id="edit_address"></textarea>
+      <label>Status</label>
+      <select name="status" id="edit_status">
+        <option>Active</option>
+        <option>Inactive</option>
+      </select>
+      <button type="submit">Update</button>
+    </form>
+  </div>
 
-          <input type="text" name="name" id="name" placeholder="Vendor Name" required />
-          <input type="text" name="company" id="company" placeholder="Company Name" required />
-          <input type="email" name="email" id="email" placeholder="Email" required />
-          <input type="text" name="phone" id="phone" placeholder="Phone" required />
-          <input type="text" name="gst" id="gst" placeholder="GST Number" />
-          <textarea name="address" id="address" placeholder="Address" rows="2"></textarea>
-
-          <select name="category" id="category">
-            <option value="">Select Category</option>
-            <option value="Electrical">Electrical</option>
-            <option value="Mechanical">Mechanical</option>
-            <option value="Raw Material">Raw Material</option>
-          </select>
-
-          <select name="rating" id="rating">
-            <option value="">Rating</option>
-            <option value="★☆☆☆☆">★☆☆☆☆</option>
-            <option value="★★☆☆☆">★★☆☆☆</option>
-            <option value="★★★☆☆">★★★☆☆</option>
-            <option value="★★★★☆">★★★★☆</option>
-            <option value="★★★★★">★★★★★</option>
-          </select>
-
-          <select name="status" id="status">
-            <option value="">Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-
-          <div class="popup-buttons">
-            <button type="submit" class="save-btn">Save</button>
-            <button type="button" class="cancel-btn" onclick="closePopup()">Cancel</button>
-          </div>
-        </form>
-      </div>
-      <script>
-  // Open Popup for Add
-  function openAddPopup() {
-    document.getElementById("popupTitle").innerText = "Add Vendor";
-    document.getElementById("vendorForm").reset();
-    document.getElementById("vendor_id").value = "";
-    document.getElementById("vendorPopup").classList.add("active");
-  }
-
-  // Open Popup for Edit
-  function editVendor(id, name, company, email, phone, gst, address, category, rating, status) {
-    document.getElementById("popupTitle").innerText = "Edit Vendor";
-    document.getElementById("vendor_id").value = id;
-    document.getElementById("name").value = name;
-    document.getElementById("company").value = company;
-    document.getElementById("email").value = email;
-    document.getElementById("phone").value = phone;
-    document.getElementById("gst").value = gst;
-    document.getElementById("address").value = address;
-    document.getElementById("category").value = category;
-    document.getElementById("rating").value = rating;
-    document.getElementById("status").value = status;
-    document.getElementById("vendorPopup").classList.add("active");
-  }
-
-  // Close Popup
-  function closePopup() {
-    document.getElementById("vendorPopup").classList.remove("active");
-  }
-
-  // Filter Vendors
-  function filterVendors() {
-    const input = document.getElementById("search").value.toLowerCase();
-    const rows = document.getElementById("vendorTable").getElementsByTagName("tr");
-
-    for (let i = 1; i < rows.length; i++) {
-      const rowText = rows[i].innerText.toLowerCase();
-      rows[i].style.display = rowText.includes(input) ? "" : "none";
+  <script>
+    function showAddPopup() {
+      document.getElementById('addVendorPopup').classList.remove('hidden');
     }
-  }
-
-  // Export to CSV
-  function exportTableToCSV() {
-    const table = document.getElementById("vendorTable");
-    let csv = "";
-    for (let row of table.rows) {
-      const cols = Array.from(row.cells).map(cell => `"${cell.innerText}"`);
-      csv += cols.join(",") + "\n";
+    function editVendor(vendor) {
+      document.getElementById('edit_id').value = vendor.id;
+      document.getElementById('edit_name').value = vendor.name;
+      document.getElementById('edit_company').value = vendor.company;
+      document.getElementById('edit_email').value = vendor.email;
+      document.getElementById('edit_phone').value = vendor.phone;
+      document.getElementById('edit_gst').value = vendor.gst_number;
+      document.getElementById('edit_address').value = vendor.address;
+      document.getElementById('edit_status').value = vendor.status;
+      document.getElementById('editVendorPopup').classList.remove('hidden');
     }
-    downloadFile(csv, "vendors.csv", "text/csv");
-  }
-
-  // Export to Excel
-  function exportTableToExcel() {
-    const table = document.getElementById("vendorTable").outerHTML;
-    const data = 'data:application/vnd.ms-excel,' + encodeURIComponent(table);
-    downloadFile(data, "vendors.xls", "application/vnd.ms-excel");
-  }
-
-  // Export to PDF (basic)
-  function exportTableToPDF() {
-    const table = document.getElementById("vendorTable");
-    let rows = "";
-    for (let row of table.rows) {
-      let cols = Array.from(row.cells).map(cell => cell.innerText);
-      rows += cols.join(" | ") + "\n";
+    function closePopup(id) {
+      document.getElementById(id).classList.add('hidden');
     }
-    const blob = new Blob([rows], { type: "application/pdf" });
-    downloadFile(URL.createObjectURL(blob), "vendors.pdf", "application/pdf");
-  }
-
-  // Download helper
-  function downloadFile(content, filename, type) {
-    const link = document.createElement("a");
-    link.href = typeof content === "string" && content.startsWith("data:") ? content : URL.createObjectURL(new Blob([content], { type }));
-    link.download = filename;
-    link.click();
-  }
-      </script>
-      <script>
-  // Submit Vendor Form (Add or Edit)
-  document.getElementById("vendorForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const id = formData.get("vendor_id");
-    const url = id ? "/edit_vendor" : "/add_vendor";
-
-    fetch(url, {
-      method: "POST",
-      body: formData
-    })
-      .then(res => {
-        if (res.ok) {
-          alert("Vendor saved successfully.");
-          window.location.reload();
-        } else {
-          return res.text().then(text => { throw new Error(text); });
-        }
-      })
-      .catch(err => {
-        alert("Error: " + err.message);
-      });
-  });
-
-  // Delete Vendor
-  function deleteVendor(id) {
-    if (!confirm("Are you sure you want to delete this vendor?")) return;
-
-    fetch(`/delete_vendor/${id}`, { method: "POST" })
-      .then(res => {
-        if (res.ok) {
-          alert("Vendor deleted.");
-          window.location.reload();
-        } else {
-          return res.text().then(text => { throw new Error(text); });
-        }
-      })
-      .catch(err => {
-        alert("Error: " + err.message);
-      });
-  }
-      </script>
-      <script>
-  // Close Popup on outside click
-  window.onclick = function (event) {
-    const popup = document.getElementById("vendorPopup");
-    if (event.target === popup) {
-      closeVendorPopup();
-    }
-  };
-
-  // Optional: Escape key to close popup
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
-      closeVendorPopup();
-    }
-  });
-</script>
-
+  </script>
 </body>
-    </html>
-      
+</html>
