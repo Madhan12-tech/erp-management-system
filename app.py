@@ -4,7 +4,7 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = 'vanes_secret_key'  # Change this in production!
+app.secret_key = 'vanes_secret_key'  # Replace with a secure secret in production
 
 # ---------- Database Setup ----------
 def init_db():
@@ -20,11 +20,11 @@ def init_db():
     ''')
     conn.close()
 
-@app.before_first_request
-def setup():
+# Initialize database on startup (compatible with Flask 3 / Python 3.13)
+with app.app_context():
     init_db()
 
-# ---------- Home/Login ----------
+# ---------- Login ----------
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -97,6 +97,6 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
-# ---------- Run Server ----------
+# ---------- Run Locally ----------
 if __name__ == '__main__':
     app.run(debug=True)
