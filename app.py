@@ -3,9 +3,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3, os
 
 app = Flask(__name__)
-app.secret_key = 'vanes_secret_key'
+app.secret_key = 'vanes_secret_key'  # keep secret in production
 
-# ---------- Database Setup ----------
+# ---------- Database Initialization ----------
 def init_db():
     conn = sqlite3.connect('database.db')
     conn.execute('''
@@ -19,24 +19,29 @@ def init_db():
     ''')
     conn.close()
 
-@app.before_request
-def initialize_once():
-    if not hasattr(app, 'db_initialized'):
-        init_db()
-        app.db_initialized = True
+@app.before_first_request
+def setup():
+    init_db()
 
 # ---------- Register ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        role = request.form['role']
+        print("Form data received:", request.form)  # Debugging line
+
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        role = request.form.get('role')
+
+        # Validate form
+        if not all([name, email, password, confirm_password, role]):
+            flash("All fields are required", "danger")
+            return redirect(url_for('register'))
 
         if password != confirm_password:
-            flash("Passwords do not match.", "danger")
+            flash("Passwords do not match", "danger")
             return redirect(url_for('register'))
 
         hashed_password = generate_password_hash(password)
@@ -49,7 +54,8 @@ def register():
             flash("Registered successfully!", "success")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
-            flash("Email already registered.", "danger")
+            flash("Email already exists.", "danger")
+            return redirect(url_for('register'))
         finally:
             conn.close()
 
@@ -60,8 +66,8 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password_input = request.form['password']
+        email = request.form.get('email')
+        password_input = request.form.get('password')
 
         conn = sqlite3.connect('database.db')
         user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
@@ -70,9 +76,11 @@ def login():
         if user and check_password_hash(user[3], password_input):
             session['user'] = user[1]
             session['role'] = user[4]
+            flash(f"Welcome {user[1]}!", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid credentials!", "danger")
+            flash("Invalid email or password", "danger")
+            return redirect(url_for('login'))
 
     return render_template('login.html')
 
@@ -80,6 +88,7 @@ def login():
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
+        flash("Please log in first", "warning")
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
