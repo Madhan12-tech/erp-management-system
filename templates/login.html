@@ -42,7 +42,7 @@
       margin-bottom: 20px;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
@@ -93,6 +93,15 @@
     .form.active {
       display: block;
     }
+
+    .flash {
+      background: #ff4b5c;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      text-align: center;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -104,6 +113,15 @@
       <button id="registerBtn">Register</button>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Login Form -->
     <form id="loginForm" class="form active" method="POST" action="/login">
       <h2>Login</h2>
       <input type="email" name="email" placeholder="Email" required />
@@ -111,17 +129,25 @@
       <button type="submit">Login</button>
     </form>
 
-    <form id="registerForm" class="form" method="POST" action="/register">
+    <!-- Register Form -->
+    <form id="registerForm" class="form" method="POST" action="/register" accept-charset="UTF-8" autocomplete="off">
       <h2>Register</h2>
       <input type="text" name="name" placeholder="Full Name" required />
       <input type="email" name="email" placeholder="Email" required />
       <input type="password" name="password" placeholder="Password" required />
+      <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+      <select name="role" required>
+        <option value="">Select Role</option>
+        <option value="admin">Admin</option>
+        <option value="vendor">Vendor</option>
+        <option value="employee">Employee</option>
+      </select>
       <button type="submit">Register</button>
     </form>
   </div>
 
   <script>
-    // Toggle forms
+    // Toggle logic
     const loginBtn = document.getElementById("loginBtn");
     const registerBtn = document.getElementById("registerBtn");
     const loginForm = document.getElementById("loginForm");
@@ -141,13 +167,13 @@
       loginBtn.classList.remove("active");
     };
 
-    // 3D Background with Three.js
+    // Three.js 3D Background
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg3d'), alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const geometry = new THREE.TorusGeometry(10, 3, 16, 100);
+    const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
     const material = new THREE.MeshStandardMaterial({ color: 0x00b4ff });
     const torus = new THREE.Mesh(geometry, material);
     scene.add(torus);
@@ -156,7 +182,7 @@
     light.position.set(30, 30, 30);
     scene.add(light);
 
-    camera.position.z = 30;
+    camera.position.z = 35;
 
     function animate() {
       requestAnimationFrame(animate);
