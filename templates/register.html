@@ -2,51 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Register</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register | Ducting ERP</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #101820;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0e1012;
     }
+
+    canvas#bg3d {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
     .form-box {
-      background: #1c1c1c;
-      padding: 30px;
-      border-radius: 15px;
-      width: 300px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 20px;
+      width: 320px;
+      color: white;
+      box-shadow: 0 0 20px rgba(255,255,255,0.15);
     }
+
     .form-box h2 {
       text-align: center;
+      margin-bottom: 20px;
     }
-    input, select, button {
+
+    input, select {
       width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #00b4ff;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0099cc;
+    }
+
+    .flash {
+      background: #ff4b5c;
       padding: 10px;
       margin: 10px 0;
       border-radius: 8px;
-      border: none;
-    }
-    button {
-      background: #00b4ff;
+      text-align: center;
       color: white;
-      font-weight: bold;
     }
   </style>
 </head>
 <body>
+  <canvas id="bg3d"></canvas>
+
   <div class="form-box">
     <h2>Register</h2>
-    <form method="POST" action="/register">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/register" accept-charset="UTF-8" autocomplete="off">
       <input type="text" name="name" placeholder="Full Name" required />
       <input type="email" name="email" placeholder="Email" required />
       <input type="password" name="password" placeholder="Password" required />
       <input type="password" name="confirm_password" placeholder="Confirm Password" required />
       <select name="role" required>
-        <option value="" disabled selected>Select Role</option>
+        <option value="">Select Role</option>
         <option value="admin">Admin</option>
         <option value="vendor">Vendor</option>
         <option value="employee">Employee</option>
@@ -54,5 +107,32 @@
       <button type="submit">Register</button>
     </form>
   </div>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg3d'), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+    const material = new THREE.MeshStandardMaterial({ color: 0x00b4ff });
+    const torus = new THREE.Mesh(geometry, material);
+    scene.add(torus);
+
+    const light = new THREE.PointLight(0xffffff);
+    light.position.set(30, 30, 30);
+    scene.add(light);
+
+    camera.position.z = 35;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      torus.rotation.x += 0.01;
+      torus.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
 </body>
 </html>
