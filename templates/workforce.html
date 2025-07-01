@@ -2,150 +2,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Workforce Management</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .modal-lg { max-width: 90%; }
-    .table th, .table td { vertical-align: middle; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Workforce Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .modal input, .modal select { margin-bottom: 10px; }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container py-5">
-  <h2 class="mb-4">Workforce Management</h2>
+<body>
+<div class="container mt-4">
+    <h2 class="mb-4">Workforce / HR Module</h2>
 
-  <!-- Add Employee Button -->
-  <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">+ Add Employee</button>
-
-  <!-- Modal -->
-  <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">Add New Employee</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <!-- Filter -->
+    <form method="get" class="row g-3 mb-3">
+        <div class="col-md-3">
+            <select name="site" class="form-select" onchange="this.form.submit()">
+                <option value="">Filter by Site</option>
+                {% for site in sites %}
+                    <option value="{{ site }}" {% if site == request.args.get('site') %}selected{% endif %}>{{ site }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <form action="/workforce" method="POST" enctype="multipart/form-data">
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">Employee ID</label>
-                <input type="text" class="form-control" name="emp_id" value="{{ generated_id }}" readonly>
-
-                <label class="form-label mt-3">Full Name</label>
-                <input type="text" class="form-control" name="name" required>
-
-                <label class="form-label mt-3">Email</label>
-                <input type="email" class="form-control" name="email" required>
-
-                <label class="form-label mt-3">Phone</label>
-                <input type="tel" class="form-control" name="phone" required>
-
-                <label class="form-label mt-3">Designation</label>
-                <select class="form-select" name="designation">
-                  <option value="">Select</option>
-                  <option>Manager</option>
-                  <option>Engineer</option>
-                  <option>Staff</option>
-                  <option>Technician</option>
-                </select>
-              </div>
-
-              <div class="col-md-6">
-                <label class="form-label">Department</label>
-                <input type="text" class="form-control" name="department">
-
-                <label class="form-label mt-3">Joining Date</label>
-                <input type="date" class="form-control" name="joining_date">
-
-                <label class="form-label mt-3">Salary (₹)</label>
-                <input type="number" class="form-control" name="salary" required>
-
-                <label class="form-label mt-3">Upload Photo</label>
-                <input type="file" class="form-control" name="photo">
-
-                <label class="form-label mt-3">Attendance Mode</label>
-                <select class="form-select" name="attendance_mode">
-                  <option value="">Select</option>
-                  <option>Manual</option>
-                  <option>Biometric</option>
-                  <option>App Punch</option>
-                </select>
-              </div>
-            </div>
-
-            <hr class="my-4">
-            <div class="row g-3">
-              <div class="col-md-4">
-                <label class="form-label">Bank Account Number</label>
-                <input type="text" class="form-control" name="bank_account">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">IFSC Code</label>
-                <input type="text" class="form-control" name="ifsc">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">UAN Number</label>
-                <input type="text" class="form-control" name="uan">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">ESIC Number</label>
-                <input type="text" class="form-control" name="esic">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Emergency Contact</label>
-                <input type="text" class="form-control" name="emergency_contact">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Address</label>
-                <textarea class="form-control" name="address"></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Save</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
-      </div>
+        <div class="col-md-3">
+            <select name="department" class="form-select" onchange="this.form.submit()">
+                <option value="">Filter by Department</option>
+                {% for dept in departments %}
+                    <option value="{{ dept }}" {% if dept == request.args.get('department') %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <a href="/export_workforce_excel" class="btn btn-success">Export Excel</a>
+            <a href="/export_workforce_pdf" class="btn btn-danger">Export PDF</a>
+        </div>
+        <div class="col-md-3 text-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">+ Add Workforce</button>
+        </div>
+    </form>
+    <!-- Workforce Table -->
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th><th>Name</th><th>Role</th><th>Dept</th><th>Site</th>
+                <th>Salary</th><th>Days</th><th>Leaves</th><th>Bonus</th>
+                <th>Deduct</th><th>Total Pay</th><th>Join Date</th>
+                <th>Train</th><th>Perf</th><th>Docs</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in data %}
+            <tr>
+                <td>EMP{{ 1000 + row[0] }}</td>
+                <td>{{ row[1] }}</td><td>{{ row[2] }}</td><td>{{ row[3] }}</td><td>{{ row[4] }}</td>
+                <td>₹{{ row[5] }}</td><td>{{ row[6] }}</td><td>{{ row[7] }}</td>
+                <td>₹{{ row[8] }}</td><td>₹{{ row[9] }}</td><td>₹{{ row[10] }}</td>
+                <td>{{ row[11] }}</td><td>{{ row[12] }}</td><td>{{ row[13] }}</td>
+                <td><a href="{{ row[14] }}" target="_blank">View</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <form method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Workforce</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <div class="col-md-6"><input type="text" name="name" class="form-control" placeholder="Employee Name" required></div>
+          <div class="col-md-6"><input type="text" name="role" class="form-control" placeholder="Role/Position" required></div>
+          <div class="col-md-6"><input type="text" name="department" class="form-control" placeholder="Department" required></div>
+          <div class="col-md-6"><input type="text" name="site" class="form-control" placeholder="Site Assigned" required></div>
+          <div class="col-md-6"><input type="number" step="0.01" name="salary" class="form-control" placeholder="Monthly Salary" required></div>
+          <div class="col-md-6"><input type="number" name="days_present" class="form-control" placeholder="Days Present" required></div>
+          <div class="col-md-6"><input type="number" name="leaves" class="form-control" placeholder="Leave Days" required></div>
+          <div class="col-md-6"><input type="number" step="0.01" name="bonus" class="form-control" placeholder="Bonus Amount" required></div>
+          <div class="col-md-6"><input type="number" step="0.01" name="deductions" class="form-control" placeholder="Deductions" required></div>
+          <div class="col-md-6"><input type="date" name="joining_date" class="form-control" placeholder="Joining Date" required></div>
+          <div class="col-md-6"><select name="training_status" class="form-select">
+              <option value="Completed">Training Completed</option>
+              <option value="Ongoing">Training Ongoing</option>
+              <option value="Not Started">Not Started</option>
+          </select></div>
+          <div class="col-md-6"><select name="performance" class="form-select">
+              <option value="Excellent">Excellent</option>
+              <option value="Good">Good</option>
+              <option value="Needs Improvement">Needs Improvement</option>
+          </select></div>
+          <div class="col-md-12"><input type="url" name="documents" class="form-control" placeholder="Document URL (e.g., CV, ID Proof)"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit">Add Entry</button>
+        </div>
+      </form>
     </div>
   </div>
-
-  <!-- Employee Table -->
-  <div class="table-responsive mt-4">
-    <table class="table table-bordered table-striped">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Designation</th>
-          <th>Department</th>
-          <th>Joining</th>
-          <th>Salary</th>
-          <th>Payroll (Auto)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for emp in employees %}
-        <tr>
-          <td>{{ emp[1] }}</td>
-          <td>{{ emp[2] }}</td>
-          <td>{{ emp[3] }}</td>
-          <td>{{ emp[4] }}</td>
-          <td>{{ emp[5] }}</td>
-          <td>{{ emp[6] }}</td>
-          <td>{{ emp[7] }}</td>
-          <td>₹{{ emp[8] }}</td>
-          <td>₹{{ (emp[8] * 0.9)|round(2) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
