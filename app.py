@@ -10,7 +10,7 @@ def init_db():
     conn = sqlite3.connect('vanes.db')
     c = conn.cursor()
 
-    # Users table (used for login)
+    # Users table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,12 +21,51 @@ def init_db():
         )
     ''')
 
+    # Projects table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id TEXT,
+            name TEXT,
+            client TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            status TEXT,
+            budget REAL,
+            notes TEXT
+        )
+    ''')
+
+    # Sites table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS sites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            site_id TEXT,
+            name TEXT,
+            location TEXT,
+            supervisor TEXT,
+            linked_project TEXT,
+            status TEXT
+        )
+    ''')
+
+    # Material Requests table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS material_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id TEXT,
+            item TEXT,
+            quantity INTEGER,
+            status TEXT
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
 init_db()
 
-# ---------- MANUAL USER CREATION ----------
+# ---------- CREATE ADMIN USER ----------
 def insert_admin_user():
     conn = sqlite3.connect('vanes.db')
     c = conn.cursor()
@@ -34,7 +73,6 @@ def insert_admin_user():
     password = "admin123"
     hashed_password = generate_password_hash(password)
     role = "admin"
-
     try:
         c.execute("INSERT INTO users (name, username, password, role) VALUES (?, ?, ?, ?)",
                   ("Admin", username, hashed_password, role))
@@ -46,11 +84,12 @@ def insert_admin_user():
 
 insert_admin_user()
 
-# ---------- LOGIN ONLY ----------
+# ---------- ROUTES ----------
 @app.route('/')
 def home():
     return redirect(url_for('login'))
 
+# Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -79,11 +118,75 @@ def logout():
     flash("Logged out", "info")
     return redirect(url_for('login'))
 
+# Dashboard with summary counts
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('dashboard.html')
 
+    conn = sqlite3.connect('vanes.db')
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM projects")
+    total_projects = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM sites")
+    total_sites = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users WHERE role = 'engineer'")
+    total_engineers = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM material_requests")
+    total_material_requests = c.fetchone()[0]
+
+    conn.close()
+
+    return render_template('dashboard.html',
+                           total_projects=total_projects,
+                           total_sites=total_sites,
+                           total_engineers=total_engineers,
+                           total_material_requests=total_material_requests)
+
+# Project ID auto-generator
+@app.route('/generate_project_id')
+def generate_project_id():
+    conn = sqlite3.connect('vanes.db')
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM projects")
+    count = c.fetchone()[0] + 1
+    conn.close()
+    return {"project_id": f"PROJ-2025-{count:03}"}
+
+# Add Project route (form POST)
+@app.route('/add_project', methods=['POST'])
+def add_project():
+    data = request.form
+    conn = sqlite3.connect('vanes.db')
+    c = conn.cursor()
+    c.execute('''INSERT INTO projects (project_id, name, client, start_date, end_date, status, budget, notes)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+              (data['project_id'], data['project_name'], data['client_name'],
+               data['start_date'], data['end_date'], data['status'],
+               data['budget'], data['notes']))
+    conn.commit()
+    conn.close()
+    flash("Project added successfully", "success")
+    return redirect(url_for('dashboard'))
+
+# Project Sites Page (To use popup)
+@app.route('/project_sites')
+def project_sites():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('vanes.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM projects")
+    projects = c.fetchall()
+    conn.close()
+
+    return render_template('project_sites.html', projects=projects)
+
+# --------------- Run App ---------------
 if __name__ == '__main__':
     app.run(debug=True)
