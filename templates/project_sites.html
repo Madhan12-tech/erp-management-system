@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project & Site Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">  <!-- Bootstrap & Icons -->  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body><!-- ===== PROJECT MODAL ===== --><div class="modal fade" id="projectModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">📁 Project Management</h5>
+        <button class="btn-close bg-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body"><ul class="nav nav-tabs mb-3">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#project-form">📝 Add Project</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#project-table">📊 View Projects</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="project-form">
+        <form action="/add_project" method="POST">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label>Project ID</label>
+              <input type="text" name="project_id" id="project_id" class="form-control" readonly>
+            </div>
+            <div class="col-md-4">
+              <label>Project Name</label>
+              <input type="text" name="project_name" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label>Client Name</label>
+              <input type="text" name="client_name" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Start Date</label>
+              <input type="date" name="start_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>End Date</label>
+              <input type="date" name="end_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Status</label>
+              <select name="status" class="form-select">
+                <option>Not Started</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label>Budget (₹)</label>
+              <input type="number" step="0.01" name="budget" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>Notes</label>
+              <textarea name="notes" class="form-control"></textarea>
+            </div>
+            <div class="col-12 text-end">
+              <button class="btn btn-primary">Add Project</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="tab-pane fade" id="project-table">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <input type="text" class="form-control w-50" id="projectSearch" placeholder="🔍 Search in table...">
+          <div>
+            <button onclick="exportTableToExcel('projectTable')" class="btn btn-outline-primary btn-sm me-2">
+              <i class="bi bi-file-earmark-excel"></i> Excel
+            </button>
+            <button onclick="exportTableToPDF('projectTable')" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-file-earmark-pdf"></i> PDF
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="projectTable" class="table table-bordered">
+            <thead class="table-primary">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Client</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+                <th>Budget</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in projects %}
+              <tr>
+                <td>{{ p[1] }}</td>
+                <td>{{ p[2] }}</td>
+                <td>{{ p[3] }}</td>
+                <td>{{ p[4] }}</td>
+                <td>{{ p[5] }}</td>
+                <td>{{ p[6] }}</td>
+                <td>{{ p[7] }}</td>
+                <td>{{ p[8] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  </div>
+</div><!-- ==== Site Modal is same layout (reuse concept from previous part) --><!-- Include your existing Site Modal code below here --><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script><script>
+  window.addEventListener("load", () => {
+    fetch("/generate_project_id")
+      .then(res => res.json())
+      .then(data => document.getElementById("project_id").value = data.project_id);
+  });
+
+  document.getElementById("projectSearch").addEventListener("keyup", function () {
+    let input = this.value.toLowerCase();
+    document.querySelectorAll("#projectTable tbody tr").forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+    });
+  });
+
+  function exportTableToExcel(tableID) {
+    let wb = XLSX.utils.table_to_book(document.getElementById(tableID), { sheet: "Sheet1" });
+    XLSX.writeFile(wb, `${tableID}.xlsx`);
+  }
+
+  function exportTableToPDF(tableID) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.autoTable({ html: `#${tableID}` });
+    doc.save(`${tableID}.pdf`);
+  }
+</script></body>
+</html>
