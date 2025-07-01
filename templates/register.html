@@ -1,79 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Register | ERP System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-                  url('https://images.unsplash.com/photo-1573164574395-d02719f53b48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80') center/cover no-repeat;
-      height: 100vh;
-      color: #fff;
-    }
-    .register-box {
-      max-width: 500px;
-      margin: auto;
-      margin-top: 80px;
-      padding: 30px;
-      background-color: rgba(0, 0, 0, 0.8);
-      border-radius: 12px;
-    }
-    .register-box h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .btn-custom {
-      width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Register | Vanes ERP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .register-box {
+            background-color: #ffffff0d;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 0 20px #00000080;
+            width: 100%;
+            max-width: 450px;
+        }
+    </style>
 </head>
 <body>
-
-  <div class="register-box">
-    <h2>📝 Register for ERP</h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form method="POST">
-      <div class="mb-3">
-        <label>Full Name</label>
-        <input type="text" name="name" class="form-control" placeholder="Your full name" required />
-      </div>
-      <div class="mb-3">
-        <label>Email address</label>
-        <input type="email" name="email" class="form-control" placeholder="Enter email" required />
-      </div>
-      <div class="mb-3">
-        <label>Password</label>
-        <input type="password" name="password" class="form-control" placeholder="Create password" required />
-      </div>
-      <div class="mb-3">
-        <label>Role</label>
-        <select class="form-select" name="role" required>
-          <option value="">Select Role</option>
-          <option value="management">Management</option>
-          <option value="employee">Employee</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-success btn-custom">Register ➜</button>
-    </form>
-
-    <div class="text-center mt-3">
-      <a href="{{ url_for('login') }}" class="text-light">Already have an account? Login</a>
+    <div class="register-box">
+        <h2 class="text-center mb-4">Register User</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-info" role="alert">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="/register">
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" name="name" placeholder="John Doe" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" name="username" placeholder="Unique username" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" name="password" placeholder="Enter password" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select class="form-select" name="role" required>
+                    <option value="">-- Select Role --</option>
+                    <option value="admin">Admin</option>
+                    <option value="engineer">Engineer</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="storekeeper">Storekeeper</option>
+                </select>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-light text-dark">Register</button>
+            </div>
+        </form>
     </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
