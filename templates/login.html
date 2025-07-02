@@ -2,33 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login - ERP System</title>
+  <title>Login - ERP</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
     }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    .login-container {
       width: 400px;
+      margin: 100px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
     }
-    .login-box h2 {
+    h2 {
       text-align: center;
       margin-bottom: 20px;
     }
     input[type="text"], input[type="password"] {
       width: 100%;
       padding: 12px;
-      margin: 8px 0 16px;
-      border: 1px solid #ccc;
+      margin: 10px 0;
       border-radius: 6px;
+      border: 1px solid #ccc;
     }
     button {
       width: 100%;
@@ -42,59 +41,45 @@
     button:hover {
       background: #0056b3;
     }
-    .register-link {
-      display: block;
-      text-align: center;
-      margin-top: 15px;
-    }
     .toast {
       position: fixed;
       top: 20px;
       right: 20px;
       background: #333;
-      color: #fff;
-      padding: 15px 20px;
-      border-radius: 8px;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
       display: none;
     }
-    .toast.success { background: green; }
-    .toast.danger { background: red; }
-    .toast.warning { background: orange; }
-    .toast.info { background: #17a2b8; }
   </style>
 </head>
 <body>
-
-  <div class="login-box">
-    <h2>Login</h2>
-    <form method="POST">
-      <input type="text" name="username" placeholder="Username" required>
-      <input type="password" name="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-    </form>
-    <a class="register-link" href="/register">New Vendor? Register here</a>
-  </div>
-
-  <!-- Toast Message -->
-  <div id="toast" class="toast"></div>
-
-  <script>
-    // Handle Flask Flash messages as toast
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        const toast = document.getElementById('toast');
-        {% for category, message in messages %}
-          toast.textContent = "{{ message }}";
-          toast.classList.add("{{ category }}", "show");
-          toast.style.display = "block";
-          setTimeout(() => {
-            toast.style.display = "none";
-            toast.classList.remove("{{ category }}", "show");
-          }, 3000);
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </script>
-
+<div class="login-container">
+  <h2>Login</h2>
+  <form method="POST" action="/login">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById('toast');
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
 </body>
 </html>
