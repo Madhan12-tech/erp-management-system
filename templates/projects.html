@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Project Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fb;
+      display: flex;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: #2c3e50;
+      color: white;
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+      padding: 20px 15px;
+    }
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 10px;
+    }
+    .sidebar a {
+      display: block;
+      color: #eee;
+      text-decoration: none;
+      padding: 10px 0;
+      border-bottom: 1px solid #444;
+    }
+    .sidebar a.active {
+      background: #1abc9c;
+      padding-left: 10px;
+      border-radius: 5px;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 30px;
+      position: relative;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    /* Floating Button */
+    .add-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1abc9c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .add-btn:hover {
+      background: #17a589;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>ERP System</h2>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/projects" class="active">Project Management</a>
+    <a href="/production">Production</a>
+    <a href="/employees">Employees</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/summary">Summary</a>
+  </div>
+
+  <!-- Main Area -->
+  <div class="main">
+    <h1>Project Management</h1>
+
+    <!-- ✅ Floating Add Project Button -->
+    <button class="add-btn" onclick="openPopup()">+</button>
+    <!-- ✅ Right-side Add Project Popup -->
+    <div id="projectPopup" style="
+      position: fixed;
+      top: 0; right: -100%;
+      width: 400px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+      padding: 30px;
+      overflow-y: auto;
+      transition: right 0.4s ease;
+      z-index: 999;
+    ">
+      <h2 style="margin-top: 0;">New Project</h2>
+      <form method="POST" action="/add_project" enctype="multipart/form-data">
+        <label>Enquiry ID</label>
+        <input type="text" name="enquiry_id" id="enquiry_id" readonly style="background:#eee;" required>
+
+        <label>Client Name</label>
+        <select name="client_name" id="client_name" onchange="autoFillClientDetails()" required>
+          <option value="">-- Select Client --</option>
+          {% for vendor in vendors %}
+            <option value="{{ vendor.name }}" data-gst="{{ vendor.gst }}" data-address="{{ vendor.address }}">{{ vendor.name }}</option>
+          {% endfor %}
+        </select>
+
+        <label>GST Number</label>
+        <input type="text" name="gst_number" id="gst_number" readonly style="background:#eee;" required>
+
+        <label>Address</label>
+        <input type="text" name="address" id="address" readonly style="background:#eee;" required>
+
+        <label>Quotation RO</label>
+        <input type="text" name="quotation_ro" required>
+
+        <label>Start Date</label>
+        <input type="date" name="start_date" value="{{ today }}" required>
+
+        <label>End Date</label>
+        <input type="date" name="end_date" required>
+
+        <label>Project Location</label>
+        <input type="text" name="location" required>
+
+        <label>Source Drawing (Upload)</label>
+        <input type="file" name="drawing_file" required>
+
+        <label>Project Incharge</label>
+        <select name="project_incharge" required>
+          <option value="">-- Select Incharge --</option>
+          {% for emp in employees %}
+            <option value="{{ emp.name }}">{{ emp.name }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Notes</label>
+        <textarea name="notes" rows="3"></textarea>
+
+        <div style="text-align:right; margin-top: 20px;">
+          <button type="submit" style="background:#1abc9c;">Save Project</button>
+          <button type="button" onclick="closePopup()" style="background:#bbb;">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      function openPopup() {
+        document.getElementById("projectPopup").style.right = "0";
+        generateEnquiryID();
+      }
+      function closePopup() {
+        document.getElementById("projectPopup").style.right = "-100%";
+      }
+      function autoFillClientDetails() {
+        const selected = document.getElementById("client_name").selectedOptions[0];
+        document.getElementById("gst_number").value = selected.dataset.gst;
+        document.getElementById("address").value = selected.dataset.address;
+      }
+      function generateEnquiryID() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const id = 'VE/TN/' + yyyy + '/E' + Math.floor(Math.random() * 9000 + 1000);
+        document.getElementById("enquiry_id").value = id;
+      }
+    </script>
+    <!-- ✅ Project Filter and Export Bar -->
+    <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <label>Filter by Client:</label>
+        <select onchange="filterTable(this.value)">
+          <option value="all">All</option>
+          {% for vendor in vendors %}
+            <option value="{{ vendor.name }}">{{ vendor.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <a href="/export_projects/csv" class="btn">CSV</a>
+        <a href="/export_projects/excel" class="btn">Excel</a>
+        <a href="/export_projects/pdf" class="btn">PDF</a>
+        <button onclick="window.print()" class="btn">Print</button>
+      </div>
+    </div>
+
+    <!-- ✅ Project Table -->
+    <div style="overflow-x:auto; margin-top: 20px;">
+      <table border="1" cellpadding="8" cellspacing="0" width="100%" id="projectTable">
+        <thead style="background: #eee;">
+          <tr>
+            <th>#</th>
+            <th>Enquiry ID</th>
+            <th>Client</th>
+            <th>Location</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Incharge</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+          <tr data-client="{{ project.client_name }}">
+            <td>{{ loop.index }}</td>
+            <td>{{ project.enquiry_id }}</td>
+            <td>{{ project.client_name }}</td>
+            <td>{{ project.location }}</td>
+            <td>{{ project.start_date }}</td>
+            <td>{{ project.end_date }}</td>
+            <td>{{ project.project_incharge }}</td>
+            <td>
+              {% if project.status == 'approved' %}
+                ✅ Approved
+              {% elif project.status == 'under_review' %}
+                ⏳ Under Review
+              {% else %}
+                📝 Preparation
+              {% endif %}
+            </td>
+            <td>
+              <a href="/edit_project/{{ project.id }}" class="btn btn-sm btn-warning">Edit</a>
+              <a href="/delete_project/{{ project.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this project?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ✅ Toast Messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="margin-top:20px; padding: 12px; background:#d4edda; border-left: 5px solid green; color: #155724;">
+          {{ messages[0] }}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <script>
+      function filterTable(client) {
+        const rows = document.querySelectorAll("#projectTable tbody tr");
+        rows.forEach(row => {
+          if (client === "all" || row.dataset.client === client) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
+    </script>
+    <!-- ✅ Design Progress Table -->
+    <div style="margin-top: 40px;">
+      <h3>Design Progress (Tag Drawing)</h3>
+      <table border="1" cellpadding="8" cellspacing="0" width="100%">
+        <thead style="background: #f5f5f5;">
+          <tr>
+            <th>Enquiry ID</th>
+            <th>Client</th>
+            <th>Drawing Stage</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+          <tr>
+            <td>{{ project.enquiry_id }}</td>
+            <td>{{ project.client_name }}</td>
+            <td>
+              {% if project.status == 'preparation' %}
+                🔧 Preparation
+              {% elif project.status == 'completed' %}
+                ✅ Completed
+              {% elif project.status == 'submitted' %}
+                📤 Submitted
+              {% elif project.status == 'under_review' %}
+                🔍 Under Review
+              {% elif project.status == 'approved' %}
+                ✅✅ Approved
+              {% endif %}
+            </td>
+            <td>
+              {% if project.status == 'preparation' %}
+                <a href="/measurement_sheet/{{ project.id }}" class="btn btn-sm btn-primary">Add Measurement Sheet</a>
+                <a href="/mark_completed/{{ project.id }}" class="btn btn-sm btn-success">Mark Completed</a>
+              {% elif project.status == 'completed' %}
+                <a href="/submit_for_approval/{{ project.id }}" class="btn btn-sm btn-warning">Submit for Approval</a>
+              {% elif project.status == 'submitted' %}
+                <a href="/mark_under_review/{{ project.id }}" class="btn btn-sm btn-info">Mark Under Review</a>
+              {% elif project.status == 'under_review' %}
+                <a href="/approve_project/{{ project.id }}" class="btn btn-sm btn-success">Approve</a>
+              {% else %}
+                ✅ Done
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <!-- Optional: Dark Mode Toggle -->
+    <div style="position: fixed; top: 20px; right: 30px;">
+      <button onclick="toggleDark()" style="padding: 5px 10px; border: none; background: #555; color: #fff; border-radius: 5px;">🌓</button>
+    </div>
+
+    <script>
+      function toggleDark() {
+        document.body.classList.toggle("dark-mode");
+      }
+    </script>
+
+    <style>
+      .dark-mode {
+        background-color: #121212;
+        color: white;
+      }
+      .dark-mode table {
+        background-color: #1e1e1e;
+        color: #ccc;
+      }
+      .dark-mode input, .dark-mode select, .dark-mode textarea {
+        background-color: #2b2b2b;
+        color: white;
+        border: 1px solid #444;
+      }
+      .dark-mode .btn {
+        background-color: #444;
+        color: #eee;
+      }
+    </style>
+
+  </div> <!-- end main -->
+</body>
+</html>
+    
