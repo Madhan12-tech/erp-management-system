@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Production Module - ERP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .in-progress {
+      background: #ffc107;
+    }
+
+    .completed {
+      background: #28a745;
+    }
+
+    .export-btn {
+      margin: 10px 5px;
+      background: #17a2b8;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Production Tracking</h2>
+
+  <div style="margin-bottom: 10px;">
+    <button class="export-btn" onclick="exportToCSV()">Export CSV</button>
+    <button class="export-btn" onclick="window.print()">Print</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Enquiry ID</th>
+        <th>Client</th>
+        <th>Location</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Incharge</th>
+        <th>Production Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+      <tr>
+        <td>{{ p['enquiry_id'] }}</td>
+        <td>{{ p['client'] }}</td>
+        <td>{{ p['location'] }}</td>
+        <td>{{ p['start_date'] }}</td>
+        <td>{{ p['end_date'] }}</td>
+        <td>{{ p['project_incharge'] }}</td>
+        <td>{{ p['production_status'] if p['production_status'] else 'Not Started' }}</td>
+        <td>
+          {% if not p['production_status'] %}
+            <a href="/start_production/{{ p['id'] }}"><button class="in-progress">Start</button></a>
+          {% elif p['production_status'] == 'In Progress' %}
+            <a href="/complete_production/{{ p['id'] }}"><button class="completed">Mark Complete</button></a>
+          {% else %}
+            ✅ Done
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="toast" class="toast"></div>
+<script>
+  // Export to CSV
+  function exportToCSV() {
+    let csv = "Enquiry ID,Client,Location,Start Date,End Date,Incharge,Production Status\n";
+    document.querySelectorAll("table tbody tr").forEach(row => {
+      const cols = row.querySelectorAll("td");
+      const line = Array.from(cols).slice(0, 7).map(td => `"${td.innerText}"`).join(",");
+      csv += line + "\n";
+    });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "production_status.csv";
+    a.click();
+  }
+
+  // Toast flash messages
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById("toast");
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = "block";
+        setTimeout(() => toast.style.display = "none", 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
+
+</body>
+</html>
