@@ -395,5 +395,6 @@ def export_projects_pdf():
     buffer.seek(0)
 
     return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='projects.pdf')
-    if __name__ == '__main__':
+    
+if __name__ == '__main__':
     app.run(debug=True)
