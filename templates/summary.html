@@ -1,1 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Summary - ERP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
 
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    select, button {
+      padding: 10px;
+      margin: 10px 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    .status-tag {
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .preparation { background: #ffc107; }
+    .completed { background: #17a2b8; }
+    .submitted { background: #6f42c1; }
+    .review { background: #fd7e14; }
+    .approved { background: #28a745; }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Project Summary</h2>
+
+  <div style="margin-bottom: 10px;">
+    <label>Filter by Status:</label>
+    <select id="filterStatus" onchange="filterTable()">
+      <option value="all">All</option>
+      <option value="preparation">Preparation</option>
+      <option value="completed">Completed</option>
+      <option value="submitted">Submitted for Approval</option>
+      <option value="review">Under Review</option>
+      <option value="approved">Approved</option>
+    </select>
+    <button onclick="exportToCSV()">Export CSV</button>
+    <button onclick="window.print()">Print</button>
+  </div>
+
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>Enquiry ID</th>
+        <th>Client</th>
+        <th>Location</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Incharge</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+      <tr class="status-row" data-status="{{ p['design_status'] }}">
+        <td>{{ p['enquiry_id'] }}</td>
+        <td>{{ p['client'] }}</td>
+        <td>{{ p['location'] }}</td>
+        <td>{{ p['start_date'] }}</td>
+        <td>{{ p['end_date'] }}</td>
+        <td>{{ p['project_incharge'] }}</td>
+        <td><span class="status-tag {{ p['design_status'] }}">{{ p['design_status'] }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="toast" class="toast"></div>
+  <script>
+  // Filter rows by status
+  function filterTable() {
+    const selected = document.getElementById("filterStatus").value;
+    const rows = document.querySelectorAll("#summaryTable tbody tr");
+    rows.forEach(row => {
+      const status = row.getAttribute("data-status");
+      if (selected === "all" || selected === status) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+  }
+
+  // Export to CSV
+  function exportToCSV() {
+    let csv = "Enquiry ID,Client,Location,Start Date,End Date,Incharge,Status\n";
+    document.querySelectorAll("#summaryTable tbody tr").forEach(row => {
+      if (row.style.display === "none") return;
+      const cols = row.querySelectorAll("td");
+      const line = Array.from(cols).map(td => `"${td.innerText}"`).join(",");
+      csv += line + "\n";
+    });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "project_summary.csv";
+    a.click();
+  }
+
+  // Toast flash messages
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById("toast");
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = "block";
+        setTimeout(() => toast.style.display = "none", 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
+
+</body>
+</html>
