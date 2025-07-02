@@ -2,63 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Employee Registration</title>
+  <title>Employee Registration - ERP</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 30px;
-      background: #f2f2f2;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
     }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
     h2 {
       text-align: center;
+      color: #333;
     }
-    form {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input {
+
+    input, select {
       width: 100%;
       padding: 10px;
       margin: 8px 0;
-      border-radius: 6px;
       border: 1px solid #ccc;
+      border-radius: 6px;
     }
+
     button {
-      padding: 10px 20px;
-      background: #007bff;
+      background: #28a745;
       color: white;
+      padding: 12px 20px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
+
     button:hover {
-      background: #0056b3;
+      background: #218838;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 30px;
     }
+
     th, td {
       padding: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
+      border: 1px solid #ddd;
+      text-align: left;
     }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
     .actions button {
+      background: #ffc107;
       margin-right: 5px;
-      padding: 6px 12px;
     }
+
+    .actions button:last-child {
+      background: #dc3545;
+    }
+
     .toast {
       position: fixed;
       top: 20px;
       right: 20px;
       background: #333;
-      color: #fff;
-      padding: 15px;
+      color: white;
+      padding: 12px;
       border-radius: 6px;
       display: none;
     }
@@ -66,20 +86,27 @@
 </head>
 <body>
 
+<div class="container">
   <h2>Employee Registration</h2>
-  <form method="POST">
-    <input type="text" name="name" placeholder="Employee Name" required>
-    <input type="text" name="designation" placeholder="Designation" required>
-    <input type="email" name="email" placeholder="Email">
-    <input type="text" name="phone" placeholder="Phone Number">
-    <button type="submit">{{ 'Update' if edit else 'Add' }} Employee</button>
-  </form>
 
-  <!-- Employees Table -->
+  <form method="POST">
+    <input type="text" name="name" placeholder="Full Name" required>
+    <input type="text" name="designation" placeholder="Designation" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="phone" placeholder="Phone Number" required>
+    <button type="submit">Add Employee</button>
+  </form>
+  <h3 style="margin-top: 40px;">Employee List</h3>
+
+  <div style="margin-bottom: 10px;">
+    <button onclick="exportToCSV()">Export CSV</button>
+    <button onclick="exportToExcel()">Export Excel</button>
+    <button onclick="window.print()">Print</button>
+  </div>
+
   <table>
     <thead>
       <tr>
-        <th>ID</th>
         <th>Name</th>
         <th>Designation</th>
         <th>Email</th>
@@ -90,36 +117,67 @@
     <tbody>
       {% for emp in employees %}
       <tr>
-        <td>{{ emp[0] }}</td>
         <td>{{ emp[1] }}</td>
         <td>{{ emp[2] }}</td>
         <td>{{ emp[3] }}</td>
         <td>{{ emp[4] }}</td>
         <td class="actions">
-          <a href="/employee_edit/{{ emp[0] }}"><button type="button">Edit</button></a>
-          <a href="/employee_delete/{{ emp[0] }}" onclick="return confirm('Delete this employee?')">
-            <button type="button" style="background:red;">Delete</button>
-          </a>
+          <a href="/employee_edit/{{ emp[0] }}"><button>Edit</button></a>
+          <a href="/employee_delete/{{ emp[0] }}" onclick="return confirm('Are you sure?')"><button>Delete</button></a>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+</div>
 
-  <div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
+<script>
+  // Export to CSV
+  function exportToCSV() {
+    let csv = "Name,Designation,Email,Phone\n";
+    document.querySelectorAll("table tbody tr").forEach(row => {
+      const cols = row.querySelectorAll("td:not(.actions)");
+      let line = Array.from(cols).map(td => `"${td.textContent}"`).join(",");
+      csv += line + "\n";
+    });
+    let blob = new Blob([csv], { type: 'text/csv' });
+    let url = window.URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "employees.csv";
+    a.click();
+  }
 
-  <script>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        const toast = document.getElementById('toast');
-        {% for category, message in messages %}
-          toast.textContent = "{{ message }}";
-          toast.style.display = "block";
-          setTimeout(() => toast.style.display = "none", 3000);
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </script>
+  // Export to Excel
+  function exportToExcel() {
+    let tableHTML = document.querySelector("table").outerHTML;
+    let blob = new Blob([tableHTML], { type: "application/vnd.ms-excel" });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "employees.xls";
+    a.click();
+  }
+
+  // Toast messages (from Flask flash)
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById("toast");
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = "block";
+        setTimeout(() => toast.style.display = "none", 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
 
 </body>
 </html>
