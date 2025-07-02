@@ -1,78 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>ERP Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <title>Login - ERP System</title>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #2c3e50, #4ca1af);
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
     .login-box {
-      background: #fff;
-      padding: 40px 30px;
+      background: white;
+      padding: 30px;
       border-radius: 12px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      width: 400px;
     }
     .login-box h2 {
-      margin-bottom: 25px;
       text-align: center;
-      color: #2c3e50;
+      margin-bottom: 20px;
     }
-    .login-box input {
+    input[type="text"], input[type="password"] {
       width: 100%;
       padding: 12px;
-      margin-bottom: 15px;
+      margin: 8px 0 16px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      font-size: 15px;
     }
-    .login-box button {
+    button {
       width: 100%;
       padding: 12px;
-      background-color: #2c3e50;
+      background: #007bff;
       color: white;
       border: none;
       border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
       cursor: pointer;
     }
-    .login-box button:hover {
-      background-color: #1a252f;
+    button:hover {
+      background: #0056b3;
     }
-    .login-box .register-link {
-      margin-top: 15px;
+    .register-link {
+      display: block;
       text-align: center;
+      margin-top: 15px;
     }
-    .login-box .register-link a {
-      color: #2c3e50;
-      text-decoration: none;
-      font-weight: bold;
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: #fff;
+      padding: 15px 20px;
+      border-radius: 8px;
+      display: none;
     }
+    .toast.success { background: green; }
+    .toast.danger { background: red; }
+    .toast.warning { background: orange; }
+    .toast.info { background: #17a2b8; }
   </style>
 </head>
 <body>
 
   <div class="login-box">
-    <h2>Login to ERP</h2>
-    <form method="POST" action="/login">
-      <input type="email" name="email" placeholder="Email" required />
-      <input type="password" name="password" placeholder="Password" required />
+    <h2>Login</h2>
+    <form method="POST">
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
       <button type="submit">Login</button>
     </form>
-    <div class="register-link">
-      Don’t have an account? <a href="/register">Register here</a>
-    </div>
+    <a class="register-link" href="/register">New Vendor? Register here</a>
   </div>
+
+  <!-- Toast Message -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Handle Flask Flash messages as toast
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        const toast = document.getElementById('toast');
+        {% for category, message in messages %}
+          toast.textContent = "{{ message }}";
+          toast.classList.add("{{ category }}", "show");
+          toast.style.display = "block";
+          setTimeout(() => {
+            toast.style.display = "none";
+            toast.classList.remove("{{ category }}", "show");
+          }, 3000);
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </script>
 
 </body>
 </html>
