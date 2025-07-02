@@ -1,252 +1,376 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import sqlite3
-import uuid
 from datetime import datetime
 import pandas as pd
+import os
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
 app = Flask(__name__)
-app.secret_key = 'secretkey'
+app.secret_key = 'your-secret-key'
 
-# ---------- DB SETUP ----------
+# ---------- DATABASE INIT ----------
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Create users table
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE,
-                    password TEXT
-                )''')
+    # Users
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    ''')
 
-    # Create vendors table
-    c.execute('''CREATE TABLE IF NOT EXISTS vendors (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    vendor_id TEXT,
-                    name TEXT,
-                    category TEXT,
-                    email TEXT,
-                    phone TEXT,
-                    address TEXT,
-                    status TEXT,
-                    rating INTEGER,
-                    created_at TEXT,
-                    updated_at TEXT
-                )''')
+    # Projects
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            enquiry_id TEXT,
+            client_name TEXT,
+            gst_number TEXT,
+            address TEXT,
+            quotation_ro TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            location TEXT,
+            drawing_file TEXT,
+            project_incharge TEXT,
+            notes TEXT,
+            status TEXT DEFAULT 'preparation'
+        )
+    ''')
+
+    # Vendors (for client dropdown)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS vendors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            gst TEXT,
+            address TEXT
+        )
+    ''')
+
+    # Employees (for incharge dropdown)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT
+        )
+    ''')
 
     conn.commit()
     conn.close()
 
+# Call it once
 init_db()
-# ---------- HOME ----------
+
+# ---------- HOME REDIRECT ----------
 @app.route('/')
 def home():
-    if 'user' in session:
-        return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
-
-# ---------- LOGIN ----------
+    # ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        uname = request.form['username']
-        pwd = request.form['password']
+        username = request.form['username']
+        password = request.form['password']
 
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect('erp.db')
         c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE username=? AND password=?", (uname, pwd))
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
         user = c.fetchone()
         conn.close()
 
         if user:
-            session['user'] = uname
-            flash("Login successful", "success")
-            return redirect(url_for('dashboard'))
+            session['user'] = username
+            flash('Login successful!', 'success')
+            return redirect('/dashboard')
         else:
-            flash("Invalid credentials", "danger")
-            return redirect(url_for('login'))
+            flash('Invalid username or password.', 'error')
+            return redirect('/login')
 
-    return render_template("login.html")
+    return render_template('login.html')
 
 # ---------- REGISTER ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        uname = request.form['username']
-        pwd = request.form['password']
+        username = request.form['username']
+        password = request.form['password']
 
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect('erp.db')
         c = conn.cursor()
         try:
-            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (uname, pwd))
+            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
             conn.commit()
-            flash("Registration successful", "success")
-            return redirect(url_for('login'))
-        except:
-            flash("Username already exists", "danger")
+            flash('Registration successful! Please login.', 'success')
+            return redirect('/login')
+        except sqlite3.IntegrityError:
+            flash('Username already exists.', 'error')
+            return redirect('/register')
         finally:
             conn.close()
 
-    return render_template("register.html")
+    return render_template('register.html')
 
 # ---------- LOGOUT ----------
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
-    flash("Logged out successfully", "info")
-    return redirect(url_for('login'))
+    session.clear()
+    flash("Logged out successfully.", "info")
+    return redirect('/login')
 
 # ---------- DASHBOARD ----------
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template("dashboard.html")
-    # ---------- VENDOR LIST ----------
-@app.route('/vendors')
-def vendors():
+        flash("Please login first.", "error")
+        return redirect('/login')
+    return render_template('dashboard.html')
+    # ---------- PROJECTS PAGE ----------
+@app.route('/projects')
+def projects():
     if 'user' not in session:
-        return redirect(url_for('login'))
+        flash("Please login first.", "error")
+        return redirect('/login')
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM vendors ORDER BY id DESC")
-    vendors = c.fetchall()
+
+    # Get all projects
+    c.execute("SELECT * FROM projects")
+    projects = [dict(zip([column[0] for column in c.description], row)) for row in c.fetchall()]
+
+    # Get all vendors
+    c.execute("SELECT name, gst, address FROM vendors")
+    vendors = [dict(name=row[0], gst=row[1], address=row[2]) for row in c.fetchall()]
+
+    # Get all employees
+    c.execute("SELECT name FROM employees")
+    employees = [dict(name=row[0]) for row in c.fetchall()]
+
     conn.close()
-    return render_template("vendors.html", vendors=vendors)
 
-# ---------- ADD VENDOR ----------
-@app.route('/add_vendor', methods=['POST'])
-def add_vendor():
+    today = datetime.today().strftime('%Y-%m-%d')
+
+    return render_template("projects.html", projects=projects, vendors=vendors, employees=employees, today=today)
+    # ---------- ADD PROJECT ----------
+@app.route('/add_project', methods=['POST'])
+def add_project():
     if 'user' not in session:
-        return redirect(url_for('login'))
+        flash("Please login first.", "error")
+        return redirect('/login')
 
-    vendor_id = "VDR-" + str(uuid.uuid4())[:8]
-    name = request.form['name']
-    category = request.form['category']
-    email = request.form['email']
-    phone = request.form['phone']
+    client_name = request.form['client_name']
+    gst_number = request.form['gst_number']
     address = request.form['address']
-    status = request.form['status']
-    rating = request.form.get('rating', 0)
-    created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    quotation_ro = request.form['quotation_ro']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    location = request.form['location']
+    project_incharge = request.form['project_incharge']
+    notes = request.form['notes']
 
-    conn = sqlite3.connect('database.db')
+    # Upload file
+    drawing_file = request.files['drawing_file']
+    filename = ""
+    if drawing_file and drawing_file.filename != '':
+        filename = f"uploads/{drawing_file.filename}"
+        os.makedirs("uploads", exist_ok=True)
+        drawing_file.save(filename)
+
+    # Generate Enquiry ID like VE/TN/2526/E001
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute('''INSERT INTO vendors 
-        (vendor_id, name, category, email, phone, address, status, rating, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (vendor_id, name, category, email, phone, address, status, rating, created, created))
+    c.execute("SELECT COUNT(*) FROM projects")
+    count = c.fetchone()[0] + 1
+    enquiry_id = f"VE/TN/2526/E{str(count).zfill(3)}"
+
+    # Save project
+    c.execute('''
+        INSERT INTO projects (
+            enquiry_id, client_name, gst_number, address,
+            quotation_ro, start_date, end_date,
+            location, drawing_file, project_incharge, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        enquiry_id, client_name, gst_number, address,
+        quotation_ro, start_date, end_date,
+        location, filename, project_incharge, notes
+    ))
+
     conn.commit()
     conn.close()
 
-    flash("Vendor added successfully!", "success")
-    return redirect(url_for('vendors'))
-    # ---------- VIEW VENDOR (AJAX) ----------
-@app.route('/view_vendor/<int:id>')
-def view_vendor(id):
+    flash("Project added successfully!", "success")
+    return redirect('/projects')
+    # ---------- EDIT PROJECT ----------
+@app.route('/edit_project/<int:id>', methods=['GET', 'POST'])
+def edit_project(id):
     if 'user' not in session:
-        return redirect(url_for('login'))
+        flash("Please login first.", "error")
+        return redirect('/login')
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM vendors WHERE id=?", (id,))
-    vendor = c.fetchone()
+
+    if request.method == 'POST':
+        client_name = request.form['client_name']
+        gst_number = request.form['gst_number']
+        address = request.form['address']
+        quotation_ro = request.form['quotation_ro']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        location = request.form['location']
+        project_incharge = request.form['project_incharge']
+        notes = request.form['notes']
+
+        drawing_file = request.files['drawing_file']
+        if drawing_file and drawing_file.filename != '':
+            filename = f"uploads/{drawing_file.filename}"
+            os.makedirs("uploads", exist_ok=True)
+            drawing_file.save(filename)
+            c.execute('''
+                UPDATE projects SET client_name=?, gst_number=?, address=?, quotation_ro=?, 
+                start_date=?, end_date=?, location=?, drawing_file=?, project_incharge=?, notes=? 
+                WHERE id=?
+            ''', (client_name, gst_number, address, quotation_ro, start_date, end_date,
+                  location, filename, project_incharge, notes, id))
+        else:
+            c.execute('''
+                UPDATE projects SET client_name=?, gst_number=?, address=?, quotation_ro=?, 
+                start_date=?, end_date=?, location=?, project_incharge=?, notes=? 
+                WHERE id=?
+            ''', (client_name, gst_number, address, quotation_ro, start_date, end_date,
+                  location, project_incharge, notes, id))
+
+        conn.commit()
+        conn.close()
+        flash("Project updated successfully!", "success")
+        return redirect('/projects')
+
+    c.execute("SELECT * FROM projects WHERE id=?", (id,))
+    project = c.fetchone()
     conn.close()
 
-    return vendor  # JSON sent via fetch (in JS popup)
+    return render_template("edit_project.html", project=project)
 
-# ---------- EDIT VENDOR ----------
-@app.route('/edit_vendor/<int:id>', methods=['POST'])
-def edit_vendor(id):
+
+# ---------- DELETE PROJECT ----------
+@app.route('/delete_project/<int:id>')
+def delete_project(id):
     if 'user' not in session:
-        return redirect(url_for('login'))
+        flash("Please login first.", "error")
+        return redirect('/login')
 
-    name = request.form['name']
-    category = request.form['category']
-    email = request.form['email']
-    phone = request.form['phone']
-    address = request.form['address']
-    status = request.form['status']
-    rating = request.form.get('rating', 0)
-    updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute('''UPDATE vendors SET
-                    name=?, category=?, email=?, phone=?,
-                    address=?, status=?, rating=?, updated_at=?
-                 WHERE id=?''',
-              (name, category, email, phone, address, status, rating, updated, id))
+    c.execute("DELETE FROM projects WHERE id=?", (id,))
     conn.commit()
     conn.close()
-
-    flash("Vendor updated successfully!", "info")
-    return redirect(url_for('vendors'))
-
-# ---------- DELETE VENDOR ----------
-@app.route('/delete_vendor/<int:id>', methods=['POST'])
-def delete_vendor(id):
+    flash("Project deleted successfully!", "info")
+    return redirect('/projects')
+    # ---------- MARK AS COMPLETED ----------
+@app.route('/mark_completed/<int:id>')
+def mark_completed(id):
     if 'user' not in session:
-        return redirect(url_for('login'))
+        flash("Please login first.", "error")
+        return redirect('/login')
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("DELETE FROM vendors WHERE id=?", (id,))
+    c.execute("UPDATE projects SET status='completed' WHERE id=?", (id,))
     conn.commit()
     conn.close()
+    flash("Project marked as completed.", "info")
+    return redirect('/projects')
 
-    flash("Vendor deleted.", "warning")
-    return redirect(url_for('vendors'))
-    # ---------- EXPORT CSV ----------
-@app.route('/export_vendors_csv')
-def export_vendors_csv():
+
+# ---------- SUBMIT FOR APPROVAL ----------
+@app.route('/submit_for_approval/<int:id>')
+def submit_for_approval(id):
     if 'user' not in session:
-        return redirect(url_for('login'))
+        flash("Please login first.", "error")
+        return redirect('/login')
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM vendors")
-    data = c.fetchall()
+    c.execute("UPDATE projects SET status='submitted' WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    flash("Project submitted for approval.", "info")
+    return redirect('/projects')
+
+
+# ---------- MARK UNDER REVIEW ----------
+@app.route('/mark_review/<int:id>')
+def mark_review(id):
+    if 'user' not in session:
+        flash("Please login first.", "error")
+        return redirect('/login')
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status='under_review' WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    flash("Project moved to review stage.", "info")
+    return redirect('/projects')
+
+
+# ---------- APPROVE PROJECT ----------
+@app.route('/approve_project/<int:id>')
+def approve_project(id):
+    if 'user' not in session:
+        flash("Please login first.", "error")
+        return redirect('/login')
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status='approved' WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    flash("Project approved successfully.", "success")
+    return redirect(f"/measurement_sheet/{id}")
+    # ---------- EXPORT PROJECTS: CSV ----------
+@app.route('/export_projects_csv')
+def export_projects_csv():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query("SELECT * FROM projects", conn)
     conn.close()
 
     output = BytesIO()
-    writer = csv.writer(output)
-    writer.writerow(['ID', 'Vendor ID', 'Name', 'Category', 'Email', 'Phone', 'Address', 'Status', 'Rating', 'Created', 'Updated'])
-    writer.writerows(data)
+    df.to_csv(output, index=False)
     output.seek(0)
 
-    return send_file(output, mimetype='text/csv', download_name='vendors.csv', as_attachment=True)
+    return send_file(output, mimetype='text/csv', as_attachment=True, download_name='projects.csv')
 
-# ---------- EXPORT EXCEL ----------
-@app.route('/export_vendors_excel')
-def export_vendors_excel():
-    if 'user' not in session:
-        return redirect(url_for('login'))
 
-    conn = sqlite3.connect('database.db')
-    df = pd.read_sql_query("SELECT * FROM vendors", conn)
+# ---------- EXPORT PROJECTS: EXCEL ----------
+@app.route('/export_projects_excel')
+def export_projects_excel():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query("SELECT * FROM projects", conn)
     conn.close()
 
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Vendors')
+        df.to_excel(writer, index=False, sheet_name='Projects')
     output.seek(0)
 
-    return send_file(output, download_name='vendors.xlsx', as_attachment=True)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     as_attachment=True, download_name='projects.xlsx')
 
-# ---------- EXPORT PDF ----------
-@app.route('/export_vendors_pdf')
-def export_vendors_pdf():
-    if 'user' not in session:
-        return redirect(url_for('login'))
 
-    conn = sqlite3.connect('database.db')
+# ---------- EXPORT PROJECTS: PDF ----------
+@app.route('/export_projects_pdf')
+def export_projects_pdf():
+    conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT vendor_id, name, category, email, phone, status FROM vendors")
+    c.execute("SELECT enquiry_id, client_name, quotation_ro, start_date, end_date FROM projects")
     data = c.fetchall()
     conn.close()
 
@@ -254,22 +378,22 @@ def export_vendors_pdf():
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
+    y = height - 40
     p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 50, "Vendor List")
+    p.drawString(50, y, "Projects List")
+    y -= 30
 
     p.setFont("Helvetica", 10)
-    y = height - 80
     for row in data:
-        line = " | ".join(str(col) for col in row)
-        p.drawString(50, y, line)
-        y -= 18
-        if y < 50:
+        p.drawString(50, y, f"Enquiry ID: {row[0]}, Client: {row[1]}, Quotation: {row[2]}, Start: {row[3]}, End: {row[4]}")
+        y -= 20
+        if y < 60:
             p.showPage()
-            y = height - 50
+            y = height - 40
 
     p.save()
     buffer.seek(0)
-    return send_file(buffer, download_name='vendors.pdf', as_attachment=True)
-    # ---------- RUN ----------
-if __name__ == '__main__':
+
+    return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='projects.pdf')
+    if __name__ == '__main__':
     app.run(debug=True)
