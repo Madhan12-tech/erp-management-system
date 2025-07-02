@@ -1,135 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Vendor Registration</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Register - ERP</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 0;
       margin: 0;
+    }
+    .register-container {
+      width: 400px;
+      margin: 80px auto;
+      background: #fff;
       padding: 30px;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
     }
     h2 {
       text-align: center;
-      color: #2c3e50;
+      margin-bottom: 20px;
     }
-    .section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 800px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .section h3 {
-      cursor: pointer;
-      margin: 0;
-      background: #2c3e50;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px 8px 0 0;
-    }
-    .section-content {
-      padding: 20px;
-      display: none;
-    }
-    input, select {
+    input[type="text"], input[type="password"] {
       width: 100%;
-      padding: 10px;
-      margin: 8px 0 16px;
-      border: 1px solid #ccc;
+      padding: 12px;
+      margin: 10px 0;
       border-radius: 6px;
-      font-size: 14px;
+      border: 1px solid #ccc;
     }
     button {
-      background: #2c3e50;
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
       color: white;
-      padding: 12px 20px;
       border: none;
-      border-radius: 8px;
-      font-weight: bold;
+      border-radius: 6px;
       cursor: pointer;
     }
     button:hover {
-      background: #1a252f;
+      background: #218838;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
     }
   </style>
 </head>
 <body>
 
-<h2>Vendor Registration</h2>
-<form method="POST" action="/register_vendor">
+<div class="register-container">
+  <h2>User Registration</h2>
+  <form method="POST" action="/register">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Register</button>
+  </form>
+</div>
 
-  <!-- ✅ Section 1: Vendor Details -->
-  <div class="section">
-    <h3 onclick="toggleSection(this)">1. Vendor Details</h3>
-    <div class="section-content">
-      <label>Vendor Name</label>
-      <input type="text" name="vendor_name" required>
+<div class="toast" id="toast"></div>
 
-      <label>Company Name</label>
-      <input type="text" name="company_name" required>
+<script>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById('toast');
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
 
-      <label>GST Number</label>
-      <input type="text" name="gst_number" required>
-
-      <label>Address</label>
-      <input type="text" name="address" required>
-    </div>
-  </div>
-
-  <!-- Part 2 & 3 will be added below -->
-
-  <script>
-    function toggleSection(header) {
-      const content = header.nextElementSibling;
-      content.style.display = content.style.display === 'block' ? 'none' : 'block';
-    }
-  </script>
-  <!-- ✅ Section 2: Communication Info -->
-  <div class="section">
-    <h3 onclick="toggleSection(this)">2. Communication Details</h3>
-    <div class="section-content">
-      <label>Contact Person</label>
-      <input type="text" name="contact_person" required>
-
-      <label>Phone Number</label>
-      <input type="text" name="phone" required>
-
-      <label>Email Address</label>
-      <input type="email" name="email" required>
-
-      <label>Alternate Number (optional)</label>
-      <input type="text" name="alternate_phone">
-    </div>
-  </div>
-  <!-- ✅ Section 3: Bank Account Details -->
-  <div class="section">
-    <h3 onclick="toggleSection(this)">3. Bank Account Details</h3>
-    <div class="section-content">
-      <label>Bank Name</label>
-      <input type="text" name="bank_name" required>
-
-      <label>Account Number</label>
-      <input type="text" name="account_number" required>
-
-      <label>IFSC Code</label>
-      <input type="text" name="ifsc_code" required>
-
-      <label>Branch</label>
-      <input type="text" name="branch" required>
-    </div>
-  </div>
-
-  <!-- ✅ Submit Button -->
-  <div style="text-align: center; margin-top: 30px;">
-    <button type="submit">Submit Registration</button>
-  </div>
-
-</form>
-
-<!-- ✅ Close HTML -->
 </body>
 </html>
