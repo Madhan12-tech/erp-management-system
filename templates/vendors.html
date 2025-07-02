@@ -6,37 +6,45 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      background: #f4f4f4;
       margin: 0;
-      padding: 20px;
+      padding: 0;
     }
-    h2 {
-      text-align: center;
-    }
+
     .container {
-      max-width: 900px;
-      margin: auto;
+      max-width: 1000px;
+      margin: 30px auto;
       background: white;
       padding: 25px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
     .section {
       margin-bottom: 20px;
     }
+
     .section h3 {
       background: #007bff;
       color: white;
       padding: 10px;
-      margin: 0;
       cursor: pointer;
+      margin: 0;
+      border-radius: 5px 5px 0 0;
     }
+
     .content {
       padding: 15px;
-      display: none;
       background: #f9f9f9;
       border: 1px solid #ddd;
+      display: none;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -45,6 +53,7 @@
       border: 1px solid #ccc;
       border-radius: 6px;
     }
+
     button {
       background: #28a745;
       color: white;
@@ -53,16 +62,44 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
     button:hover {
       background: #218838;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    .actions button {
+      background: #ffc107;
+      margin-right: 5px;
+    }
+
+    .actions button:last-child {
+      background: #dc3545;
+    }
+
     .toast {
       position: fixed;
       top: 20px;
       right: 20px;
       background: #333;
       color: #fff;
-      padding: 15px;
+      padding: 12px;
       border-radius: 6px;
       display: none;
     }
@@ -72,16 +109,15 @@
 
 <div class="container">
   <h2>Vendor Registration</h2>
+
   <form method="POST">
-    
     <!-- Vendor Details -->
     <div class="section">
       <h3 onclick="toggleSection(this)">Vendor Details</h3>
       <div class="content">
         <input type="text" name="name" placeholder="Vendor Name" required>
-        <input type="text" name="vendor_type" placeholder="Vendor Type">
         <input type="text" name="gst_no" placeholder="GST Number">
-        <input type="text" name="pan" placeholder="PAN Number">
+        <input type="text" name="address" placeholder="Address">
       </div>
     </div>
 
@@ -90,12 +126,8 @@
       <h3 onclick="toggleSection(this)">Communication Details</h3>
       <div class="content">
         <input type="text" name="contact_person" placeholder="Contact Person">
-        <input type="email" name="email" placeholder="Email">
         <input type="text" name="phone" placeholder="Phone Number">
-        <input type="text" name="address" placeholder="Address">
-        <input type="text" name="state" placeholder="State">
-        <input type="text" name="city" placeholder="City">
-        <input type="text" name="pin" placeholder="PIN Code">
+        <input type="email" name="email" placeholder="Email">
       </div>
     </div>
 
@@ -104,30 +136,99 @@
       <h3 onclick="toggleSection(this)">Bank Details</h3>
       <div class="content">
         <input type="text" name="bank_name" placeholder="Bank Name">
-        <input type="text" name="account_no" placeholder="Account Number">
-        <input type="text" name="ifsc" placeholder="IFSC Code">
-        <input type="text" name="branch" placeholder="Branch">
+        <input type="text" name="bank_account" placeholder="Account Number">
+        <input type="text" name="bank_ifsc" placeholder="IFSC Code">
       </div>
     </div>
 
     <button type="submit">Register Vendor</button>
+    <h3 style="margin-top: 40px;">Registered Vendors</h3>
 
-  </form>
+  <div style="margin-bottom: 10px;">
+    <button onclick="exportToCSV()">Export CSV</button>
+    <button onclick="exportToExcel()">Export Excel</button>
+    <button onclick="window.print()">Print</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>GST No</th>
+        <th>Address</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Bank</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in vendors %}
+      <tr>
+        <td>{{ v[1] }}</td>
+        <td>{{ v[2] }}</td>
+        <td>{{ v[3] }}</td>
+        <td>{{ v[5] }}</td>
+        <td>{{ v[6] }}</td>
+        <td>{{ v[7] }}</td>
+        <td class="actions">
+          <a href="/vendor_edit/{{ v[0] }}"><button>Edit</button></a>
+          <a href="/vendor_delete/{{ v[0] }}" onclick="return confirm('Are you sure?')"><button>Delete</button></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
-<div id="toast" class="toast"></div>
-
-<script>
+<div class="toast" id="toast"></div>
+  </form>
+  <script>
+  // Collapsible sections
   function toggleSection(el) {
     const content = el.nextElementSibling;
-    content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+    content.style.display = content.style.display === 'block' ? 'none' : 'block';
   }
 
+  // CSV Export
+  function exportToCSV() {
+    let csv = "Name,GST No,Address,Phone,Email,Bank\n";
+    document.querySelectorAll("table tbody tr").forEach(row => {
+      const cols = row.querySelectorAll("td:not(.actions)");
+      let rowText = Array.from(cols).map(td => `"${td.textContent}"`).join(",");
+      csv += rowText + "\n";
+    });
+    let blob = new Blob([csv], { type: 'text/csv' });
+    let url = window.URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "vendors.csv";
+    a.click();
+  }
+
+  // Excel Export
+  function exportToExcel() {
+    let table = document.querySelector("table").outerHTML;
+    let blob = new Blob([table], { type: "application/vnd.ms-excel" });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "vendors.xls";
+    a.click();
+  }
+
+  // Toast Messages from Flask
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      const toast = document.getElementById('toast');
+      const toast = document.getElementById("toast");
       {% for category, message in messages %}
         toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
         toast.style.display = "block";
         setTimeout(() => toast.style.display = "none", 3000);
       {% endfor %}
