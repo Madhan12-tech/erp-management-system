@@ -1,516 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Vendor Management | Ducting ERP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
+    <meta charset="UTF-8">
+    <title>Vendors | Ducting ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+        }
 
-    body {
-      background-color: #0f1115;
-      color: white;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-    }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            width: 240px;
+            background-color: #343a40;
+            color: white;
+            padding-top: 20px;
+        }
 
-    /* Sidebar */
-    .sidebar {
-      width: 240px;
-      background: #1c1f26;
-      padding: 30px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      border-right: 1px solid rgba(255,255,255,0.1);
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-    }
+        .sidebar a {
+            color: white;
+            padding: 12px 20px;
+            display: block;
+            text-decoration: none;
+        }
 
-    .sidebar h2 {
-      font-size: 18px;
-      margin-bottom: 20px;
-      color: #00b4ff;
-    }
+        .sidebar a:hover {
+            background-color: #495057;
+        }
 
-    .sidebar a {
-      text-decoration: none;
-      color: #ccc;
-      padding: 12px 16px;
-      background: #2a2d36;
-      border-radius: 8px;
-      transition: 0.2s;
-    }
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+        }
 
-    .sidebar a:hover,
-    .sidebar a.active {
-      background: #00b4ff;
-      color: white;
-    }
+        .topbar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    /* Main Content */
-    .main {
-      margin-left: 240px;
-      width: calc(100% - 240px);
-      padding: 30px;
-      overflow-y: auto;
-    }
+        .add-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 99;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 30px;
+        }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
+        .popup-form {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 420px;
+            height: 100%;
+            background: #ffffffdd;
+            backdrop-filter: blur(8px);
+            box-shadow: -5px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.4s ease;
+            padding: 25px;
+            overflow-y: auto;
+            z-index: 100;
+        }
 
-    .header h1 {
-      font-size: 24px;
-    }
+        .popup-form.active {
+            right: 0;
+        }
 
-    .btn {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      background: #00b4ff;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+        .popup-form h4 {
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
 
-    .btn:hover {
-      background: #009ad1;
-    }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 98;
+        }
 
-    /* Table Placeholder */
-    .vendor-table {
-      width: 100%;
-      margin-top: 20px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .vendor-table table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .vendor-table th,
-    .vendor-table td {
-      padding: 14px;
-      text-align: left;
-      border-bottom: 1px solid #333;
-    }
-
-    .vendor-table th {
-      color: #00b4ff;
-    }
-
-    .vendor-table tr:hover {
-      background: rgba(255,255,255,0.05);
-    }
-  </style>
+        .overlay.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>ERP Modules</h2>
-    <a href="/dashboard">Dashboard</a>
-    <a href="/vendors" class="active">Vendor Management</a>
-    <a href="#">Quotations</a>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h4 class="text-center">Ducting ERP</h4>
+    <hr style="border-color: #555;">
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('vendors') }}" style="background:#495057;">Vendors</a>
+    <a href="#">Inventory</a>
+    <a href="#">Accounts Purchase</a>
+    <a href="#">Production</a>
+    <a href="#">Project Sites</a>
+    <a href="#">Transport</a>
     <a href="#">Workforce</a>
-    <a href="#">Delivery</a>
-    <a href="#">Accounts</a>
-    <a href="/logout">Logout</a>
-  </div>
-
-  <!-- Main Section -->
-  <div class="main">
-    <div class="header">
-      <h1>Vendor Management</h1>
-      <button class="btn" onclick="openAddVendor()">+ Add Vendor</button>
-    </div>
-
-    <div class="vendor-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Vendor ID</th>
-            <th>Name</th>
-            <th>Company</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="vendorData">
-          <!-- Dynamic Rows Will Be Inserted Here -->
-        </tbody>
-      </table>
-    </div>
-    <!-- Export Buttons -->
-    <div style="margin-top: 20px; display: flex; gap: 10px;">
-      <form method="GET" action="/export/vendors/csv">
-        <button class="btn">Export CSV</button>
-      </form>
-      <form method="GET" action="/export/vendors/excel">
-        <button class="btn">Export Excel</button>
-      </form>
-      <form method="GET" action="/export/vendors/pdf">
-        <button class="btn">Export PDF</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Right Side Popup -->
-  <div id="vendorPopup" style="
-    position: fixed;
-    top: 0;
-    right: -500px;
-    width: 400px;
-    height: 100%;
-    background: #1e1e24;
-    padding: 30px;
-    box-shadow: -4px 0 12px rgba(0,0,0,0.4);
-    transition: right 0.3s ease;
-    z-index: 9999;
-    overflow-y: auto;
-  ">
-    <h2 style="margin-bottom: 20px;">Add Vendor</h2>
-    <form id="vendorForm" method="POST" action="/add_vendor">
-      <input type="hidden" name="vendor_id" id="vendor_id" />
-      <div style="margin-bottom: 15px;">
-        <label>Name:</label><br />
-        <input type="text" name="name" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
-      </div>
-      <div style="margin-bottom: 15px;">
-        <label>Company:</label><br />
-        <input type="text" name="company" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
-      </div>
-      <div style="margin-bottom: 15px;">
-        <label>Phone:</label><br />
-        <input type="text" name="phone" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
-      </div>
-      <div style="margin-bottom: 15px;">
-        <label>Email:</label><br />
-        <input type="email" name="email" required style="width:100%; padding:10px; border-radius:6px; border:none;" />
-      </div>
-      <div style="margin-bottom: 15px;">
-        <label>Address:</label><br />
-        <textarea name="address" rows="3" style="width:100%; padding:10px; border-radius:6px; border:none;"></textarea>
-      </div>
-      <button class="btn" type="submit">Save Vendor</button>
-      <button type="button" class="btn" style="background:#666;margin-left:10px;" onclick="closePopup()">Cancel</button>
-    </form>
-  </div>
-  <!-- Vendor Table -->
-  <div class="table-container">
-    <table class="vendor-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Company</th>
-          <th>Phone</th>
-          <th>Email</th>
-          <th>Address</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for vendor in vendors %}
-        <tr>
-          <td>{{ vendor.vendor_id }}</td>
-          <td>{{ vendor.name }}</td>
-          <td>{{ vendor.company }}</td>
-          <td>{{ vendor.phone }}</td>
-          <td>{{ vendor.email }}</td>
-          <td>{{ vendor.address }}</td>
-          <td>
-            <button onclick="editVendor({{ vendor | tojson | safe }})" class="btn">Edit</button>
-            <button onclick="confirmDelete('{{ vendor.vendor_id }}')" class="btn" style="background: #e74c3c;">Delete</button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <script>
-    function editVendor(data) {
-      document.getElementById("vendorPopup").style.right = "0";
-      document.getElementById("vendor_id").value = data.vendor_id;
-      document.querySelector("input[name='name']").value = data.name;
-      document.querySelector("input[name='company']").value = data.company;
-      document.querySelector("input[name='phone']").value = data.phone;
-      document.querySelector("input[name='email']").value = data.email;
-      document.querySelector("textarea[name='address']").value = data.address;
-      document.getElementById("vendorForm").action = "/edit_vendor";
-    }
-
-    function confirmDelete(vendorId) {
-      Swal.fire({
-        title: 'Delete Vendor?',
-        text: "This action cannot be undone!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "/delete_vendor/" + vendorId;
-        }
-      });
-    }
-  </script>
-  <!-- Filters & Search -->
-  <div class="filters">
-    <input type="text" id="searchInput" placeholder="Search vendor name, email..." />
-    <select id="sortSelect">
-      <option value="default">Sort By</option>
-      <option value="name">Name</option>
-      <option value="company">Company</option>
-    </select>
-    <select id="limitSelect">
-      <option value="5">Show 5</option>
-      <option value="10" selected>Show 10</option>
-      <option value="25">Show 25</option>
-    </select>
-    <button id="themeToggle" class="btn">🌙 Dark/Light</button>
-  </div>
-
-  <!-- Pagination (dummy UI, functional in backend optional) -->
-  <div class="pagination">
-    <button class="btn">&laquo;</button>
-    <button class="btn active">1</button>
-    <button class="btn">2</button>
-    <button class="btn">3</button>
-    <button class="btn">&raquo;</button>
-  </div>
-
-  <script>
-    // Search functionality
-    document.getElementById('searchInput').addEventListener('input', function () {
-      const searchText = this.value.toLowerCase();
-      const rows = document.querySelectorAll('.vendor-table tbody tr');
-      rows.forEach(row => {
-        const rowText = row.innerText.toLowerCase();
-        row.style.display = rowText.includes(searchText) ? '' : 'none';
-      });
-    });
-
-    // Sort functionality
-    document.getElementById('sortSelect').addEventListener('change', function () {
-      const rows = Array.from(document.querySelectorAll('.vendor-table tbody tr'));
-      const sortBy = this.value;
-      if (sortBy !== 'default') {
-        rows.sort((a, b) => {
-          const aText = a.querySelector(`td:nth-child(${sortBy === 'name' ? 2 : 3})`).innerText;
-          const bText = b.querySelector(`td:nth-child(${sortBy === 'name' ? 2 : 3})`).innerText;
-          return aText.localeCompare(bText);
-        });
-        const tbody = document.querySelector('.vendor-table tbody');
-        tbody.innerHTML = '';
-        rows.forEach(row => tbody.appendChild(row));
-      }
-    });
-
-    // Dark/Light theme toggle
-    const body = document.body;
-    const themeBtn = document.getElementById("themeToggle");
-    themeBtn.addEventListener("click", () => {
-      body.classList.toggle("light-theme");
-    });
-  </script>
-
-  <style>
-    .filters {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
-    }
-
-    .filters input,
-    .filters select {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: flex-end;
-      gap: 6px;
-      margin-top: 20px;
-    }
-
-    .pagination .btn {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .pagination .active {
-      background-color: #00b4ff;
-      color: white;
-    }
-
-    /* Light theme override */
-    .light-theme {
-      background: #f9f9f9;
-      color: #333;
-    }
-
-    .light-theme .popup,
-    .light-theme .table-container,
-    .light-theme .filters {
-      background-color: white;
-      color: #333;
-    }
-
-    .light-theme .vendor-table th,
-    .light-theme .vendor-table td {
-      color: #333;
-    }
-  </style>
-  <!-- Export Section -->
-<div class="export-controls">
-  <form method="GET" action="/export/vendors/csv">
-    <button type="submit" class="btn export-btn">⬇️ Export CSV</button>
-  </form>
-  <form method="GET" action="/export/vendors/excel">
-    <button type="submit" class="btn export-btn">📊 Export Excel</button>
-  </form>
-  <form method="GET" action="/export/vendors/pdf">
-    <button type="submit" class="btn export-btn">📄 Export PDF</button>
-  </form>
+    <a href="#">Quotations & Invoices</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
 </div>
 
-<style>
-  .export-controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    margin-bottom: 30px;
-  }
+<!-- Main Content -->
+<div class="main-content">
+    <div class="topbar">
+        <h4>Vendor Management</h4>
+        <span class="text-muted small">Manage all your suppliers here</span>
+    </div>
 
-  .export-btn {
-    background-color: #00b4ff;
-    color: white;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
+    <!-- Table and filter will come in next parts -->
+  <!-- Export Buttons + Filters -->
+    <div class="card p-3 shadow-sm">
+        <div class="mb-3">
+            <a href="{{ url_for('export_vendors_csv') }}" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+            <a href="{{ url_for('export_vendors_excel') }}" class="btn btn-sm btn-outline-success">Export Excel</a>
+            <a href="{{ url_for('export_vendors_pdf') }}" class="btn btn-sm btn-outline-danger">Export PDF</a>
+        </div>
 
-  .export-btn:hover {
-    background-color: #0093cc;
-  }
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search by name, category or phone...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="categoryFilter" onchange="filterTable()">
+                    <option value="">Filter by Category</option>
+                    {% for vendor in vendors %}
+                        {% if vendor[3] %}
+                            <option>{{ vendor[3] }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter" onchange="filterTable()">
+                    <option value="">Filter by Status</option>
+                    <option>Active</option>
+                    <option>Inactive</option>
+                </select>
+            </div>
+        </div>
 
-  .light-theme .export-btn {
-    background-color: #333;
-    color: white;
-  }
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm" id="vendorTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Rating</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vendors %}
+                    <tr>
+                        <td>{{ v[1] }}</td>
+                        <td>{{ v[2] }}</td>
+                        <td>{{ v[3] }}</td>
+                        <td>{{ v[4] }}</td>
+                        <td>{{ v[5] }}</td>
+                        <td>{{ v[6] }}</td>
+                        <td>{{ v[7] }}</td>
+                        <td>{{ v[9] }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary btn-view" data-id="{{ v[0] }}">View</button>
+                            <button class="btn btn-sm btn-warning btn-edit" data-id="{{ v[0] }}">Edit</button>
+                            <form method="POST" action="{{ url_for('delete_vendor', id=v[0]) }}" style="display:inline;">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div> <!-- Closing .main-content -->
 
-  .light-theme .export-btn:hover {
-    background-color: #555;
-  }
-</style>
-  </div> <!-- End of main-content -->
-  </div> <!-- End of dashboard -->
+<!-- Floating Add Vendor Button -->
+<button class="btn btn-primary add-btn" onclick="openForm()">+ Add Vendor</button>
 
-  <!-- Popup Background Overlay -->
-  <div id="popupOverlay" class="hidden" onclick="closePopup()"></div>
+<!-- Add Vendor Popup -->
+<div class="popup-form" id="popupForm">
+    <h4>Add New Vendor</h4>
+    <form action="{{ url_for('add_vendor') }}" method="POST">
+        <div class="mb-3">
+            <label>Vendor ID</label>
+            <input type="text" class="form-control" value="Auto-generated" disabled>
+        </div>
+        <div class="mb-3">
+            <label>Name</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Category</label>
+            <input type="text" name="category" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Phone</label>
+            <input type="text" name="phone" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Address</label>
+            <textarea name="address" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="mb-3">
+            <label>Status</label>
+            <select name="status" class="form-control">
+                <option>Active</option>
+                <option>Inactive</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Rating (1–5)</label>
+            <input type="number" name="rating" class="form-control" min="1" max="5">
+        </div>
+        <div class="d-grid">
+            <button class="btn btn-success">Save Vendor</button>
+        </div>
+    </form>
+</div>
 
-  <script>
-    function openPopup(id) {
-      const popup = document.getElementById(id);
-      document.getElementById('popupOverlay').classList.remove('hidden');
-      popup.classList.remove('hidden');
+<!-- Edit Vendor Popup -->
+<div class="popup-form" id="editForm">
+    <h4>Edit Vendor</h4>
+    <form id="editVendorForm" method="POST">
+        <div class="mb-3">
+            <label>Name</label>
+            <input type="text" name="name" id="edit_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Category</label>
+            <input type="text" name="category" id="edit_category" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" id="edit_email" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Phone</label>
+            <input type="text" name="phone" id="edit_phone" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Address</label>
+            <textarea name="address" id="edit_address" class="form-control"></textarea>
+        </div>
+        <div class="mb-3">
+            <label>Status</label>
+            <select name="status" id="edit_status" class="form-control">
+                <option>Active</option>
+                <option>Inactive</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Rating</label>
+            <input type="number" name="rating" id="edit_rating" class="form-control" min="1" max="5">
+        </div>
+        <div class="d-grid">
+            <button class="btn btn-warning">Update Vendor</button>
+        </div>
+    </form>
+</div>
+
+<!-- View Vendor Popup -->
+<div class="popup-form" id="viewForm">
+    <h4>Vendor Details</h4>
+    <div id="viewContent" class="text-muted small"></div>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
+<!-- Scripts -->
+<script>
+    // ---------- Popup Logic ----------
+    function openForm() {
+        document.getElementById("popupForm").classList.add("active");
+        document.getElementById("overlay").classList.add("active");
     }
 
-    function closePopup() {
-      document.getElementById('popupOverlay').classList.add('hidden');
-      document.querySelectorAll('.popup-form').forEach(p => p.classList.add('hidden'));
+    function closeAll() {
+        document.getElementById("popupForm").classList.remove("active");
+        document.getElementById("editForm").classList.remove("active");
+        document.getElementById("viewForm").classList.remove("active");
+        document.getElementById("overlay").classList.remove("active");
     }
 
-    // Responsive UI enhancements
-    window.addEventListener('resize', () => {
-      // Add responsive logic here if needed
+    // ---------- View Vendor ----------
+    document.querySelectorAll('.btn-view').forEach(btn => {
+        btn.onclick = () => {
+            const id = btn.dataset.id;
+            fetch(`/view_vendor/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    let content = `
+                        <p><strong>Vendor ID:</strong> ${data[1]}</p>
+                        <p><strong>Name:</strong> ${data[2]}</p>
+                        <p><strong>Category:</strong> ${data[3]}</p>
+                        <p><strong>Email:</strong> ${data[4]}</p>
+                        <p><strong>Phone:</strong> ${data[5]}</p>
+                        <p><strong>Address:</strong> ${data[6]}</p>
+                        <p><strong>Status:</strong> ${data[7]}</p>
+                        <p><strong>Rating:</strong> ${data[8]}</p>
+                        <p><strong>Last Updated:</strong> ${data[10]}</p>
+                    `;
+                    document.getElementById("viewContent").innerHTML = content;
+                    document.getElementById("viewForm").classList.add("active");
+                    document.getElementById("overlay").classList.add("active");
+                });
+        };
     });
-  </script>
 
-  <style>
-    #popupOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 900;
+    // ---------- Edit Vendor ----------
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.onclick = () => {
+            const id = btn.dataset.id;
+            fetch(`/view_vendor/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("editVendorForm").action = `/edit_vendor/${id}`;
+                    document.getElementById("edit_name").value = data[2];
+                    document.getElementById("edit_category").value = data[3];
+                    document.getElementById("edit_email").value = data[4];
+                    document.getElementById("edit_phone").value = data[5];
+                    document.getElementById("edit_address").value = data[6];
+                    document.getElementById("edit_status").value = data[7];
+                    document.getElementById("edit_rating").value = data[8];
+
+                    document.getElementById("editForm").classList.add("active");
+                    document.getElementById("overlay").classList.add("active");
+                });
+        };
+    });
+
+    // ---------- Search & Filter ----------
+    const searchInput = document.getElementById("searchInput");
+    const vendorTable = document.getElementById("vendorTable").getElementsByTagName("tbody")[0];
+
+    searchInput.addEventListener("keyup", function () {
+        const searchValue = this.value.toLowerCase();
+        for (let row of vendorTable.rows) {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(searchValue) ? "" : "none";
+        }
+    });
+
+    function filterTable() {
+        const category = document.getElementById("categoryFilter").value.toLowerCase();
+        const status = document.getElementById("statusFilter").value.toLowerCase();
+
+        for (let row of vendorTable.rows) {
+            const catCell = row.cells[2].innerText.toLowerCase();
+            const statusCell = row.cells[5].innerText.toLowerCase();
+            const show = (!category || catCell.includes(category)) && (!status || statusCell.includes(status));
+            row.style.display = show ? "" : "none";
+        }
     }
+</script>
 
-    .hidden {
-      display: none;
-    }
-
-    /* Right-side popup animations */
-    .popup-form {
-      animation: slideIn 0.3s ease-in-out;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-  </style>
-
-</body>
-</html>
-
-  <script>
-    function openAddVendor() {
-      document.getElementById("vendorPopup").style.right = "0";
-      // auto-generate vendor ID (simple demo logic)
-      const idField = document.getElementById("vendor_id");
-      idField.value = "VEN" + Date.now().toString().slice(-6);
-    }
-
-    function closePopup() {
-      document.getElementById("vendorPopup").style.right = "-500px";
-    }
-
-    // Optional: prevent form resubmission
-    if (window.history.replaceState) {
-      window.history.replaceState(null, null, window.location.href);
-    }
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
