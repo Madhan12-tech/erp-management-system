@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Measurement Sheet - ERP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f9f9f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .header {
+      background: #007bff;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header .project-info {
+      display: flex;
+      gap: 25px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .main {
+      flex-grow: 1;
+      display: flex;
+      padding: 20px;
+      gap: 20px;
+      overflow: hidden;
+    }
+    /* Left form */
+    .form-container {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+    .form-container h3 {
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      background: #28a745;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    /* Right table */
+    .table-container {
+      flex: 1.2;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .table-container h3 {
+      margin-top: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .actions button {
+      margin: 0 4px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .actions button.edit {
+      background: #007bff;
+      color: white;
+    }
+    .actions button.delete {
+      background: #dc3545;
+      color: white;
+    }
+    /* Export buttons */
+    .export-buttons {
+      margin-top: auto;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .export-buttons button {
+      background: #17a2b8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .export-buttons button:hover {
+      background: #117a8b;
+    }
+    /* Toast */
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 6px;
+      display: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="project-info">
+      <div>Project: <span id="projectName">{{ project.client }}</span></div>
+      <div>Enquiry ID: <span id="enquiryId">{{ project.enquiry_id }}</span></div>
+      <div>Client GST: <span id="clientGst">{{ project.gst_no }}</span></div>
+      <div>Location: <span id="location">{{ project.location }}</span></div>
+    </div>
+    <button onclick="window.location.href='/projects'" style="background:#dc3545; border:none; padding:8px 14px; color:white; border-radius:6px; cursor:pointer;">
+      Back to Projects
+    </button>
+  </div>
+
+  <div class="main">
+
+    <!-- Left: Measurement Entry Form -->
+    <div class="form-container">
+      <h3>Add Measurement</h3>
+      <form id="measurementForm">
+        <label for="ductNumber">Duct Number</label>
+        <input type="text" id="ductNumber" name="ductNumber" required />
+
+        <label for="ductType">Duct Type</label>
+        <select id="ductType" name="ductType" required>
+          <option value="">Select Type</option>
+          <option value="Rectangular">Rectangular</option>
+          <option value="Circular">Circular</option>
+          <option value="Oval">Oval</option>
+        </select>
+
+        <label for="size">Size</label>
+        <input type="text" id="size" name="size" placeholder="e.g., 24x12" required />
+
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" name="quantity" min="1" required />
+
+        <button type="submit">Add Measurement</button>
+      </form>
+    </div>
+
+    <!-- Right: Live Measurement Table -->
+    <div class="table-container">
+      <h3>Measurements</h3>
+      <table id="measurementTable">
+        <thead>
+          <tr>
+            <th>Duct Number</th>
+            <th>Duct Type</th>
+            <th>Size</th>
+            <th>Quantity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamic rows inserted here -->
+        </tbody>
+      </table>
+
+      <div class="export-buttons">
+        <button onclick="exportTable('csv')">Export CSV</button>
+        <button onclick="exportTable('excel')">Export Excel</button>
+        <button onclick="exportTable('pdf')">Export PDF</button>
+        <button onclick="printTable()">Print</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const form = document.getElementById('measurementForm');
+    const tableBody = document.querySelector('#measurementTable tbody');
+    let measurements = [];
+    let editIndex = -1;
+
+    // Show toast
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = {
+        success: 'green',
+        danger: 'red',
+        info: '#17a2b8'
+      }[type] || '#333';
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    // Render table rows
+    function renderTable() {
+      tableBody.innerHTML = '';
+      measurements.forEach((m, i) => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${m.ductNumber}</td>
+          <td>${m.ductType}</td>
+          <td>${m.size}</td>
+          <td>${m.quantity}</td>
+          <td class="actions">
+            <button class="edit" onclick="editMeasurement(${i})">Edit</button>
+            <button class="delete" onclick="deleteMeasurement(${i})">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // Add or update measurement
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const ductNumber = form.ductNumber.value.trim();
+      const ductType = form.ductType.value;
+      const size = form.size.value.trim();
+      const quantity = form.quantity.value;
+
+      if (!ductNumber || !ductType || !size || !quantity) {
+        showToast('Please fill all fields', 'danger');
+        return;
+      }
+
+      if (editIndex >= 0) {
+        // Update existing
+        measurements[editIndex] = { ductNumber, ductType, size, quantity };
+        editIndex = -1;
+        showToast('Measurement updated', 'success');
+      } else {
+        // Add new
+        measurements.push({ ductNumber, ductType, size, quantity });
+        showToast('Measurement added', 'success');
+      }
+      form.reset();
+      renderTable();
+    });
+
+    // Edit measurement
+    function editMeasurement(index) {
+      const m = measurements[index];
+      form.ductNumber.value = m.ductNumber;
+      form.ductType.value = m.ductType;
+      form.size.value = m.size;
+      form.quantity.value = m.quantity;
+      editIndex = index;
+    }
+
+    // Delete measurement
+    function deleteMeasurement(index) {
+      if (confirm('Are you sure you want to delete this measurement?')) {
+        measurements.splice(index, 1);
+        showToast('Measurement deleted', 'info');
+        renderTable();
+      }
+    }
+
+    // Export functions (basic)
+    function exportTable(type) {
+      if (measurements.length === 0) {
+        showToast('No data to export', 'danger');
+        return;
+      }
+      if (type === 'csv') exportCSV();
+      else if (type === 'excel') exportExcel();
+      else if (type === 'pdf') exportPDF();
+    }
+
+    function exportCSV() {
+      let csv = 'Duct Number,Duct Type,Size,Quantity\n';
+      measurements.forEach(m => {
+        csv += `${m.ductNumber},${m.ductType},${m.size},${m.quantity}\n`;
+      });
+      downloadFile(csv, 'measurement_sheet.csv', 'text/csv');
+    }
+
+    function exportExcel() {
+      // Basic Excel CSV mimic
+      exportCSV(); // For simplicity, CSV used for Excel export
+    }
+
+    function exportPDF() {
+      alert('PDF export feature coming soon!');
+    }
+
+    function downloadFile(content, filename, type) {
+      const a = document.createElement('a');
+      const file = new Blob([content], {type});
+      a.href = URL.createObjectURL(file);
+      a.download = filename;
+      a.click();
+    }
+
+    // Print table
+    function printTable() {
+      if (measurements.length === 0) {
+        showToast('No data to print', 'danger');
+        return;
+      }
+      let printWindow = window.open('', '', 'height=500,width=800');
+      printWindow.document.write('<html><head><title>Print Measurement Sheet</title></head><body>');
+      printWindow.document.write('<h3>Measurement Sheet</h3>');
+      printWindow.document.write('<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">');
+      printWindow.document.write('<tr><th>Duct Number</th><th>Duct Type</th><th>Size</th><th>Quantity</th></tr>');
+      measurements.forEach(m => {
+        printWindow.document.write(`<tr><td>${m.ductNumber}</td><td>${m.ductType}</td><td>${m.size}</td><td>${m.quantity}</td></tr>`);
+      });
+      printWindow.document.write('</table></body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
+  </script>
+</body>
+</html>
