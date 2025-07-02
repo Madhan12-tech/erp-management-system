@@ -1,313 +1,314 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Project Management - ERP</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: #f4f6f8;
+      margin: 0;
+      background: #f5f5f5;
     }
-    .container {
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
-    h2 {
-      margin-bottom: 20px;
-    }
-    /* Right side popup */
-    #popupForm {
+
+    .sidebar {
       position: fixed;
-      top: 0; right: -100%;
-      width: 450px;
+      top: 0;
+      left: 0;
       height: 100%;
-      background: white;
-      box-shadow: -3px 0 15px rgba(0,0,0,0.3);
+      width: 220px;
+      background: #343a40;
+      padding-top: 20px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      padding: 15px;
+      text-decoration: none;
+    }
+
+    .sidebar a:hover {
+      background: #495057;
+    }
+
+    .main {
+      margin-left: 220px;
       padding: 20px;
-      overflow-y: auto;
-      transition: right 0.3s ease;
-      z-index: 1000;
     }
-    #popupForm.show {
-      right: 0;
-    }
-    #popupForm h3 {
+
+    h2 {
       margin-top: 0;
     }
-    #popupForm input, #popupForm select, #popupForm textarea {
-      width: 100%;
-      margin-bottom: 12px;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    #popupForm textarea {
-      resize: vertical;
-    }
-    .btn {
-      background-color: #007bff;
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
       color: white;
       border: none;
-      padding: 10px 18px;
-      cursor: pointer;
       border-radius: 6px;
-      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 15px;
     }
-    .btn:hover {
-      background-color: #0056b3;
+
+    button:hover {
+      background: #0056b3;
     }
-    .btn-secondary {
-      background-color: #6c757d;
-      margin-left: 10px;
-    }
-    /* Table styles */
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
+
     th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
       text-align: left;
-      padding: 12px 15px;
-      border-bottom: 1px solid #ddd;
     }
+
     th {
-      background-color: #007bff;
+      background: #007bff;
       color: white;
     }
-    tr:hover {
-      background-color: #f1f1f1;
+
+    .popup-form {
+      position: fixed;
+      top: 0;
+      right: -500px;
+      width: 450px;
+      height: 100%;
+      background: #fff;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      padding: 20px;
     }
-    .actions button {
-      background: #dc3545;
-      border: none;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
+
+    .popup-form.active {
+      right: 0;
     }
-    .actions button.edit {
-      background: #28a745;
-      margin-right: 5px;
-    }
-    /* Progress table */
-    .progress-table {
-      margin-top: 30px;
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .progress-table h3 {
-      margin-top: 0;
+
+    .form-group {
       margin-bottom: 15px;
     }
-    .stage-btn {
-      margin-right: 10px;
-      padding: 8px 15px;
-      border: none;
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
       border-radius: 6px;
-      cursor: pointer;
-      color: white;
-      font-weight: bold;
+      box-sizing: border-box;
     }
-    .stage-preparation { background: #17a2b8; }
-    .stage-completed { background: #28a745; }
-    .stage-submitted { background: #ffc107; color: black; }
-    .stage-review { background: #6c757d; }
-    .stage-approved { background: #007bff; }
-    /* Toast */
-    #toast {
+
+    .toast {
       position: fixed;
       top: 20px;
       right: 20px;
       background: #333;
       color: #fff;
-      padding: 15px 25px;
+      padding: 12px;
       border-radius: 6px;
       display: none;
-      z-index: 2000;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Project Management</h2>
-  <button id="openPopupBtn" class="btn">+ New Project</button>
+<div class="sidebar">
+  <a href="/dashboard">Dashboard</a>
+  <a href="/vendor_register">Vendors</a>
+  <a href="/employee_register">Employees</a>
+  <a href="/projects">Projects</a>
+  <a href="/logout">Logout</a>
+</div>
 
-  <!-- Projects Table -->
-  <table id="projectsTable">
+<div class="main">
+  <h2>Project Management</h2>
+  <button onclick="openPopup()">+ New Project</button>
+  <div class="popup-form" id="projectPopup">
+    <h3>Add New Project</h3>
+    <form method="POST" action="/add_project" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Client</label>
+        <select name="client" required onchange="autoFillDetails(this)">
+          <option value="">-- Select Vendor --</option>
+          {% for v in vendors %}
+            <option value="{{ v.name }}" data-gst="{{ v.gst_no }}" data-address="{{ v.address }}">{{ v.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Quotation RO</label>
+        <input type="text" name="quotation_ro">
+      </div>
+
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" name="start_date" value="{{ current_date }}">
+      </div>
+
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" name="end_date">
+      </div>
+
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" name="location">
+      </div>
+
+      <div class="form-group">
+        <label>Upload Source Drawing</label>
+        <input type="file" name="source_drawing">
+      </div>
+
+      <div class="form-group">
+        <label>GST Number</label>
+        <input type="text" name="gst_no" id="gst_no">
+      </div>
+
+      <div class="form-group">
+        <label>Address</label>
+        <textarea name="address" id="address"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Project Incharge</label>
+        <select name="project_incharge">
+          <option value="">-- Select Employee --</option>
+          {% for emp in employees %}
+            <option value="{{ emp.name }}">{{ emp.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes"></textarea>
+      </div>
+
+      <button type="submit">Save and Continue</button>
+    </form>
+  </div>
+  <h3>Project List</h3>
+  <table>
     <thead>
       <tr>
         <th>Enquiry ID</th>
         <th>Client</th>
-        <th>Quotation RO</th>
-        <th>Start Date</th>
-        <th>End Date</th>
+        <th>Start</th>
+        <th>End</th>
         <th>Location</th>
-        <th>GST No</th>
-        <th>Address</th>
-        <th>Project Incharge</th>
-        <th>Notes</th>
+        <th>Status</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      <!-- Filled dynamically by Flask -->
-      {% for project in projects %}
+      {% for p in projects %}
       <tr>
-        <td>{{ project.enquiry_id }}</td>
-        <td>{{ project.client }}</td>
-        <td>{{ project.quotation_ro }}</td>
-        <td>{{ project.start_date }}</td>
-        <td>{{ project.end_date }}</td>
-        <td>{{ project.location }}</td>
-        <td>{{ project.gst_no }}</td>
-        <td>{{ project.address }}</td>
-        <td>{{ project.project_incharge }}</td>
-        <td>{{ project.notes }}</td>
-        <td class="actions">
-          <button class="edit" onclick="editProject('{{ project.id }}')">Edit</button>
-          <button onclick="deleteProject('{{ project.id }}')">Delete</button>
+        <td>{{ p.enquiry_id }}</td>
+        <td>{{ p.client }}</td>
+        <td>{{ p.start_date }}</td>
+        <td>{{ p.end_date }}</td>
+        <td>{{ p.location }}</td>
+        <td>{{ p.design_status }}</td>
+        <td>
+          <button onclick="alert('Edit Coming Soon')">Edit</button>
+          <button onclick="confirm('Are you sure?')">Delete</button>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
-  <!-- Design Process Progress -->
-  <div class="progress-table">
-    <h3>Design Process Tracker</h3>
-    <button class="stage-btn stage-preparation">Preparation</button>
-    <button class="stage-btn stage-completed">Completed</button>
-    <button class="stage-btn stage-submitted">Submitted for Approval</button>
-    <button class="stage-btn stage-review">Under Review</button>
-    <button class="stage-btn stage-approved">Approved</button>
-  </div>
-</div>
-
-<!-- Right-side Popup Form -->
-<div id="popupForm">
-  <h3>Add New Project</h3>
-  <form id="projectForm" method="POST" action="{{ url_for('add_project') }}" enctype="multipart/form-data">
-    <label>Enquiry ID</label>
-    <input type="text" name="enquiry_id" id="enquiryId" readonly />
-
-    <label>Client</label>
-    <select name="client" id="clientDropdown" required onchange="fillClientDetails()">
-      <option value="">-- Select Client --</option>
-      {% for v in vendors %}
-      <option value="{{ v.name }}" data-gst="{{ v.gst_no }}" data-address="{{ v.address }}">{{ v.name }}</option>
+  <button onclick="exportTableToCSV()">Export CSV</button>
+  <button onclick="window.print()">Print</button>
+  <h3>Design Process Progress</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Enquiry ID</th>
+        <th>Client</th>
+        <th>Stage</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+        <tr>
+          <td>{{ p.enquiry_id }}</td>
+          <td>{{ p.client }}</td>
+          <td>{{ p.design_status }}</td>
+          <td>
+            {% if p.design_status == 'preparation' %}
+              <button onclick="window.location.href='/measurement_sheet/{{ p.id }}'">Add Sheet</button>
+              <button onclick="alert('Mark Completed')">Complete</button>
+            {% elif p.design_status == 'completed' %}
+              <button onclick="alert('Submit for Approval')">Submit</button>
+            {% elif p.design_status == 'submitted' %}
+              <button onclick="alert('Under Review')">Review</button>
+            {% elif p.design_status == 'under_review' %}
+              <button onclick="alert('Approve')">Approve</button>
+            {% elif p.design_status == 'approved' %}
+              ✅ Approved
+            {% endif %}
+          </td>
+        </tr>
       {% endfor %}
-    </select>
+    </tbody>
+  </table>
+  </div> <!-- End of .main -->
 
-    <label>Quotation RO</label>
-    <input type="text" name="quotation_ro" required />
-
-    <label>Start Date</label>
-    <input type="date" name="start_date" id="startDate" required />
-
-    <label>End Date</label>
-    <input type="date" name="end_date" id="endDate" required />
-
-    <label>Project Location</label>
-    <input type="text" name="location" required />
-
-    <label>Source Drawing (Upload)</label>
-    <input type="file" name="source_drawing" />
-
-    <label>GST Number</label>
-    <input type="text" name="gst_no" id="gstNo" readonly />
-
-    <label>Address</label>
-    <textarea name="address" id="address" rows="2" readonly></textarea>
-
-    <label>Project Incharge</label>
-    <select name="project_incharge" required>
-      <option value="">-- Select Incharge --</option>
-      {% for e in employees %}
-      <option value="{{ e.name }}">{{ e.name }}</option>
-      {% endfor %}
-    </select>
-
-    <label>Notes</label>
-    <textarea name="notes" rows="3"></textarea>
-
-    <button type="submit">Save and Continue</button>
-    <button type="button" class="btn-secondary" onclick="closePopup()">Cancel</button>
-  </form>
-</div>
-
-<!-- Toast -->
-<div id="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-  // Show popup
-  document.getElementById('openPopupBtn').onclick = function() {
-    generateEnquiryId();
-    document.getElementById('startDate').valueAsDate = new Date();
-    document.getElementById('popupForm').classList.add('show');
-  };
+  function openPopup() {
+    document.getElementById("projectPopup").classList.add("active");
+  }
 
-  // Close popup
   function closePopup() {
-    document.getElementById('popupForm').classList.remove('show');
-    document.getElementById('projectForm').reset();
+    document.getElementById("projectPopup").classList.remove("active");
   }
 
-  // Auto fill GST and Address when client selected
-  function fillClientDetails() {
-    const dropdown = document.getElementById('clientDropdown');
-    const selected = dropdown.options[dropdown.selectedIndex];
-    document.getElementById('gstNo').value = selected.getAttribute('data-gst') || '';
-    document.getElementById('address').value = selected.getAttribute('data-address') || '';
+  function autoFillDetails(select) {
+    const gst = select.options[select.selectedIndex].getAttribute("data-gst");
+    const address = select.options[select.selectedIndex].getAttribute("data-address");
+    document.getElementById("gst_no").value = gst;
+    document.getElementById("address").value = address;
   }
 
-  // Enquiry ID generation: VE/TN/Year/Sequence
-  function generateEnquiryId() {
-    const year = new Date().getFullYear();
-    const seq = Math.floor(Math.random() * 900 + 100); // Random 3-digit for demo, replace with real seq
-    document.getElementById('enquiryId').value = `VE/TN/${year}/E${seq}`;
+  function exportTableToCSV() {
+    const rows = document.querySelectorAll("table tbody tr");
+    let csv = "Enquiry ID,Client,Start,End,Location,Status\n";
+    rows.forEach(row => {
+      const cols = row.querySelectorAll("td");
+      const line = Array.from(cols).map(td => `"${td.innerText}"`).join(",");
+      csv += line + "\n";
+    });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", "projects.csv");
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
-  // Toast function
-  function showToast(message, category = "info") {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.style.backgroundColor = {
-      success: "green",
-      danger: "red",
-      warning: "orange",
-      info: "#17a2b8"
-    }[category] || "#333";
-    toast.style.display = "block";
-    setTimeout(() => toast.style.display = "none", 3000);
-  }
-
-  // Edit project - To be implemented with backend
-  function editProject(id) {
-    alert('Edit project feature coming soon: ' + id);
-  }
-
-  // Delete project - To be implemented with backend
-  function deleteProject(id) {
-    if (confirm('Are you sure you want to delete this project?')) {
-      alert('Delete project feature coming soon: ' + id);
-    }
-  }
-
-  // Handle any flash messages from Flask to toast
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
+      const toast = document.getElementById('toast');
       {% for category, message in messages %}
-        showToast("{{ message }}", "{{ category }}");
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
       {% endfor %}
     {% endif %}
   {% endwith %}
