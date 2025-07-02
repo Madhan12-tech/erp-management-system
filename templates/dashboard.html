@@ -1,82 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard | Ducting ERP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            background: #f8f9fa;
-        }
+  <meta charset="UTF-8">
+  <title>Dashboard - ERP System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
 
-        .sidebar {
-            height: 100vh;
-            width: 240px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: #343a40;
-            color: white;
-            padding-top: 20px;
-        }
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background-color: #1e1e2f;
+      color: white;
+      padding-top: 20px;
+    }
 
-        .sidebar a {
-            color: white;
-            padding: 12px 20px;
-            display: block;
-            text-decoration: none;
-        }
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 22px;
+    }
 
-        .sidebar a:hover {
-            background-color: #495057;
-        }
+    .sidebar a {
+      display: block;
+      padding: 12px 20px;
+      color: white;
+      text-decoration: none;
+      transition: 0.3s;
+    }
 
-        .main {
-            margin-left: 240px;
-            padding: 30px;
-        }
+    .sidebar a:hover {
+      background-color: #3e3e55;
+    }
 
-        .card-box {
-            padding: 25px;
-            border-radius: 12px;
-            background: white;
-            box-shadow: 0 0 12px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
+    .main {
+      flex-grow: 1;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
 
-        h4 {
-            font-weight: 600;
-        }
-    </style>
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .logout-btn {
+      padding: 10px 20px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #a80000;
+    }
+  </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar">
-    <h4 class="text-center">Ducting ERP</h4>
-    <hr style="border-color: #555;">
-    <a href="{{ url_for('dashboard') }}" style="background:#495057;">Dashboard</a>
-    <a href="{{ url_for('vendors') }}">Vendors</a>
-    <a href="#">Inventory</a>
-    <a href="#">Accounts Purchase</a>
-    <a href="#">Production</a>
-    <a href="#">Project Sites</a>
-    <a href="#">Transport</a>
-    <a href="#">Workforce</a>
-    <a href="#">Quotations & Invoices</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
-</div>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>ERP Modules</h2>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/vendor_register">Vendor Registration</a>
+    <a href="/employee_register">Employee Registration</a>
+    <a href="/projects">Project Management</a>
+    <a href="/production">Production</a>
+    <a href="/summary">Summary</a>
+    <a href="/logout">Logout</a>
+  </div>
 
-<!-- Main Content -->
-<div class="main">
-    <div class="card-box">
-        <h4>Welcome, {{ session['user'] }}</h4>
-        <p>This is your Ducting ERP Dashboard.</p>
-        <p>Use the left sidebar to manage modules such as Vendors, Inventory, Purchase, and more.</p>
+  <!-- Main Content -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Welcome, {{ user }}</h1>
+      <form action="/logout" method="get">
+        <button class="logout-btn">Logout</button>
+      </form>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <p>This is your ERP system dashboard. Use the sidebar to navigate between modules.</p>
+
+  </div>
+
 </body>
 </html>
