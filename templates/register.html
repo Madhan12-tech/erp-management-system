@@ -1,67 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Register | Ducting ERP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: #f2f3f7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
-        .register-box {
-            background: white;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.05);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        h4 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Vendor Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      padding: 30px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .section h3 {
+      cursor: pointer;
+      margin: 0;
+      background: #2c3e50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+    }
+    .section-content {
+      padding: 20px;
+      display: none;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      background: #2c3e50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1a252f;
+    }
+  </style>
 </head>
 <body>
 
-<div class="register-box">
-    <h4>Ducting ERP Registration</h4>
+<h2>Vendor Registration</h2>
+<form method="POST" action="/register_vendor">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+  <!-- ✅ Section 1: Vendor Details -->
+  <div class="section">
+    <h3 onclick="toggleSection(this)">1. Vendor Details</h3>
+    <div class="section-content">
+      <label>Vendor Name</label>
+      <input type="text" name="vendor_name" required>
 
-    <form method="POST" action="{{ url_for('register') }}">
-        <div class="mb-3">
-            <label>Username</label>
-            <input type="text" name="username" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label>Password</label>
-            <input type="password" name="password" class="form-control" required>
-        </div>
-        <div class="d-grid">
-            <button class="btn btn-success">Register</button>
-        </div>
-        <p class="text-center mt-3 small">
-            Already have an account? <a href="{{ url_for('login') }}">Login here</a>
-        </p>
-    </form>
-</div>
+      <label>Company Name</label>
+      <input type="text" name="company_name" required>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      <label>GST Number</label>
+      <input type="text" name="gst_number" required>
+
+      <label>Address</label>
+      <input type="text" name="address" required>
+    </div>
+  </div>
+
+  <!-- Part 2 & 3 will be added below -->
+
+  <script>
+    function toggleSection(header) {
+      const content = header.nextElementSibling;
+      content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    }
+  </script>
+  <!-- ✅ Section 2: Communication Info -->
+  <div class="section">
+    <h3 onclick="toggleSection(this)">2. Communication Details</h3>
+    <div class="section-content">
+      <label>Contact Person</label>
+      <input type="text" name="contact_person" required>
+
+      <label>Phone Number</label>
+      <input type="text" name="phone" required>
+
+      <label>Email Address</label>
+      <input type="email" name="email" required>
+
+      <label>Alternate Number (optional)</label>
+      <input type="text" name="alternate_phone">
+    </div>
+  </div>
+  <!-- ✅ Section 3: Bank Account Details -->
+  <div class="section">
+    <h3 onclick="toggleSection(this)">3. Bank Account Details</h3>
+    <div class="section-content">
+      <label>Bank Name</label>
+      <input type="text" name="bank_name" required>
+
+      <label>Account Number</label>
+      <input type="text" name="account_number" required>
+
+      <label>IFSC Code</label>
+      <input type="text" name="ifsc_code" required>
+
+      <label>Branch</label>
+      <input type="text" name="branch" required>
+    </div>
+  </div>
+
+  <!-- ✅ Submit Button -->
+  <div style="text-align: center; margin-top: 30px;">
+    <button type="submit">Submit Registration</button>
+  </div>
+
+</form>
+
+<!-- ✅ Close HTML -->
 </body>
 </html>
