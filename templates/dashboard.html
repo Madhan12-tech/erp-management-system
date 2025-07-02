@@ -5,96 +5,89 @@
   <title>Dashboard - ERP System</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      display: flex;
-      height: 100vh;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
     }
 
-    /* Sidebar */
     .sidebar {
-      width: 250px;
-      background-color: #1e1e2f;
-      color: white;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 220px;
+      background: #343a40;
       padding-top: 20px;
-    }
-
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 22px;
     }
 
     .sidebar a {
       display: block;
-      padding: 12px 20px;
       color: white;
+      padding: 15px;
       text-decoration: none;
-      transition: 0.3s;
     }
 
     .sidebar a:hover {
-      background-color: #3e3e55;
+      background: #495057;
     }
 
     .main {
-      flex-grow: 1;
+      margin-left: 220px;
       padding: 20px;
-      background-color: #f9f9f9;
     }
 
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
+    h1 {
+      color: #333;
     }
 
-    .topbar h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .logout-btn {
-      padding: 10px 20px;
-      background: #dc3545;
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
       color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .logout-btn:hover {
-      background: #a80000;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>ERP Modules</h2>
-    <a href="/dashboard">Dashboard</a>
-    <a href="/vendor_register">Vendor Registration</a>
-    <a href="/employee_register">Employee Registration</a>
-    <a href="/projects">Project Management</a>
-    <a href="/production">Production</a>
-    <a href="/summary">Summary</a>
-    <a href="/logout">Logout</a>
-  </div>
+<div class="sidebar">
+  <a href="/dashboard">Dashboard</a>
+  <a href="/vendor_register">Vendors</a>
+  <a href="/employee_register">Employees</a>
+  <a href="/projects">Projects</a>
+  <a href="/logout">Logout</a>
+</div>
 
-  <!-- Main Content -->
-  <div class="main">
-    <div class="topbar">
-      <h1>Welcome, {{ user }}</h1>
-      <form action="/logout" method="get">
-        <button class="logout-btn">Logout</button>
-      </form>
-    </div>
+<div class="main">
+  <h1>Welcome to ERP Dashboard</h1>
+  <p>Select a module from the left menu to continue.</p>
+</div>
 
-    <p>This is your ERP system dashboard. Use the sidebar to navigate between modules.</p>
+<div class="toast" id="toast"></div>
 
-  </div>
+<script>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById('toast');
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
 
 </body>
 </html>
