@@ -154,27 +154,37 @@ def vendors():
 
 @app.route('/add_vendor', methods=['POST'])
 def add_vendor():
-    vendor_id = generate_vendor_id()
-    name = request.form['name']
-    email = request.form['email']
-    phone = request.form['phone']
-    company = request.form['company']
-    gst = request.form['gst']
-    address = request.form['address']
-    services = request.form['services']
-    rating = request.form['rating']
-    joined_on = datetime.now().strftime("%Y-%m-%d")
+    try:
+        name = request.form['name']
+        company = request.form['company']
+        email = request.form['email']
+        phone = request.form['phone']
+        gst = request.form['gst']
+        address = request.form['address']
+        category = request.form['category']
+        rating = request.form['rating']
+        status = request.form['status']
 
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
-    c.execute('''INSERT INTO vendors 
-        (vendor_id, name, email, phone, company, gst, address, services, rating, joined_on)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (vendor_id, name, email, phone, company, gst, address, services, rating, joined_on))
-    conn.commit()
-    conn.close()
-    flash("Vendor added successfully!", "success")
-    return redirect(url_for('vendors'))
+        # Generate unique vendor ID
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM vendors")
+        count = cursor.fetchone()[0]
+        vendor_id = f"VEND{count + 1:04d}"
+
+        cursor.execute('''INSERT INTO vendors 
+            (vendor_id, name, company, email, phone, gst, address, category, rating, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (vendor_id, name, company, email, phone, gst, address, category, rating, status))
+
+        conn.commit()
+        conn.close()
+        flash('Vendor added successfully!', 'success')
+    except Exception as e:
+        print("Error adding vendor:", e)
+        flash('Failed to add vendor', 'danger')
+
+    return redirect('/vendors')
 
 @app.route('/edit_vendor/<int:id>', methods=['POST'])
 def edit_vendor(id):
