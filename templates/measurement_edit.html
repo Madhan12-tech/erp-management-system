@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Measurement Entry</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+    }
+    .box {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 15px;
+      color: #007bff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Edit Duct Entry</h2>
+  <form method="POST">
+    <input type="text" name="duct_no" placeholder="Duct No." value="{{ row[2] }}" required>
+    <input type="text" name="duct_type" placeholder="Duct Type" value="{{ row[3] }}" required>
+    <input type="text" name="duct_size" placeholder="Duct Size" value="{{ row[4] }}" required>
+    <input type="number" name="quantity" placeholder="Quantity" value="{{ row[5] }}" required>
+    <input type="text" name="remarks" placeholder="Remarks" value="{{ row[6] }}">
+    <button type="submit">Update Entry</button>
+  </form>
+  <a class="back" href="{{ url_for('measurement_sheet', project_id=project_id) }}">← Back to Measurement Sheet</a>
+</div>
+
+</body>
+</html>
