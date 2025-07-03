@@ -2,217 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vendor Registration - ERP</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-    .section h3 {
-      background: #007bff;
-      color: white;
-      padding: 10px;
-      margin: 0;
-      cursor: pointer;
-      border-radius: 5px 5px 0 0;
-    }
-    .content {
-      background: #f9f9f9;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-top: none;
-      display: none;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin: 8px 5px 20px 0;
-    }
-    button:hover {
-      background: #218838;
-    }
-    .export-btn {
-      background: #17a2b8;
-      margin: 10px 0;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background: #007bff;
-      color: white;
-    }
-    .action-btn {
-      padding: 6px 10px;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .edit-btn { background: #007bff; }
-    .delete-btn { background: #dc3545; }
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #333;
-      color: white;
-      padding: 15px;
-      border-radius: 6px;
-      display: none;
-    }
-  </style>
+  <title>Vendors | Duct ERP</title>
 </head>
 <body>
-
-<div class="container">
-  <h2>Vendor Registration</h2>
-  <form method="POST">
-
-    <!-- Vendor Details -->
-    <div class="section">
-      <h3 onclick="toggleSection(this)">Vendor Details</h3>
-      <div class="content">
-        <input type="text" name="name" placeholder="Vendor Name" required>
-        <input type="text" name="gst_no" placeholder="GST Number">
-        <input type="text" name="address" placeholder="Address">
-      </div>
-    </div>
-
-    <!-- Communication Details -->
-    <div class="section">
-      <h3 onclick="toggleSection(this)">Communication Details</h3>
-      <div class="content">
-        <input type="text" name="contact_person" placeholder="Contact Person">
-        <input type="email" name="email" placeholder="Email">
-        <input type="text" name="phone" placeholder="Phone Number">
-      </div>
-    </div>
-
-    <!-- Bank Details -->
-    <div class="section">
-      <h3 onclick="toggleSection(this)">Bank Details</h3>
-      <div class="content">
-        <input type="text" name="bank_name" placeholder="Bank Name">
-        <input type="text" name="bank_account" placeholder="Account Number">
-        <input type="text" name="bank_ifsc" placeholder="IFSC Code">
-      </div>
-    </div>
-
+  <h2>Register Vendor</h2>
+  <form method="POST" action="/vendors">
+    <input type="text" name="vendor_name" placeholder="Vendor Name" required><br><br>
+    <input type="text" name="gst" placeholder="GST Number" required><br><br>
+    <textarea name="address" placeholder="Address" required></textarea><br><br>
     <button type="submit">Submit</button>
-    <button type="reset" style="background:#6c757d;">Cancel</button>
   </form>
 
-  <button class="export-btn" onclick="exportToCSV()">Export CSV</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>GST</th>
-        <th>Address</th>
-        <th>Contact</th>
-        <th>Phone</th>
-        <th>Email</th>
-        <th>Bank</th>
-        <th>Account</th>
-        <th>IFSC</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for v in vendors %}
-      <tr>
-        <td>{{ v[1] }}</td>
-        <td>{{ v[2] }}</td>
-        <td>{{ v[3] }}</td>
-        <td>{{ v[4] }}</td>
-        <td>{{ v[5] }}</td>
-        <td>{{ v[6] }}</td>
-        <td>{{ v[7] }}</td>
-        <td>{{ v[8] }}</td>
-        <td>{{ v[9] }}</td>
-        <td>
-          <a href="/vendor_edit/{{ v[0] }}"><button class="action-btn edit-btn">Edit</button></a>
-          <a href="/vendor_delete/{{ v[0] }}" onclick="return confirm('Delete this vendor?')">
-            <button class="action-btn delete-btn">Delete</button>
-          </a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div id="toast" class="toast"></div>
-
-<script>
-  function toggleSection(el) {
-    const content = el.nextElementSibling;
-    content.style.display = (content.style.display === 'block') ? 'none' : 'block';
-  }
-
-  function exportToCSV() {
-    let csv = "Name,GST,Address,Contact,Phone,Email,Bank,Account,IFSC\n";
-    document.querySelectorAll("table tbody tr").forEach(row => {
-      const cols = row.querySelectorAll("td");
-      const line = Array.from(cols).slice(0, 9).map(td => `"${td.innerText}"`).join(",");
-      csv += line + "\n";
-    });
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "vendors.csv";
-    a.click();
-  }
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      const toast = document.getElementById("toast");
-      {% for category, message in messages %}
-        toast.textContent = "{{ message }}";
-        toast.style.display = "block";
-        toast.style.backgroundColor = {
-          success: '#28a745',
-          danger: '#dc3545',
-          warning: '#ffc107',
-          info: '#17a2b8'
-        }['{{ category }}'] || '#333';
-        setTimeout(() => toast.style.display = "none", 3000);
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-</script>
+  <h3>Registered Vendors</h3>
+  <ul>
+    {% for v in vendors %}
+      <li>{{ v[1] }} (GST: {{ v[2] }}) - {{ v[3] }}</li>
+    {% endfor %}
+  </ul>
 </body>
 </html>
