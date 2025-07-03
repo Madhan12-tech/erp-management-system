@@ -577,10 +577,10 @@ def submit_measurement(project_id):
 
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("UPDATE projects SET design_status='completed' WHERE id=?", (project_id,))
+    c.execute("UPDATE projects SET design_status=? WHERE id=?", ('completed', project_id))
     conn.commit()
     conn.close()
-    flash("Design status marked as completed", "success")
+    flash("Measurement submitted and design marked as completed", "success")
     return redirect(url_for('projects'))
     # --- Production View Page ---
 @app.route('/production')
