@@ -9,33 +9,12 @@ from reportlab.lib.pagesizes import A4
 app = Flask(__name__)
 app.secret_key = 'secretkey'
 
-# ---------- DB SETUP ----------
-def init_db():
-ers (username, password) VALUES (?, ?)", ('admin', 'admin123'))
-# ---------- LOGIN ----------
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        uname = request.form['username']
-        pwd = request.form['password']
-        conn = sqlite3.connect('erp.db')
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE username=? AND password=?", (uname, pwd))
-        user = c.fetchone()
-        conn.close()
-        if user:
-            session['username'] = uname
-            return redirect('/dashboard')
-        else:
-            flash("Invalid credentials", "danger")
-    return render_template('login.html')
-    
-
+# ---------- INIT DB ----------
 def init_db():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Users table
+    # Users
     c.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT,
@@ -89,13 +68,35 @@ def init_db():
         quantity INTEGER
     )''')
 
-    # ✅ Insert dummy user safely
+    # Insert dummy user
     c.execute("SELECT * FROM users WHERE username = 'admin'")
     if not c.fetchone():
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin123'))
 
     conn.commit()
     conn.close()
+
+# Run DB setup on load
+init_db()
+# ---------- LOGIN ----------
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        uname = request.form['username']
+        pwd = request.form['password']
+        conn = sqlite3.connect('erp.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (uname, pwd))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            session['username'] = uname
+            return redirect('/dashboard')
+        else:
+            flash("Invalid credentials", "danger")
+    return render_template('login.html')
+
+
 # ---------- REGISTER ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -175,11 +176,10 @@ def add_project():
     conn.close()
 
     return redirect('/projects')
-    # ---------- ADD MEASUREMENT POPUP ----------
+# ---------- ADD MEASUREMENT SHEET ----------
 @app.route('/add_measurement', methods=['POST'])
 def add_measurement():
-    project_id = request.args.get('project_id')  # passed from form query string if needed
-
+    project_id = request.form['project_id']
     client_name = request.form['client_name']
     company_name = request.form['company_name']
     project_location = request.form['project_location']
@@ -188,14 +188,11 @@ def add_measurement():
 
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-
-    # Insert into measurements
-    c.execute('''INSERT INTO measurements 
-        (project_id, client_name, company_name, project_location, engineer_name, phone) 
-        VALUES (?, ?, ?, ?, ?, ?)''', (
-            project_id, client_name, company_name, project_location, engineer_name, phone
-        ))
-    
+    c.execute('''INSERT INTO measurements (
+        project_id, client_name, company_name, project_location, engineer_name, phone
+    ) VALUES (?, ?, ?, ?, ?, ?)''', (
+        project_id, client_name, company_name, project_location, engineer_name, phone
+    ))
     conn.commit()
     conn.close()
 
@@ -208,29 +205,24 @@ def measurement_sheet(project_id):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Get measurement sheet info
     c.execute("SELECT * FROM measurements WHERE project_id=?", (project_id,))
     measurement = c.fetchone()
 
-    # Get ducts
     c.execute("SELECT * FROM ducts WHERE project_id=?", (project_id,))
     ducts = c.fetchall()
 
-    # Get project for top bar
     c.execute("SELECT * FROM projects WHERE id=?", (project_id,))
     project = c.fetchone()
 
     conn.close()
-
     return render_template('measurement_sheet.html',
                            project=project,
                            ducts=ducts,
                            measurement=measurement)
-    # ---------- ADD DUCT ENTRY ----------
+# ---------- ADD DUCT ENTRY ----------
 @app.route('/add_duct', methods=['POST'])
 def add_duct():
-    project_id = request.args.get('project_id')  # passed as query string from form/page
-
+    project_id = request.form['project_id']
     duct_no = request.form['duct_no']
     duct_type = request.form['duct_type']
     duct_size = request.form['duct_size']
@@ -247,7 +239,7 @@ def add_duct():
     return redirect(f'/measurement_sheet/{project_id}')
 
 
-# ---------- DELETE DUCT ENTRY ----------
+# ---------- DELETE DUCT ----------
 @app.route('/delete_duct/<int:duct_id>')
 def delete_duct(duct_id):
     conn = sqlite3.connect('erp.db')
@@ -260,7 +252,7 @@ def delete_duct(duct_id):
     return redirect(f'/measurement_sheet/{project_id}')
 
 
-# ---------- SUBMIT MEASUREMENT SHEET ----------
+# ---------- SUBMIT SHEET ----------
 @app.route('/submit_sheet/<int:project_id>')
 def submit_sheet(project_id):
     conn = sqlite3.connect('erp.db')
@@ -268,8 +260,9 @@ def submit_sheet(project_id):
     c.execute("UPDATE projects SET design_status='completed' WHERE id=?", (project_id,))
     conn.commit()
     conn.close()
+    flash("Design marked as completed", "success")
     return redirect('/dashboard')
-    # ---------- SUBMIT FOR APPROVAL ----------
+# ---------- SUBMIT FOR APPROVAL ----------
 @app.route('/submit_for_approval/<int:project_id>')
 def submit_for_approval(project_id):
     conn = sqlite3.connect('erp.db')
@@ -277,6 +270,7 @@ def submit_for_approval(project_id):
     c.execute("UPDATE projects SET approval_status='Submitted' WHERE id=?", (project_id,))
     conn.commit()
     conn.close()
+    flash("Submitted for approval", "info")
     return redirect('/projects')
 
 
@@ -288,10 +282,11 @@ def approve_project(project_id):
     c.execute("UPDATE projects SET approval_status='Approved' WHERE id=?", (project_id,))
     conn.commit()
     conn.close()
+    flash("Project approved", "success")
     return redirect('/projects')
 
 
-# ---------- SEND BACK TO PREPARATION ----------
+# ---------- RETURN TO PREPARATION ----------
 @app.route('/return_to_preparation/<int:project_id>')
 def return_to_preparation(project_id):
     conn = sqlite3.connect('erp.db')
@@ -299,8 +294,9 @@ def return_to_preparation(project_id):
     c.execute("UPDATE projects SET design_status='in_progress', approval_status='Not Submitted' WHERE id=?", (project_id,))
     conn.commit()
     conn.close()
+    flash("Returned to preparation stage", "warning")
     return redirect('/projects')
-    # ---------- EXPORT CSV ----------
+# ---------- EXPORT TO CSV ----------
 @app.route('/export_csv/<int:project_id>')
 def export_csv(project_id):
     conn = sqlite3.connect('erp.db')
@@ -316,7 +312,7 @@ def export_csv(project_id):
     return send_file(BytesIO(output.encode()), download_name="measurement_sheet.csv", as_attachment=True)
 
 
-# ---------- EXPORT EXCEL ----------
+# ---------- EXPORT TO EXCEL ----------
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
     conn = sqlite3.connect('erp.db')
@@ -329,15 +325,12 @@ def export_excel(project_id):
         df.to_excel(writer, index=False, sheet_name='Sheet')
     output.seek(0)
     return send_file(output, download_name="measurement_sheet.xlsx", as_attachment=True)
-
-
-# ---------- EXPORT PDF ----------
+# ---------- EXPORT TO PDF ----------
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Get header info
     c.execute("SELECT * FROM measurements WHERE project_id=?", (project_id,))
     m = c.fetchone()
 
@@ -382,7 +375,6 @@ def export_pdf(project_id):
     p.save()
     buffer.seek(0)
     return send_file(buffer, download_name="measurement_sheet.pdf", as_attachment=True)
-
 # ---------- RUN SERVER ----------
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
