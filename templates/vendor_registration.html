@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vendor Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      margin: 0 -25px 15px -25px;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .section {
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .section-header {
+      background: #f5f5f5;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .section-body {
+      padding: 10px;
+      display: none;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .add-btn, .remove-btn {
+      padding: 5px 10px;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .btn-submit {
+      background: green;
+      color: white;
+    }
+    .btn-cancel {
+      background: red;
+      color: white;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    .row > div {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Vendor Registration</h2>
+    <form method="POST" action="/add_vendor">
+      
+      <!-- Vendor Details -->
+      <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">Vendor Details</div>
+        <div class="section-body">
+          <input type="text" name="vendor_name" placeholder="Vendor Name" required>
+          <input type="text" name="gst" placeholder="GST Number" required>
+          <input type="text" name="address" placeholder="Address" required>
+        </div>
+      </div>
+
+      <!-- Communication Details -->
+      <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">Communication Details</div>
+        <div class="section-body">
+          <div id="communication-container">
+            <div class="row comm-row">
+              <div><input type="text" name="contact_person[]" placeholder="Contact Person"></div>
+              <div><input type="text" name="contact_phone[]" placeholder="Phone"></div>
+              <div><input type="email" name="contact_email[]" placeholder="Email"></div>
+              <div><button type="button" class="add-btn" onclick="addRow()">+</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank Details -->
+      <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">Bank Details</div>
+        <div class="section-body">
+          <input type="text" name="bank_name" placeholder="Bank Name">
+          <input type="text" name="account_no" placeholder="Account Number">
+          <input type="text" name="ifsc" placeholder="IFSC Code">
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="margin-top: 20px;">
+        <button type="submit" class="btn-submit">Submit</button>
+        <button type="button" class="btn-cancel" onclick="window.location.href='/dashboard'">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    function toggleSection(header) {
+      const body = header.nextElementSibling;
+      body.style.display = (body.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function addRow() {
+      const container = document.getElementById('communication-container');
+      const row = document.createElement('div');
+      row.classList.add('row', 'comm-row');
+      row.innerHTML = `
+        <div><input type="text" name="contact_person[]" placeholder="Contact Person"></div>
+        <div><input type="text" name="contact_phone[]" placeholder="Phone"></div>
+        <div><input type="email" name="contact_email[]" placeholder="Email"></div>
+        <div><button type="button" class="remove-btn" onclick="removeRow(this)">−</button></div>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeRow(btn) {
+      const row = btn.closest('.comm-row');
+      row.remove();
+    }
+  </script>
+</body>
+</html>
