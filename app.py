@@ -64,6 +64,18 @@ def init_db():
         production_status TEXT DEFAULT NULL
     )''')
 
+# Measurement Sheets
+    c.execute('''CREATE TABLE IF NOT EXISTS measurement_sheets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER,
+        duct_no TEXT,
+        duct_type TEXT,
+        duct_size TEXT,
+        quantity INTEGER,
+        remarks TEXT,
+        created_at TEXT
+    )''')
+
     # Dummy admin login if not exists
     c.execute("SELECT * FROM users WHERE username = 'admin'")
     if not c.fetchone():
@@ -329,6 +341,98 @@ def projects():
     conn.close()
     return render_template("projects.html", vendors=vendors, employees=employees, projects=projects)
 
+# -------------------- Measurement Sheet --------------------
+
+@app.route('/measurement/<int:project_id>', methods=['GET', 'POST'])
+def measurement_sheet(project_id):
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+
+    # Get project & client info
+    c.execute("SELECT enquiry_id, client, location, start_date, end_date FROM projects WHERE id=?", (project_id,))
+    project = c.fetchone()
+    if not project:
+        flash("Project not found", "danger")
+        return redirect(url_for('projects'))
+
+    project_info = {
+        'enquiry_id': project[0],
+        'client': project[1],
+        'location': project[2],
+        'start_date': project[3],
+        'end_date': project[4]
+    }
+
+    # Handle form POST (insert measurement row)
+    if request.method == 'POST':
+        duct_no = request.form.get('duct_no')
+        duct_type = request.form.get('duct_type')
+        duct_size = request.form.get('duct_size')
+        quantity = request.form.get('quantity')
+        remarks = request.form.get('remarks')
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        c.execute('''INSERT INTO measurement_sheets (project_id, duct_no, duct_type, duct_size, quantity, remarks, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                  (project_id, duct_no, duct_type, duct_size, quantity, remarks, created_at))
+        conn.commit()
+        flash("Entry added to measurement sheet", "success")
+
+    # Get existing sheet entries
+    c.execute("SELECT id, duct_no, duct_type, duct_size, quantity, remarks FROM measurement_sheets WHERE project_id=? ORDER BY id DESC", (project_id,))
+    sheet_rows = c.fetchall()
+    conn.close()
+
+    return render_template('measurement.html', project=project_info, sheet=sheet_rows, project_id=project_id)
+
+@app.route('/measurement_edit/<int:id>/<int:project_id>', methods=['GET', 'POST'])
+def measurement_edit(id, project_id):
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+
+    if request.method == 'POST':
+        duct_no = request.form.get('duct_no')
+        duct_type = request.form.get('duct_type')
+        duct_size = request.form.get('duct_size')
+        quantity = request.form.get('quantity')
+        remarks = request.form.get('remarks')
+
+        c.execute('''UPDATE measurement_sheets SET 
+                     duct_no=?, duct_type=?, duct_size=?, quantity=?, remarks=? 
+                     WHERE id=?''',
+                  (duct_no, duct_type, duct_size, quantity, remarks, id))
+        conn.commit()
+        conn.close()
+        flash("Measurement entry updated", "success")
+        return redirect(url_for('measurement_sheet', project_id=project_id))
+
+    # GET request: fetch row
+    c.execute("SELECT * FROM measurement_sheets WHERE id=?", (id,))
+    row = c.fetchone()
+    conn.close()
+    return render_template('measurement_edit.html', row=row, project_id=project_id)
+
+@app.route('/measurement_delete/<int:id>/<int:project_id>')
+def measurement_delete(id, project_id):
+    if 'user' not in session:
+        flash("Please login first", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM measurement_sheets WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    flash("Measurement entry deleted", "info")
+    return redirect(url_for('measurement_sheet', project_id=project_id))
 @app.route('/add_project', methods=['POST'])
 def add_project():
     if 'user' not in session:
