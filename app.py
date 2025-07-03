@@ -76,6 +76,18 @@ def init_db():
         created_at TEXT
     )''')
 
+    # Production Table
+    c.execute('''CREATE TABLE IF NOT EXISTS production (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER,
+        production_id TEXT UNIQUE,
+        task TEXT,
+        status TEXT,
+        materials TEXT,
+        assigned_on TEXT,
+        notes TEXT
+    )''')
+
     # Dummy admin login if not exists
     c.execute("SELECT * FROM users WHERE username = 'admin'")
     if not c.fetchone():
@@ -437,7 +449,7 @@ def measurement_delete(id, project_id):
 def add_project():
     if 'user' not in session:
         flash("Please login first", "warning")
-        return redirect(url_for('login'))
+        return redirect(url_for('login.'))
 
     enquiry_id = request.form.get('enquiry_id')
     client = request.form.get('client')
@@ -490,7 +502,7 @@ def add_project():
 def update_design_status(project_id, new_status):
     if 'user' not in session:
         flash("Please login first", "warning")
-        return redirect(url_for('login'))
+        return redirect(url_for('login.html'))
 
     valid_statuses = ['preparation', 'completed', 'submitted', 'under_review', 'approved']
     if new_status not in valid_statuses:
@@ -544,7 +556,7 @@ def production():
 def update_production(id, status):
     if 'user' not in session:
         flash("Please login first", "warning")
-        return redirect(url_for('login'))
+        return redirect(url_for('login.html'))
 
     valid = ['started', 'completed']
     if status not in valid:
