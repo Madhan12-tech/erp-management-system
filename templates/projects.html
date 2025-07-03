@@ -2,118 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Management - ERP</title>
+  <title>Project Management</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
       background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
     }
-
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 220px;
-      background: #343a40;
-      padding-top: 20px;
-    }
-
-    .sidebar a {
-      display: block;
+      width: 200px;
+      background: #2c3e50;
+      height: 100vh;
       color: white;
-      padding: 15px;
+      padding: 20px 0;
+    }
+    .sidebar a {
+      color: white;
       text-decoration: none;
+      display: block;
+      padding: 10px 20px;
     }
-
     .sidebar a:hover {
-      background: #495057;
+      background: #34495e;
     }
-
     .main {
-      margin-left: 220px;
+      flex: 1;
       padding: 20px;
     }
-
-    h2 {
-      margin-top: 0;
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-
+    .popup-form {
+      position: fixed;
+      right: -100%;
+      top: 0;
+      width: 400px;
+      height: 100vh;
+      background: white;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      transition: right 0.3s ease;
+      overflow-y: auto;
+    }
+    .popup-form.open {
+      right: 0;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
     button {
-      padding: 10px 20px;
       background: #007bff;
       color: white;
+      padding: 10px 15px;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
-      margin-bottom: 15px;
     }
-
-    button:hover {
-      background: #0056b3;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-top: 20px;
     }
-
     th, td {
       border: 1px solid #ddd;
-      padding: 10px;
+      padding: 8px;
       text-align: left;
     }
-
     th {
       background: #007bff;
       color: white;
     }
-
-    .popup-form {
-      position: fixed;
-      top: 0;
-      right: -500px;
-      width: 450px;
-      height: 100%;
-      background: #fff;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.2);
-      overflow-y: auto;
-      transition: right 0.3s ease;
-      padding: 20px;
-    }
-
-    .popup-form.active {
-      right: 0;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-
     .toast {
       position: fixed;
       top: 20px;
       right: 20px;
       background: #333;
-      color: #fff;
-      padding: 12px;
-      border-radius: 6px;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
       display: none;
     }
   </style>
 </head>
 <body>
-
 <div class="sidebar">
   <a href="/dashboard">Dashboard</a>
   <a href="/vendor_register">Vendors</a>
@@ -121,184 +99,135 @@
   <a href="/projects">Projects</a>
   <a href="/logout">Logout</a>
 </div>
-
 <div class="main">
-  <h2>Project Management</h2>
-  <button onclick="openPopup()">+ New Project</button>
-  <div class="popup-form" id="projectPopup">
-    <h3>Add New Project</h3>
-    <form method="POST" action="/add_project" enctype="multipart/form-data">
-      <div class="form-group">
-        <label>Client</label>
-        <select name="client" required onchange="autoFillDetails(this)">
-          <option value="">-- Select Vendor --</option>
-          {% for v in vendors %}
-            <option value="{{ v.name }}" data-gst="{{ v.gst_no }}" data-address="{{ v.address }}">{{ v.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Quotation RO</label>
-        <input type="text" name="quotation_ro">
-      </div>
-
-      <div class="form-group">
-        <label>Start Date</label>
-        <input type="date" name="start_date" value="{{ current_date }}">
-      </div>
-
-      <div class="form-group">
-        <label>End Date</label>
-        <input type="date" name="end_date">
-      </div>
-
-      <div class="form-group">
-        <label>Location</label>
-        <input type="text" name="location">
-      </div>
-
-      <div class="form-group">
-        <label>Upload Source Drawing</label>
-        <input type="file" name="source_drawing">
-      </div>
-
-      <div class="form-group">
-        <label>GST Number</label>
-        <input type="text" name="gst_no" id="gst_no">
-      </div>
-
-      <div class="form-group">
-        <label>Address</label>
-        <textarea name="address" id="address"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Project Incharge</label>
-        <select name="project_incharge">
-          <option value="">-- Select Employee --</option>
-          {% for emp in employees %}
-            <option value="{{ emp.name }}">{{ emp.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea name="notes"></textarea>
-      </div>
-
-      <button type="submit">Save and Continue</button>
-    </form>
+  <div class="header">
+    <h2>Project Management</h2>
+    <button onclick="openPopup()">+ New Project</button>
   </div>
-  <h3>Project List</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Enquiry ID</th>
-        <th>Client</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Location</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in projects %}
-      <tr>
-        <td>{{ p.enquiry_id }}</td>
-        <td>{{ p.client }}</td>
-        <td>{{ p.start_date }}</td>
-        <td>{{ p.end_date }}</td>
-        <td>{{ p.location }}</td>
-        <td>{{ p.design_status }}</td>
-        <td>
-          <button onclick="alert('Edit Coming Soon')">Edit</button>
-          <button onclick="confirm('Are you sure?')">Delete</button>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <!-- Popup Form -->
+<div id="projectPopup" class="popup-form">
+  <h3>Add New Project</h3>
+  <form action="/add_project" method="POST" enctype="multipart/form-data">
+    <label>Enquiry ID (auto):</label>
+    <input type="text" name="enquiry_id" id="enquiry_id" readonly placeholder="Auto-generated">
 
-  <button onclick="exportTableToCSV()">Export CSV</button>
-  <button onclick="window.print()">Print</button>
-  <h3>Design Process Progress</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Enquiry ID</th>
-        <th>Client</th>
-        <th>Stage</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in projects %}
-        <tr>
-          <td>{{ p.enquiry_id }}</td>
-          <td>{{ p.client }}</td>
-          <td>{{ p.design_status }}</td>
-          <td>
-            {% if p.design_status == 'preparation' %}
-              <button onclick="window.location.href='/measurement_sheet/{{ p.id }}'">Add Sheet</button>
-              <button onclick="alert('Mark Completed')">Complete</button>
-            {% elif p.design_status == 'completed' %}
-              <button onclick="alert('Submit for Approval')">Submit</button>
-            {% elif p.design_status == 'submitted' %}
-              <button onclick="alert('Under Review')">Review</button>
-            {% elif p.design_status == 'under_review' %}
-              <button onclick="alert('Approve')">Approve</button>
-            {% elif p.design_status == 'approved' %}
-              ✅ Approved
-            {% endif %}
-          </td>
-        </tr>
+    <label>Client (Vendor):</label>
+    <select name="client" id="clientDropdown" onchange="fillClientDetails()" required>
+      <option value="">-- Select Vendor --</option>
+      {% for v in vendors %}
+        <option value="{{ v.name }}" data-gst="{{ v.gst_no }}" data-address="{{ v.address }}">{{ v.name }}</option>
       {% endfor %}
-    </tbody>
-  </table>
-  </div> <!-- End of .main -->
+    </select>
 
-<div class="toast" id="toast"></div>
+    <label>Quotation RO:</label>
+    <input type="text" name="quotation_ro" required>
+
+    <label>Start Date:</label>
+    <input type="date" name="start_date" value="{{ current_date }}" required>
+
+    <label>End Date:</label>
+    <input type="date" name="end_date" required>
+
+    <label>Location:</label>
+    <input type="text" name="location">
+
+    <label>GST Number:</label>
+    <input type="text" name="gst_no" id="gst_no" readonly>
+
+    <label>Address:</label>
+    <textarea name="address" id="address" readonly></textarea>
+
+    <label>Project Incharge:</label>
+    <select name="project_incharge" required>
+      <option value="">-- Select Incharge --</option>
+      {% for emp in employees %}
+        <option value="{{ emp.name }}">{{ emp.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Notes:</label>
+    <textarea name="notes"></textarea>
+
+    <label>Upload Source Drawing:</label>
+    <input type="file" name="source_drawing">
+
+    <button type="submit">Save and Continue</button>
+  </form>
+</div>
+<!-- Project List Table -->
+<h3>Project List</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Enquiry ID</th>
+      <th>Client</th>
+      <th>Start</th>
+      <th>End</th>
+      <th>Location</th>
+      <th>Incharge</th>
+      <th>Design Stage</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in projects %}
+    <tr>
+      <td>{{ p.enquiry_id }}</td>
+      <td>{{ p.client }}</td>
+      <td>{{ p.start_date }}</td>
+      <td>{{ p.end_date }}</td>
+      <td>{{ p.location }}</td>
+      <td>{{ p.project_incharge }}</td>
+      <td>{{ p.design_status }}</td>
+      <td>
+        {% if p.design_status == 'preparation' %}
+          <a href="/add_measurement/{{ p.id }}"><button>Measurement</button></a>
+          <a href="/mark_design_stage/{{ p.id }}/completed"><button>Mark Completed</button></a>
+        {% elif p.design_status == 'completed' %}
+          <a href="/mark_design_stage/{{ p.id }}/submitted"><button>Submit</button></a>
+        {% elif p.design_status == 'submitted' %}
+          <a href="/mark_design_stage/{{ p.id }}/under_review"><button>Under Review</button></a>
+        {% elif p.design_status == 'under_review' %}
+          <a href="/mark_design_stage/{{ p.id }}/approved"><button>Approve</button></a>
+        {% elif p.design_status == 'approved' %}
+          ✅ Sent to Production
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
 
 <script>
   function openPopup() {
-    document.getElementById("projectPopup").classList.add("active");
+    document.getElementById("projectPopup").classList.add("open");
+    generateEnquiryID();
   }
 
   function closePopup() {
-    document.getElementById("projectPopup").classList.remove("active");
+    document.getElementById("projectPopup").classList.remove("open");
   }
 
-  function autoFillDetails(select) {
-    const gst = select.options[select.selectedIndex].getAttribute("data-gst");
-    const address = select.options[select.selectedIndex].getAttribute("data-address");
+  function fillClientDetails() {
+    const clientDropdown = document.getElementById("clientDropdown");
+    const selected = clientDropdown.options[clientDropdown.selectedIndex];
+    const gst = selected.getAttribute("data-gst");
+    const address = selected.getAttribute("data-address");
     document.getElementById("gst_no").value = gst;
     document.getElementById("address").value = address;
   }
 
-  function exportTableToCSV() {
-    const rows = document.querySelectorAll("table tbody tr");
-    let csv = "Enquiry ID,Client,Start,End,Location,Status\n";
-    rows.forEach(row => {
-      const cols = row.querySelectorAll("td");
-      const line = Array.from(cols).map(td => `"${td.innerText}"`).join(",");
-      csv += line + "\n";
-    });
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.setAttribute("href", url);
-    a.setAttribute("download", "projects.csv");
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  function generateEnquiryID() {
+    // Optionally handled by server. Leave blank or show placeholder
+    document.getElementById("enquiry_id").placeholder = "Auto-generated by server";
   }
 
+  // Toast logic
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      const toast = document.getElementById('toast');
+      const toast = document.getElementById("toast");
       {% for category, message in messages %}
         toast.textContent = "{{ message }}";
         toast.style.backgroundColor = {
@@ -307,12 +236,12 @@
           warning: '#ffc107',
           info: '#17a2b8'
         }['{{ category }}'] || '#333';
-        toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 3000);
+        toast.style.display = "block";
+        setTimeout(() => toast.style.display = "none", 3000);
       {% endfor %}
     {% endif %}
   {% endwith %}
 </script>
-
+</div> <!-- close .main -->
 </body>
 </html>
