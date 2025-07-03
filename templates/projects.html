@@ -278,6 +278,62 @@
       <button type="submit">Save & Continue</button>
     </form>
   </div>
+  <div class="design-process" style="margin-top:30px;">
+  <h3>Design Process</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Stage</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Diagram Uploaded</td>
+        <td><span style="color: green;">Yes</span></td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td>Preparation</td>
+        <td>
+          {% if design_status == 'completed' %}
+            ✅ Completed
+          {% else %}
+            🟡 In Progress
+          {% endif %}
+        </td>
+        <td>
+          {% if design_status != 'completed' %}
+            <button onclick="window.location.href='/measurement_sheet/{{ project_id }}'">Continue Sheet</button>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td>Submitted for Approval</td>
+        <td>{{ approval_status }}</td>
+        <td>
+          {% if design_status == 'completed' and approval_status == 'Not Submitted' %}
+            <button onclick="submitForApproval('{{ project_id }}')">Submit</button>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td>Under Review</td>
+        <td>
+          {% if approval_status == 'Submitted' %}🟡 Under Review{% endif %}
+          {% if approval_status == 'Approved' %}✅ Approved{% endif %}
+        </td>
+        <td>
+          {% if approval_status == 'Submitted' %}
+            <button onclick="approveProject('{{ project_id }}')">Approve</button>
+            <button onclick="returnToPrep('{{ project_id }}')">Send Back</button>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
 
   <!-- ✅ Measurement Sheet Popup -->
   <div id="measurementPopup" class="popup">
