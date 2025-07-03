@@ -2,26 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Production Module - ERP</title>
+  <title>Production Progress - ERP</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      background: #f8f8f8;
       margin: 0;
       padding: 0;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 30px auto;
       background: white;
       padding: 25px;
       border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     h2 {
       text-align: center;
+      margin-bottom: 20px;
       color: #333;
     }
 
@@ -34,7 +35,7 @@
     th, td {
       padding: 10px;
       border: 1px solid #ddd;
-      text-align: left;
+      text-align: center;
     }
 
     th {
@@ -42,25 +43,31 @@
       color: white;
     }
 
-    button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      color: white;
+    input[type="number"] {
+      width: 60px;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      text-align: center;
     }
 
-    .in-progress {
-      background: #ffc107;
-    }
-
-    .completed {
+    .progress-bar {
       background: #28a745;
+      height: 18px;
+      border-radius: 4px;
+      color: white;
+      text-align: center;
+      font-size: 12px;
     }
 
     .export-btn {
-      margin: 10px 5px;
       background: #17a2b8;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      margin: 10px 5px;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     .toast {
@@ -78,70 +85,89 @@
 <body>
 
 <div class="container">
-  <h2>Production Tracking</h2>
+  <h2>Production Progress Tracking</h2>
 
-  <div style="margin-bottom: 10px;">
-    <button class="export-btn" onclick="exportToCSV()">Export CSV</button>
-    <button class="export-btn" onclick="window.print()">Print</button>
+  <div style="text-align:right;">
+    <button class="export-btn" onclick="window.print()">🖨️ Print</button>
+    <button class="export-btn" onclick="exportCSV()">📁 Export CSV</button>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Enquiry ID</th>
-        <th>Client</th>
-        <th>Location</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Incharge</th>
-        <th>Production Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in projects %}
-      <tr>
-        <td>{{ p['enquiry_id'] }}</td>
-        <td>{{ p['client'] }}</td>
-        <td>{{ p['location'] }}</td>
-        <td>{{ p['start_date'] }}</td>
-        <td>{{ p['end_date'] }}</td>
-        <td>{{ p['project_incharge'] }}</td>
-        <td>{{ p['production_status'] if p['production_status'] else 'Not Started' }}</td>
-        <td>
-          {% if not p['production_status'] %}
-            <a href="/start_production/{{ p['id'] }}"><button class="in-progress">Start</button></a>
-          {% elif p['production_status'] == 'In Progress' %}
-            <a href="/complete_production/{{ p['id'] }}"><button class="completed">Mark Complete</button></a>
-          {% else %}
-            ✅ Done
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <form method="POST" action="/update_production">
+    <table>
+      <thead>
+        <tr>
+          <th>Enquiry ID</th>
+          <th>Client</th>
+          <th>Location</th>
+          <th>Drawing</th>
+          <th>Sheet Cutting %</th>
+          <th>Plasma Fab %</th>
+          <th>Assembly %</th>
+          <th>QC</th>
+          <th>Dispatch</th>
+          <th>Overall Progress</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in projects %}
+        <tr>
+          <td>{{ p.enquiry_id }}</td>
+          <td>{{ p.client }}</td>
+          <td>{{ p.location }}</td>
+          <td>
+            {% if p.source_drawing %}
+              <a href="/uploads/{{ p.source_drawing }}" target="_blank">View</a>
+            {% else %}
+              No File
+            {% endif %}
+          </td>
+
+          <!-- Stage 1: Sheet Cutting % -->
+          <td>
+            <input type="number" name="sheet_cutting_{{ p.id }}" min="0" max="100"
+              value="{{ p.sheet_cutting or 0 }}">
+          </td>
+
+          <!-- Stage 2: Plasma Fabrication % -->
+          <td>
+            <input type="number" name="plasma_fab_{{ p.id }}" min="0" max="100"
+              value="{{ p.plasma_fab or 0 }}">
+          </td>
+
+          <!-- Stage 3: Assembly % -->
+          <td>
+            <input type="number" name="assembly_{{ p.id }}" min="0" max="100"
+              value="{{ p.assembly or 0 }}">
+          </td>
+
+          <!-- Stage 4: Quality Check (display only) -->
+          <td>{{ p.quality_check or 'Pending' }}</td>
+
+          <!-- Stage 5: Dispatch (display only) -->
+          <td>{{ p.dispatch or 'Pending' }}</td>
+
+          <!-- Overall Progress Calculation -->
+          <td>
+            {% set total = ((p.sheet_cutting or 0) + (p.plasma_fab or 0) + (p.assembly or 0)) / 3 %}
+            <div class="progress-bar" style="width: {{ total }}%;">
+              {{ total|round(0) }}%
+            </div>
+          </td>
+
+          <td>
+            <button type="submit" name="update_id" value="{{ p.id }}">Update</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
 </div>
+  <div id="toast" class="toast"></div>
 
-<div id="toast" class="toast"></div>
 <script>
-  // Export to CSV
-  function exportToCSV() {
-    let csv = "Enquiry ID,Client,Location,Start Date,End Date,Incharge,Production Status\n";
-    document.querySelectorAll("table tbody tr").forEach(row => {
-      const cols = row.querySelectorAll("td");
-      const line = Array.from(cols).slice(0, 7).map(td => `"${td.innerText}"`).join(",");
-      csv += line + "\n";
-    });
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "production_status.csv";
-    a.click();
-  }
-
-  // Toast flash messages
+  // Toast messages (flash)
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       const toast = document.getElementById("toast");
@@ -158,7 +184,27 @@
       {% endfor %}
     {% endif %}
   {% endwith %}
+
+  // CSV Export function
+  function exportCSV() {
+    let rows = [["Enquiry ID", "Client", "Location", "Sheet Cutting %", "Plasma Fab %", "Assembly %", "QC", "Dispatch", "Overall"]];
+    document.querySelectorAll("tbody tr").forEach(row => {
+      const cols = Array.from(row.querySelectorAll("td")).map(td => td.innerText.trim());
+      rows.push(cols.slice(0, 9));
+    });
+
+    let csvContent = rows.map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "production_progress.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 </script>
 
 </body>
 </html>
+        
