@@ -79,7 +79,7 @@ def login():
         conn.close()
         if user:
             session['user'] = uname
-            return redirect('/register')
+            return redirect('/dashboard')  # ✅ GO TO DASHBOARD INSTEAD
         else:
             flash("Invalid Credentials")
             return redirect('/login')
