@@ -11,10 +11,31 @@ app.secret_key = 'secretkey'
 
 # ---------- DB SETUP ----------
 def init_db():
+ers (username, password) VALUES (?, ?)", ('admin', 'admin123'))
+# ---------- LOGIN ----------
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        uname = request.form['username']
+        pwd = request.form['password']
+        conn = sqlite3.connect('erp.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (uname, pwd))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            session['username'] = uname
+            return redirect('/dashboard')
+        else:
+            flash("Invalid credentials", "danger")
+    return render_template('login.html')
+    
+
+def init_db():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Users
+    # Users table
     c.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT,
@@ -68,35 +89,13 @@ def init_db():
         quantity INTEGER
     )''')
 
+    # ✅ Insert dummy user safely
+    c.execute("SELECT * FROM users WHERE username = 'admin'")
+    if not c.fetchone():
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin123'))
+
     conn.commit()
     conn.close()
-
-# ---------- INIT DB ----------
-init_db()
-
-# Insert dummy admin user if not exists
-c.execute("SELECT * FROM users WHERE username = 'admin'")
-if not c.fetchone():
-    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin123'))
-# ---------- LOGIN ----------
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        uname = request.form['username']
-        pwd = request.form['password']
-        conn = sqlite3.connect('erp.db')
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE username=? AND password=?", (uname, pwd))
-        user = c.fetchone()
-        conn.close()
-        if user:
-            session['username'] = uname
-            return redirect('/dashboard')
-        else:
-            flash("Invalid credentials", "danger")
-    return render_template('login.html')
-
-
 # ---------- REGISTER ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
