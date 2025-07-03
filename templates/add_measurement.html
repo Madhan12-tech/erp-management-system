@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Measurement Sheet</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+    }
+    .top-info {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-info div {
+      flex: 1;
+      padding: 0 10px;
+      font-size: 14px;
+    }
+    .container {
+      display: flex;
+      padding: 20px;
+    }
+    .form-section, .table-section {
+      flex: 1;
+      padding: 20px;
+      background: white;
+      margin: 0 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Project Info Top Bar -->
+<div class="top-info">
+  <div><strong>Enquiry ID:</strong> {{ project.enquiry_id }}</div>
+  <div><strong>Client:</strong> {{ project.client }}</div>
+  <div><strong>Location:</strong> {{ project.location }}</div>
+  <div><strong>Incharge:</strong> {{ project.project_incharge }}</div>
+</div>
+<div class="container">
+  <!-- Left: Form Section -->
+  <div class="form-section">
+    <h3>Add Duct Entry</h3>
+    <form method="POST" action="/save_measurement/{{ project.id }}">
+      <label>Duct Number</label>
+      <input type="text" name="duct_number" required>
+
+      <label>Duct Type</label>
+      <select name="duct_type" required>
+        <option value="">-- Select --</option>
+        <option value="Rectangular">Rectangular</option>
+        <option value="Round">Round</option>
+        <option value="Flexible">Flexible</option>
+      </select>
+
+      <label>Length (mm)</label>
+      <input type="number" name="length" required>
+
+      <label>Width (mm)</label>
+      <input type="number" name="width" required>
+
+      <label>Height (mm)</label>
+      <input type="number" name="height" required>
+
+      <label>Quantity</label>
+      <input type="number" name="quantity" required>
+
+      <button type="submit">Save Entry</button>
+    </form>
+  </div><!-- Right: Table Section -->
+  <div class="table-section">
+    <h3>Live Measurement Entries</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Duct #</th>
+          <th>Type</th>
+          <th>Length</th>
+          <th>Width</th>
+          <th>Height</th>
+          <th>Qty</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in measurements %}
+        <tr>
+          <td>{{ entry.duct_number }}</td>
+          <td>{{ entry.duct_type }}</td>
+          <td>{{ entry.length }}</td>
+          <td>{{ entry.width }}</td>
+          <td>{{ entry.height }}</td>
+          <td>{{ entry.quantity }}</td>
+          <td>
+            <a href="/edit_measurement/{{ entry.id }}"><button>Edit</button></a>
+            <a href="/delete_measurement/{{ entry.id }}" onclick="return confirm('Delete this entry?')"><button style="background:#dc3545;">Delete</button></a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;">No entries yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div> <!-- End of .container -->
+  <div style="text-align:center; margin: 30px 0;">
+  <button onclick="exportCSV()">Export CSV</button>
+  <button onclick="window.print()">Print</button>
+  <a href="/final_submit/{{ project.id }}"><button style="background:#007bff;">Final Submit</button></a>
+  <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast" style="display:none; position:fixed; top:20px; right:20px; background:#333; color:white; padding:12px; border-radius:6px;"></div>
+
+<script>
+  function exportCSV() {
+    let csv = "Duct No,Type,Length,Width,Height,Quantity\n";
+    document.querySelectorAll("table tbody tr").forEach(row => {
+      const cells = row.querySelectorAll("td");
+      if (cells.length > 1) {
+        csv += Array.from(cells).slice(0, 6).map(cell => `"${cell.innerText}"`).join(",") + "\n";
+      }
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'measurement_sheet.csv';
+    a.click();
+  }
+
+  function toggleDarkMode() {
+    const body = document.body;
+    body.classList.toggle('dark');
+    if (body.classList.contains('dark')) {
+      body.style.background = '#121212';
+      document.querySelectorAll('.form-section, .table-section').forEach(el => {
+        el.style.background = '#1e1e1e';
+        el.style.color = 'white';
+      });
+    } else {
+      body.style.background = '#f9f9f9';
+      document.querySelectorAll('.form-section, .table-section').forEach(el => {
+        el.style.background = 'white';
+        el.style.color = 'black';
+      });
+    }
+  }
+
+  // Flash message as toast
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      const toast = document.getElementById("toast");
+      {% for category, message in messages %}
+        toast.textContent = "{{ message }}";
+        toast.style.backgroundColor = {
+          success: '#28a745',
+          danger: '#dc3545',
+          warning: '#ffc107',
+          info: '#17a2b8'
+        }['{{ category }}'] || '#333';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</script>
+
+</body>
+</html>
