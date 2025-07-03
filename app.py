@@ -99,6 +99,18 @@ def init_db():
 
 init_db()
 
+def create_default_admin():
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE username='admin'")
+    if not c.fetchone():
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin123'))
+        conn.commit()
+        print("✅ Default admin created!")
+    conn.close()
+
+create_default_admin()
+
 # Helper: Generate Unique Enquiry ID
 def generate_unique_enquiry_id():
     year = datetime.now().year
