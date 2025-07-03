@@ -1,92 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Vendor Registration</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2;
-      margin: 0;
       padding: 20px;
     }
     .container {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 25px;
+      background: #fff;
+      padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     h2 {
-      background: #007bff;
-      color: white;
-      padding: 10px;
-      margin: 0 -25px 15px -25px;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
+      margin-bottom: 10px;
     }
     .section {
       margin-bottom: 20px;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 6px;
     }
     .section-header {
-      background: #f5f5f5;
+      background: #007bff;
+      color: white;
       padding: 10px;
       cursor: pointer;
-      font-weight: bold;
     }
-    .section-body {
-      padding: 10px;
+    .section-content {
+      padding: 15px;
       display: none;
     }
-    input, select {
-      width: 100%;
+    input {
+      width: calc(100% - 20px);
+      margin: 8px 0;
       padding: 8px;
-      margin-top: 8px;
-      margin-bottom: 12px;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 4px;
     }
-    button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-    .add-btn, .remove-btn {
-      padding: 5px 10px;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-    .btn-submit {
-      background: green;
-      color: white;
-    }
-    .btn-cancel {
-      background: red;
-      color: white;
-    }
-    .row {
+    .comm-row {
       display: flex;
       gap: 10px;
+      margin-bottom: 10px;
     }
-    .row > div {
+    .comm-row input {
       flex: 1;
+    }
+    .btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .btn-danger {
+      background: red;
+    }
+    .btn-cancel {
+      background: gray;
+      margin-left: 10px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Vendor Registration</h2>
-    <form method="POST" action="/add_vendor">
+    <form action="/add_vendor" method="POST">
       
       <!-- Vendor Details -->
       <div class="section">
         <div class="section-header" onclick="toggleSection(this)">Vendor Details</div>
-        <div class="section-body">
+        <div class="section-content">
           <input type="text" name="vendor_name" placeholder="Vendor Name" required>
           <input type="text" name="gst" placeholder="GST Number" required>
           <input type="text" name="address" placeholder="Address" required>
@@ -96,59 +86,50 @@
       <!-- Communication Details -->
       <div class="section">
         <div class="section-header" onclick="toggleSection(this)">Communication Details</div>
-        <div class="section-body">
-          <div id="communication-container">
-            <div class="row comm-row">
-              <div><input type="text" name="contact_person[]" placeholder="Contact Person"></div>
-              <div><input type="text" name="contact_phone[]" placeholder="Phone"></div>
-              <div><input type="email" name="contact_email[]" placeholder="Email"></div>
-              <div><button type="button" class="add-btn" onclick="addRow()">+</button></div>
-            </div>
+        <div class="section-content" id="comm-section">
+          <div class="comm-row">
+            <input type="text" name="contact_person[]" placeholder="Contact Person">
+            <input type="text" name="phone[]" placeholder="Phone">
+            <button type="button" onclick="removeRow(this)">–</button>
           </div>
+          <button type="button" onclick="addRow()">+ Add Contact</button>
         </div>
       </div>
 
       <!-- Bank Details -->
       <div class="section">
         <div class="section-header" onclick="toggleSection(this)">Bank Details</div>
-        <div class="section-body">
+        <div class="section-content">
           <input type="text" name="bank_name" placeholder="Bank Name">
           <input type="text" name="account_no" placeholder="Account Number">
           <input type="text" name="ifsc" placeholder="IFSC Code">
         </div>
       </div>
 
-      <!-- Buttons -->
-      <div style="margin-top: 20px;">
-        <button type="submit" class="btn-submit">Submit</button>
-        <button type="button" class="btn-cancel" onclick="window.location.href='/dashboard'">Cancel</button>
-      </div>
-
+      <button class="btn" type="submit">Submit</button>
+      <a href="/dashboard" class="btn btn-cancel">Cancel</a>
     </form>
   </div>
 
   <script>
     function toggleSection(header) {
-      const body = header.nextElementSibling;
-      body.style.display = (body.style.display === 'block') ? 'none' : 'block';
+      const content = header.nextElementSibling;
+      content.style.display = content.style.display === 'block' ? 'none' : 'block';
     }
 
     function addRow() {
-      const container = document.getElementById('communication-container');
+      const container = document.getElementById('comm-section');
       const row = document.createElement('div');
-      row.classList.add('row', 'comm-row');
+      row.className = 'comm-row';
       row.innerHTML = `
-        <div><input type="text" name="contact_person[]" placeholder="Contact Person"></div>
-        <div><input type="text" name="contact_phone[]" placeholder="Phone"></div>
-        <div><input type="email" name="contact_email[]" placeholder="Email"></div>
-        <div><button type="button" class="remove-btn" onclick="removeRow(this)">−</button></div>
-      `;
-      container.appendChild(row);
+        <input type="text" name="contact_person[]" placeholder="Contact Person">
+        <input type="text" name="phone[]" placeholder="Phone">
+        <button type="button" onclick="removeRow(this)">–</button>`;
+      container.insertBefore(row, container.lastElementChild);
     }
 
     function removeRow(btn) {
-      const row = btn.closest('.comm-row');
-      row.remove();
+      btn.parentElement.remove();
     }
   </script>
 </body>
