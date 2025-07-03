@@ -532,28 +532,7 @@ def measurement_sheet(project_id):
 
     return render_template('measurement_sheet.html', project=project, sheet_data=sheet_data)
 
-@app.route('/mark_design_stage/<int:project_id>/<stage>')
-def mark_design_stage(project_id, stage):
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Check if entry already exists
-    c.execute("SELECT * FROM design_stages WHERE project_id=? AND stage=?", (project_id, stage))
-    existing = c.fetchone()
-
-    if existing:
-        # Update
-        c.execute("UPDATE design_stages SET status='completed', updated_at=? WHERE project_id=? AND stage=?", (now, project_id, stage))
-    else:
-        # Insert new
-        c.execute("INSERT INTO design_stages (project_id, stage, status, updated_at) VALUES (?, ?, 'completed', ?)", (project_id, stage, now))
-
-    conn.commit()
-    conn.close()
-    flash(f"Stage '{stage}' marked as completed", "success")
-    return redirect(url_for('projects'))
     # --- Edit Measurement Entry ---
 @app.route('/edit_measurement/<int:id>/<int:project_id>', methods=['GET', 'POST'])
 def edit_measurement(id, project_id):
@@ -704,16 +683,29 @@ def update_stage(project_id):
     conn.close()
     flash("Production status updated!", "success")
     return redirect(url_for('production'))
-
 @app.route('/mark_design_stage/<int:project_id>/<stage>')
 def mark_design_stage(project_id, stage):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("UPDATE design_stages SET stage=? WHERE project_id=?", (stage, project_id))
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Check if entry already exists
+    c.execute("SELECT * FROM design_stages WHERE project_id=? AND stage=?", (project_id, stage))
+    existing = c.fetchone()
+
+    if existing:
+        # Update
+        c.execute("UPDATE design_stages SET status='completed', updated_at=? WHERE project_id=? AND stage=?", (now, project_id, stage))
+    else:
+        # Insert new
+        c.execute("INSERT INTO design_stages (project_id, stage, status, updated_at) VALUES (?, ?, 'completed', ?)", (project_id, stage, now))
+
     conn.commit()
     conn.close()
-    flash(f"Stage updated to {stage}", "info")
+    flash(f"Stage '{stage}' marked as completed", "success")
     return redirect(url_for('projects'))
+
     # --- Summary View ---
 @app.route('/summary', methods=['GET', 'POST'])
 def summary():
