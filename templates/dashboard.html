@@ -1,134 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard | Duct ERP</title>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f1f3f6;
+      background: #f1f3f5;
+      margin: 0;
+      padding: 0;
     }
-
-    .container {
-      display: flex;
-      height: 100vh;
-    }
-
     .sidebar {
-      width: 230px;
-      background-color: #2c3e50;
+      background: #2c3e50;
       color: white;
+      width: 200px;
+      height: 100vh;
+      position: fixed;
       padding: 20px;
-      box-sizing: border-box;
     }
-
     .sidebar h2 {
-      font-size: 20px;
-      margin-bottom: 30px;
       text-align: center;
-      border-bottom: 1px solid #555;
+      border-bottom: 1px solid #444;
       padding-bottom: 10px;
     }
-
     .sidebar a {
-      display: block;
-      color: #ecf0f1;
+      color: white;
       text-decoration: none;
-      margin: 15px 0;
-      font-weight: 500;
-      transition: 0.3s;
+      display: block;
+      margin: 20px 0;
     }
-
-    .sidebar a:hover {
-      color: #1abc9c;
-    }
-
     .main {
-      flex-grow: 1;
+      margin-left: 220px;
       padding: 30px;
     }
-
-    .tile-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-    }
-
     .tile {
-      background-color: white;
-      border-radius: 12px;
-      padding: 30px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      text-align: center;
-      transition: transform 0.3s;
-      cursor: pointer;
-    }
-
-    .tile:hover {
-      transform: translateY(-5px);
-      background-color: #f7f7f7;
-    }
-
-    .tile h3 {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #333;
-    }
-
-    .tile-icon {
-      font-size: 40px;
-      color: #007bff;
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <h2>Duct ERP</h2>
-      <a href="#">Dashboard</a>
-      <a href="projects.html">Project Management</a>
-      <a href="#">Production</a>
-      <a href="#">Summary</a>
-      <a href="#">Employees</a>
-      <a href="vendors.html">Vendors</a>
-      <a href="#">Contacts</a>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main">
-      <h2>Welcome to Dashboard</h2>
-      <div class="tile-grid">
-        <div class="tile" onclick="location.href='projects.html'">
-          <div class="tile-icon">📁</div>
-          <h3>Project Management</h3>
-        </div>
-        <div class="tile">
-          <div class="tile-icon">🏭</div>
-          <h3>Production</h3>
-        </div>
-        <div class="tile">
-          <div class="tile-icon">📊</div>
-          <h3>Summary</h3>
-        </div>
-        <div class="tile">
-          <div class="tile-icon">👨‍💼</div>
-          <h3>Employee Registration</h3>
-        </div>
-        <div class="tile" onclick="location.href='vendors.html'">
-          <div class="tile-icon">🏢</div>
-          <h3>Vendor Registration</h3>
-        </div>
-        <div class="tile">
-          <div class="tile-icon">📞</div>
-          <h3>Registered Contacts</h3>
-        </div>
-      </div>
-    </div>
+  <div class="sidebar">
+    <h2>Duct ERP</h2>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/register">Vendor Registration</a>
+    <a href="#">Projects</a>
+    <a href="#">Production</a>
+    <a href="#">Employees</a>
+    <a href="#">Contacts</a>
+    <a href="/logout">Logout</a>
   </div>
 
+  <div class="main">
+    <h2>Dashboard</h2>
+    <div class="tile">Project Management</div>
+    <div class="tile">Production</div>
+    <div class="tile">Summary</div>
+    <div class="tile">Employee Registration</div>
+    <div class="tile">Vendor Registration</div>
+    <div class="tile">Registered Contacts</div>
+  </div>
 </body>
 </html>
