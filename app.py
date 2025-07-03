@@ -92,7 +92,20 @@ def init_db():
         dispatch REAL,
         FOREIGN KEY(project_id) REFERENCES projects(id)
     )''')
+    
+ # CREATE design_stages table if not exists
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS design_stages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            stage TEXT,
+            status TEXT,
+            updated_at TEXT,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        )
+    ''')
 
+    # You can also create other missing tables here...
 
     conn.commit()
     conn.close()
@@ -518,6 +531,29 @@ def measurement_sheet(project_id):
     conn.close()
 
     return render_template('measurement_sheet.html', project=project, sheet_data=sheet_data)
+
+@app.route('/mark_design_stage/<int:project_id>/<stage>')
+def mark_design_stage(project_id, stage):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Check if entry already exists
+    c.execute("SELECT * FROM design_stages WHERE project_id=? AND stage=?", (project_id, stage))
+    existing = c.fetchone()
+
+    if existing:
+        # Update
+        c.execute("UPDATE design_stages SET status='completed', updated_at=? WHERE project_id=? AND stage=?", (now, project_id, stage))
+    else:
+        # Insert new
+        c.execute("INSERT INTO design_stages (project_id, stage, status, updated_at) VALUES (?, ?, 'completed', ?)", (project_id, stage, now))
+
+    conn.commit()
+    conn.close()
+    flash(f"Stage '{stage}' marked as completed", "success")
+    return redirect(url_for('projects'))
     # --- Edit Measurement Entry ---
 @app.route('/edit_measurement/<int:id>/<int:project_id>', methods=['GET', 'POST'])
 def edit_measurement(id, project_id):
