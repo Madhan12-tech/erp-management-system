@@ -113,6 +113,24 @@ def register():
     return render_template('register.html')
 
 
+@app.route('/add_vendor', methods=['POST'])
+def add_vendor():
+    vendor_name = request.form['vendor_name']
+    gst = request.form['gst']
+    address = request.form['address']
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO vendors (vendor_name, gst, address) VALUES (?, ?, ?)",
+              (vendor_name, gst, address))
+    conn.commit()
+    conn.close()
+
+    flash("Vendor added successfully", "success")
+    return redirect('/dashboard')
+
+
+
 # ---------- DASHBOARD ----------
 @app.route('/dashboard')
 def dashboard():
