@@ -5,243 +5,353 @@
   <title>Project Management</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 0;
-      display: flex;
+      background: #f1f3f5;
     }
-    .sidebar {
-      width: 200px;
-      background: #2c3e50;
-      height: 100vh;
-      color: white;
-      padding: 20px 0;
-    }
-    .sidebar a {
-      color: white;
-      text-decoration: none;
-      display: block;
-      padding: 10px 20px;
-    }
-    .sidebar a:hover {
-      background: #34495e;
-    }
-    .main {
-      flex: 1;
-      padding: 20px;
-    }
+
     .header {
+      padding: 20px;
+      background: #007bff;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .popup-form {
-      position: fixed;
-      right: -100%;
-      top: 0;
-      width: 400px;
-      height: 100vh;
+
+    .header h2 {
+      margin: 0;
+    }
+
+    .tools {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tools input[type="text"],
+    .tools select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .add-btn {
       background: white;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-      padding: 20px;
-      transition: right 0.3s ease;
-      overflow-y: auto;
-    }
-    .popup-form.open {
-      right: 0;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      box-sizing: border-box;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      padding: 10px 15px;
+      color: #007bff;
       border: none;
-      border-radius: 4px;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 6px;
       cursor: pointer;
     }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      right: -500px;
+      width: 400px;
+      height: 100%;
+      background: white;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+      transition: right 0.3s ease-in-out;
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .popup.active {
+      right: 0;
+    }
+
+    .popup h3 {
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .popup button {
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-top: 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .close-btn {
+      background: #dc3545 !important;
+      float: right;
+    }
+
+    .project-container {
+      padding: 20px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-    th, td {
+
+    table th, table td {
+      padding: 12px;
       border: 1px solid #ddd;
-      padding: 8px;
       text-align: left;
     }
-    th {
-      background: #007bff;
+
+    table th {
+      background: #343a40;
       color: white;
     }
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #333;
+
+    .design-process {
+      padding: 20px;
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .design-process h3 {
+      margin-bottom: 10px;
+    }
+
+    .design-process button {
+      background: #007bff;
       color: white;
-      padding: 10px;
-      border-radius: 4px;
-      display: none;
+      padding: 6px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-<div class="sidebar">
-  <a href="/dashboard">Dashboard</a>
-  <a href="/vendor_register">Vendors</a>
-  <a href="/employee_register">Employees</a>
-  <a href="/projects">Projects</a>
-  <a href="/logout">Logout</a>
-</div>
-<div class="main">
+
+  <!-- ✅ Top Header -->
   <div class="header">
     <h2>Project Management</h2>
-    <button onclick="openPopup()">+ New Project</button>
+    <div class="tools">
+      <input type="text" id="search" placeholder="Search project...">
+      <select id="status-filter">
+        <option value="">All Status</option>
+        <option value="Preparation">Preparation</option>
+        <option value="Submitted">Submitted</option>
+        <option value="Approved">Approved</option>
+      </select>
+      <button class="add-btn" onclick="openPopup()">+ Add New Project</button>
+    </div>
   </div>
-  <!-- Popup Form -->
-<div id="projectPopup" class="popup-form">
-  <h3>Add New Project</h3>
-  <form action="/add_project" method="POST" enctype="multipart/form-data">
-    <label>Enquiry ID (auto):</label>
-    <input type="text" name="enquiry_id" id="enquiry_id" readonly placeholder="Auto-generated">
 
-    <label>Client (Vendor):</label>
-    <select name="client" id="clientDropdown" onchange="fillClientDetails()" required>
-      <option value="">-- Select Vendor --</option>
-      {% for v in vendors %}
-        <option value="{{ v.name }}" data-gst="{{ v.gst_no }}" data-address="{{ v.address }}">{{ v.name }}</option>
-      {% endfor %}
-    </select>
+  <!-- ✅ Project Table -->
+  <div class="project-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Enquiry ID</th>
+          <th>Client Name</th>
+          <th>Project Location</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="projectTable">
+        {% for project in projects %}
+        <tr>
+          <td>{{ project.enquiry_id }}</td>
+          <td>{{ project.vendor_name }}</td>
+          <td>{{ project.location }}</td>
+          <td>{{ project.status }}</td>
+          <td>
+            <button onclick="editProject('{{ project.enquiry_id }}')">✏️ Edit</button>
+            <button onclick="deleteProject('{{ project.enquiry_id }}')">🗑️ Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-    <label>Quotation RO:</label>
-    <input type="text" name="quotation_ro" required>
+  <!-- ✅ Design Process -->
+  <div class="design-process">
+    <h3>Design Process</h3>
+    <div>
+      <strong>Stage: Preparation</strong>
+      <button onclick="openMeasurementPopup()">+ Add Measurement Sheet</button>
+    </div>
+  </div>
 
-    <label>Start Date:</label>
-    <input type="date" name="start_date" value="{{ current_date }}" required>
+  <!-- ✅ Add Project Popup -->
+  <div id="projectPopup" class="popup">
+    <button class="close-btn" onclick="closePopup()">X</button>
+    <h3>Add New Project</h3>
+    <form method="POST" action="/add_project" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Enquiry ID</label>
+        <input type="text" name="enquiry_id" value="VE/TN/2526/E001" readonly>
+      </div>
 
-    <label>End Date:</label>
-    <input type="date" name="end_date" required>
+      <div class="form-group">
+        <label>Client / Vendor Name</label>
+        <select name="vendor_name" id="vendorDropdown" onchange="fillVendorDetails(this)">
+          <option value="">-- Select Vendor --</option>
+          {% for vendor in vendors %}
+            <option value="{{ vendor.vendor_name }}" data-gst="{{ vendor.gst }}" data-address="{{ vendor.address }}">
+              {{ vendor.vendor_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
 
-    <label>Location:</label>
-    <input type="text" name="location">
+      <div class="form-group">
+        <label>GST Number</label>
+        <input type="text" name="gst" id="gstField" readonly>
+      </div>
 
-    <label>GST Number:</label>
-    <input type="text" name="gst_no" id="gst_no" readonly>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea name="address" id="addressField" readonly></textarea>
+      </div>
 
-    <label>Address:</label>
-    <textarea name="address" id="address" readonly></textarea>
+      <div class="form-group">
+        <label>Quotation RO</label>
+        <input type="text" name="quotation_ro">
+      </div>
 
-    <label>Project Incharge:</label>
-    <select name="project_incharge" required>
-      <option value="">-- Select Incharge --</option>
-      {% for emp in employees %}
-        <option value="{{ emp.name }}">{{ emp.name }}</option>
-      {% endfor %}
-    </select>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" name="start_date">
+      </div>
 
-    <label>Notes:</label>
-    <textarea name="notes"></textarea>
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" name="end_date">
+      </div>
 
-    <label>Upload Source Drawing:</label>
-    <input type="file" name="source_drawing">
+      <div class="form-group">
+        <label>Project Location</label>
+        <input type="text" name="location">
+      </div>
 
-    <button type="submit">Save and Continue</button>
-  </form>
-</div>
-<!-- Project List Table -->
-<h3>Project List</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Enquiry ID</th>
-      <th>Client</th>
-      <th>Start</th>
-      <th>End</th>
-      <th>Location</th>
-      <th>Incharge</th>
-      <th>Design Stage</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for p in projects %}
-    <tr>
-      <td>{{ p.enquiry_id }}</td>
-      <td>{{ p.client }}</td>
-      <td>{{ p.start_date }}</td>
-      <td>{{ p.end_date }}</td>
-      <td>{{ p.location }}</td>
-      <td>{{ p.project_incharge }}</td>
-      <td>{{ p.design_status }}</td>
-      <td>
-        {% if p.design_status == 'preparation' %}
-          <a href="/add_measurement/{{ p.id }}"><button>Measurement</button></a>
-          <a href="/mark_design_stage/{{ p.id }}/completed"><button>Mark Completed</button></a>
-        {% elif p.design_status == 'completed' %}
-          <a href="/mark_design_stage/{{ p.id }}/submitted"><button>Submit</button></a>
-        {% elif p.design_status == 'submitted' %}
-          <a href="/mark_design_stage/{{ p.id }}/under_review"><button>Under Review</button></a>
-        {% elif p.design_status == 'under_review' %}
-          <a href="/mark_design_stage/{{ p.id }}/approved"><button>Approve</button></a>
-        {% elif p.design_status == 'approved' %}
-          ✅ Sent to Production
-        {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<!-- Toast Notification -->
-<div id="toast" class="toast"></div>
+      <div class="form-group">
+        <label>Project Incharge</label>
+        <select name="incharge">
+          <option value="">-- Select --</option>
+          {% for emp in incharges %}
+            <option value="{{ emp }}">{{ emp }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-<script>
-  function openPopup() {
-    document.getElementById("projectPopup").classList.add("open");
-    generateEnquiryID();
-  }
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes"></textarea>
+      </div>
 
-  function closePopup() {
-    document.getElementById("projectPopup").classList.remove("open");
-  }
+      <div class="form-group">
+        <label>Upload Drawing File</label>
+        <input type="file" name="drawing_file">
+      </div>
 
-  function fillClientDetails() {
-    const clientDropdown = document.getElementById("clientDropdown");
-    const selected = clientDropdown.options[clientDropdown.selectedIndex];
-    const gst = selected.getAttribute("data-gst");
-    const address = selected.getAttribute("data-address");
-    document.getElementById("gst_no").value = gst;
-    document.getElementById("address").value = address;
-  }
+      <button type="submit">Save & Continue</button>
+    </form>
+  </div>
 
-  function generateEnquiryID() {
-    // Optionally handled by server. Leave blank or show placeholder
-    document.getElementById("enquiry_id").placeholder = "Auto-generated by server";
-  }
+  <!-- ✅ Measurement Sheet Popup -->
+  <div id="measurementPopup" class="popup">
+    <button class="close-btn" onclick="closeMeasurementPopup()">X</button>
+    <h3>Add Measurement Sheet</h3>
+    <form method="POST" action="/add_measurement">
+      <div class="form-group">
+        <label>Client Name</label>
+        <input type="text" name="client_name" required>
+      </div>
+      <div class="form-group">
+        <label>Company Name</label>
+        <input type="text" name="company_name" required>
+      </div>
+      <div class="form-group">
+        <label>Project Location</label>
+        <input type="text" name="project_location" required>
+      </div>
+      <div class="form-group">
+        <label>Site Engineer Name</label>
+        <input type="text" name="engineer_name" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" name="phone" required>
+      </div>
+      <button type="submit">Save & Continue</button>
+      <button type="button" class="close-btn" onclick="closeMeasurementPopup()">Cancel</button>
+    </form>
+  </div>
 
-  // Toast logic
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      const toast = document.getElementById("toast");
-      {% for category, message in messages %}
-        toast.textContent = "{{ message }}";
-        toast.style.backgroundColor = {
-          success: '#28a745',
-          danger: '#dc3545',
-          warning: '#ffc107',
-          info: '#17a2b8'
-        }['{{ category }}'] || '#333';
-        toast.style.display = "block";
-        setTimeout(() => toast.style.display = "none", 3000);
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-</script>
-</div> <!-- close .main -->
+  <!-- ✅ JavaScript -->
+  <script>
+    function openPopup() {
+      document.getElementById("projectPopup").classList.add("active");
+    }
+
+    function closePopup() {
+      document.getElementById("projectPopup").classList.remove("active");
+    }
+
+    function fillVendorDetails(select) {
+      const gst = select.options[select.selectedIndex].getAttribute('data-gst');
+      const address = select.options[select.selectedIndex].getAttribute('data-address');
+      document.getElementById('gstField').value = gst || '';
+      document.getElementById('addressField').value = address || '';
+    }
+
+    function openMeasurementPopup() {
+      document.getElementById("measurementPopup").classList.add("active");
+    }
+
+    function closeMeasurementPopup() {
+      document.getElementById("measurementPopup").classList.remove("active");
+    }
+
+    document.getElementById("search").addEventListener("input", function () {
+      const searchValue = this.value.toLowerCase();
+      const rows = document.querySelectorAll("#projectTable tr");
+      rows.forEach(row => {
+        const match = row.innerText.toLowerCase().includes(searchValue);
+        row.style.display = match ? "" : "none";
+      });
+    });
+
+    document.getElementById("status-filter").addEventListener("change", function () {
+      const statusValue = this.value.toLowerCase();
+      const rows = document.querySelectorAll("#projectTable tr");
+      rows.forEach(row => {
+        const status = row.children[3].innerText.toLowerCase();
+        row.style.display = !statusValue || status === statusValue ? "" : "none";
+      });
+    });
+  </script>
+
 </body>
 </html>
