@@ -7,17 +7,17 @@
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
+      padding: 20px;
       margin: 0;
-      padding: 0;
     }
 
     .container {
-      max-width: 900px;
-      margin: 30px auto;
+      max-width: 1100px;
+      margin: auto;
       background: white;
       padding: 25px;
       border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     h2 {
@@ -25,10 +25,11 @@
       color: #333;
     }
 
-    input, select {
+    input {
       width: 100%;
       padding: 10px;
       margin: 8px 0;
+      box-sizing: border-box;
       border: 1px solid #ccc;
       border-radius: 6px;
     }
@@ -36,10 +37,11 @@
     button {
       background: #28a745;
       color: white;
-      padding: 12px 20px;
+      padding: 10px 20px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -49,13 +51,12 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 30px;
+      margin-top: 25px;
     }
 
     th, td {
       padding: 10px;
       border: 1px solid #ddd;
-      text-align: left;
     }
 
     th {
@@ -63,13 +64,18 @@
       color: white;
     }
 
-    .actions button {
-      background: #ffc107;
-      margin-right: 5px;
+    .action-btn {
+      background: #007bff;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: none;
+      margin: 0 2px;
+      cursor: pointer;
     }
 
-    .actions button:last-child {
-      background: #dc3545;
+    .action-btn:hover {
+      background: #0056b3;
     }
 
     .toast {
@@ -78,31 +84,42 @@
       right: 20px;
       background: #333;
       color: white;
-      padding: 12px;
+      padding: 15px;
       border-radius: 6px;
       display: none;
+      z-index: 1000;
+    }
+
+    .export-btn {
+      background: #17a2b8;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+
+    .export-btn:hover {
+      background: #138496;
     }
   </style>
 </head>
 <body>
-
 <div class="container">
   <h2>Employee Registration</h2>
 
   <form method="POST">
-    <input type="text" name="name" placeholder="Full Name" required>
+    <input type="text" name="name" placeholder="Employee Name" required>
     <input type="text" name="designation" placeholder="Designation" required>
     <input type="email" name="email" placeholder="Email" required>
-    <input type="text" name="phone" placeholder="Phone Number" required>
-    <button type="submit">Add Employee</button>
+    <input type="text" name="phone" placeholder="Phone" required>
+    <input type="text" name="username" placeholder="Login Username" required>
+    <input type="password" name="password" placeholder="Login Password" required>
+    <button type="submit">Register Employee</button>
   </form>
-  <h3 style="margin-top: 40px;">Employee List</h3>
 
-  <div style="margin-bottom: 10px;">
-    <button onclick="exportToCSV()">Export CSV</button>
-    <button onclick="exportToExcel()">Export Excel</button>
-    <button onclick="window.print()">Print</button>
-  </div>
+  <button class="export-btn" onclick="exportToCSV()">Export CSV</button>
 
   <table>
     <thead>
@@ -111,6 +128,7 @@
         <th>Designation</th>
         <th>Email</th>
         <th>Phone</th>
+        <th>Username</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -121,9 +139,12 @@
         <td>{{ emp[2] }}</td>
         <td>{{ emp[3] }}</td>
         <td>{{ emp[4] }}</td>
-        <td class="actions">
-          <a href="/employee_edit/{{ emp[0] }}"><button>Edit</button></a>
-          <a href="/employee_delete/{{ emp[0] }}" onclick="return confirm('Are you sure?')"><button>Delete</button></a>
+        <td>{{ emp[5] }}</td>
+        <td>
+          <a href="/employee_edit/{{ emp[0] }}"><button class="action-btn">Edit</button></a>
+          <a href="/employee_delete/{{ emp[0] }}" onclick="return confirm('Are you sure?')">
+            <button class="action-btn" style="background:#dc3545;">Delete</button>
+          </a>
         </td>
       </tr>
       {% endfor %}
@@ -131,53 +152,40 @@
   </table>
 </div>
 
-<div class="toast" id="toast"></div>
+<div id="toast" class="toast"></div>
+
 <script>
-  // Export to CSV
   function exportToCSV() {
-    let csv = "Name,Designation,Email,Phone\n";
+    let csv = "Name,Designation,Email,Phone,Username\n";
     document.querySelectorAll("table tbody tr").forEach(row => {
-      const cols = row.querySelectorAll("td:not(.actions)");
-      let line = Array.from(cols).map(td => `"${td.textContent}"`).join(",");
+      const cols = row.querySelectorAll("td");
+      const line = Array.from(cols).slice(0, 5).map(td => `"${td.innerText}"`).join(",");
       csv += line + "\n";
     });
-    let blob = new Blob([csv], { type: 'text/csv' });
-    let url = window.URL.createObjectURL(blob);
-    let a = document.createElement("a");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
     a.href = url;
     a.download = "employees.csv";
     a.click();
   }
 
-  // Export to Excel
-  function exportToExcel() {
-    let tableHTML = document.querySelector("table").outerHTML;
-    let blob = new Blob([tableHTML], { type: "application/vnd.ms-excel" });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = "employees.xls";
-    a.click();
-  }
-
-  // Toast messages (from Flask flash)
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       const toast = document.getElementById("toast");
       {% for category, message in messages %}
         toast.textContent = "{{ message }}";
+        toast.style.display = "block";
         toast.style.backgroundColor = {
           success: '#28a745',
           danger: '#dc3545',
           warning: '#ffc107',
           info: '#17a2b8'
         }['{{ category }}'] || '#333';
-        toast.style.display = "block";
         setTimeout(() => toast.style.display = "none", 3000);
       {% endfor %}
     {% endif %}
   {% endwith %}
 </script>
-
 </body>
 </html>
