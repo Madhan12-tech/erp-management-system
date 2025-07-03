@@ -73,6 +73,11 @@ def init_db():
 
 # ---------- INIT DB ----------
 init_db()
+
+# Insert dummy admin user if not exists
+c.execute("SELECT * FROM users WHERE username = 'admin'")
+if not c.fetchone():
+    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin123'))
 # ---------- LOGIN ----------
 @app.route('/', methods=['GET', 'POST'])
 def login():
