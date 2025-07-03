@@ -467,28 +467,35 @@ def add_project():
 
     return redirect(url_for('projects'))
     # --- Measurement Sheet Entry Page ---
-
 @app.route('/add_measurement/<int:project_id>', methods=['GET', 'POST'])
 def add_measurement(project_id):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
+
     if request.method == 'POST':
+        duct_no = request.form['duct_no']
         duct_type = request.form['duct_type']
         gauge = request.form['gauge']
         length = float(request.form['length'])
-        width = float(request.form['width'])
+        breadth = float(request.form['breadth'])
+        height = float(request.form['height'])
         quantity = int(request.form['quantity'])
-        area = length * width * quantity
+        area = length * breadth * quantity
+
         c.execute('''
-            INSERT INTO measurement_sheets (project_id, duct_type, gauge, length, width, quantity, area)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (project_id, duct_type, gauge, length, width, quantity, area))
+            INSERT INTO measurement_sheets (
+                project_id, duct_no, duct_type, length, breadth, height, gauge, quantity, area
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (project_id, duct_no, duct_type, length, breadth, height, gauge, quantity, area))
+
         conn.commit()
         flash("Measurement added successfully", "success")
+
     c.execute("SELECT * FROM measurement_sheets WHERE project_id=?", (project_id,))
     measurements = c.fetchall()
     conn.close()
     return render_template('add_measurement.html', project_id=project_id, measurements=measurements)
+
 @app.route('/measurement_sheet/<int:project_id>', methods=['GET', 'POST'])
 def measurement_sheet(project_id):
     if 'user' not in session:
