@@ -135,6 +135,26 @@ def vendors():
     conn.close()
     return render_template('vendors.html', vendors=vendors)
 
+@app.route('/vendor_registration')
+def vendor_registration():
+    return render_template('vendor_registration.html')
+
+@app.route('/add_vendor', methods=['POST'])
+def add_vendor():
+    vendor_name = request.form['vendor_name']
+    gst = request.form['gst']
+    address = request.form['address']
+    # Optional: Save contacts and bank info here
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO vendors (vendor_name, gst, address) VALUES (?, ?, ?)",
+              (vendor_name, gst, address))
+    conn.commit()
+    conn.close()
+    flash("Vendor registered", "success")
+    return redirect('/dashboard')
+
+
 
 # ---------- FETCH VENDOR INFO (AJAX for autofill) ----------
 @app.route('/vendor_info/<int:vendor_id>')
