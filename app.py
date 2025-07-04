@@ -237,15 +237,7 @@ def vendor_edit(id):
     conn.close()
     return render_template('vendor_edit.html', row=row)
     # ---------------- PROJECT DASHBOARD + ADD PROJECT ----------------
-@app.route('/dashboard')
-def dashboard():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
 
-    cursor.execute("SELECT p.*, v.name AS vendor_name FROM projects p LEFT JOIN vendors v ON p.vendor_id = v.id")
-    projects = cursor.fetchall()
-    conn.close()
-    return render_template('dashboard.html', projects=projects)
 
 @app.route('/add_project', methods=['POST'])
 def add_project():
