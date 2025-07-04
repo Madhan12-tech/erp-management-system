@@ -2,151 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>Dashboard | Ducting ERP</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background-color: #f4f4f4;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
     }
-    header {
-      background-color: #2c3e50;
-      color: white;
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    header input {
-      padding: 6px 10px;
-      font-size: 14px;
-      border-radius: 4px;
-      border: none;
-      margin-left: 15px;
-    }
-    .container {
-      padding: 30px;
-    }
-    .grid {
+    .dashboard {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 2rem;
     }
     .card {
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      padding: 25px;
+      background: white;
+      padding: 1.5rem;
       text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       transition: 0.3s;
       cursor: pointer;
     }
     .card:hover {
-      background-color: #ecf0f1;
+      background: #e8f0fe;
+      transform: scale(1.02);
     }
-    .card h3 {
-      margin: 0;
-      color: #34495e;
-    }
-    .logout {
-      background-color: #e74c3c;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .logout:hover {
-      background-color: #c0392b;
-    }
-    .project-card {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-top: 20px;
-    }
-    .project-card h3 {
-      margin: 0 0 10px;
-    }
-    .project-card button {
-      margin-top: 10px;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      background: #2980b9;
-      color: white;
-      cursor: pointer;
-    }
-    .project-card button:hover {
-      background: #1c5980;
-    }
-    .project-card span {
-      font-weight: bold;
+    h2 {
+      text-align: center;
+      margin-top: 1rem;
+      color: #333;
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <strong>Welcome, {{ session['user'] }}</strong>
-  </div>
-  <div>
-    <input type="text" placeholder="Search modules...">
-    <a href="{{ url_for('logout') }}" class="logout">Logout</a>
-  </div>
-</header>
+<h2>Welcome, {{ user }}</h2>
 
-<div class="container">
-
-  <div class="grid">
-    <div class="card" onclick="location.href='{{ url_for('projects') }}'">
-      <h3>Project Management</h3>
-    </div>
-    <div class="card" onclick="alert('Production module coming soon')">
-      <h3>Production</h3>
-    </div>
-    <div class="card" onclick="alert('Project Summary is a separate module')">
-      <h3>Project Summary</h3>
-    </div>
-    <div class="card" onclick="location.href='{{ url_for('register') }}'">
-      <h3>Employee Registration</h3>
-    </div>
-    <div class="card" onclick="location.href='{{ url_for('vendors') }}'">
-      <h3>Vendor Registration</h3>
-    </div>
+<div class="dashboard">
+  <!-- Example modules -->
+  <div class="card" onclick="location.href='{{ url_for('projects') }}'">
+    <h3>Projects</h3>
   </div>
 
-  <h2 style="margin-top: 40px;">Live Project Status</h2>
+  <div class="card" onclick="location.href='{{ url_for('vendors') }}'">
+    <h3>Vendors</h3>
+  </div>
 
-  {% for row in projects %}
-    <div class="project-card">
-      <h3>{{ row[1] }}</h3>
-      <p>Location: {{ row[6] }}</p>
+  <div class="card" onclick="location.href='{{ url_for('production') }}'">
+    <h3>Production</h3>
+  </div>
 
-      <p>Status:
-        {% if row[13] == 'Design Process' %}
-          <span style="color: orange;">{{ row[13] }}</span>
+  <div class="card" onclick="location.href='{{ url_for('show_measurements') }}'">
+    <h3>Measurement Sheets</h3>
+  </div>
 
-        {% elif row[13] == 'Submit for Approval' %}
-          <span style="color: blue;">{{ row[13] }}</span>
-          <a href="{{ url_for('review', project_id=row[0]) }}">
-            <button>🔍 Review</button>
-          </a>
+  <div class="card" onclick="location.href='{{ url_for('register_user') }}'">
+    <h3>Register Employees</h3>
+  </div>
 
-        {% elif row[13] == 'Approved' %}
-          <span style="color: green;">{{ row[13] }}</span>
-          <button disabled>✅ Sent to Production</button>
-          <a href="{{ url_for('push_to_production', project_id=row[0]) }}">
-            <button>📦 Push to Production</button>
-          </a>
-        {% endif %}
-      </p>
-    </div>
-  {% endfor %}
-
+  <div class="card" onclick="location.href='{{ url_for('logout') }}'">
+    <h3>Logout</h3>
+  </div>
 </div>
 
 </body>
