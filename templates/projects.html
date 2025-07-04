@@ -291,14 +291,14 @@
     <div class="prep-flex">
       <!-- Duct Entry Form -->
       <form method="POST" action="/add_duct" class="duct-form">
-        <input type="hidden" name="project_id" id="ductProjectId">
-        <h3>Add Duct Entry</h3>
-        <input type="text" name="duct_no" placeholder="Duct No" required>
-        <input type="text" name="duct_type" placeholder="Type" required>
-        <input type="text" name="duct_size" placeholder="Size" required>
-        <input type="number" name="quantity" placeholder="Quantity" required>
-        <input type="text" name="remarks" placeholder="Remarks">
-        <button type="submit" class="btn-green">Add Duct</button>
+  <input type="hidden" name="project_id" value="{{ project_id }}">  <!-- or set via JS -->
+  <h3>Add Duct Entry</h3>
+  <input type="text" name="duct_no" placeholder="Duct No" required>
+  <input type="text" name="duct_type" placeholder="Type" required>
+  <input type="text" name="duct_size" placeholder="Size" required>
+  <input type="number" name="quantity" placeholder="Quantity" required>
+  <input type="text" name="remarks" placeholder="Remarks">
+  <button type="submit" class="btn-green">Add Duct</button>
       </form>
 
       <!-- Duct Table -->
