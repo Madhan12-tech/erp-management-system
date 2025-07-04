@@ -38,6 +38,14 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Insert dummy admin login only if it doesn't exist
+cursor.execute("SELECT * FROM employees WHERE username = 'admin'")
+if not cursor.fetchone():
+    cursor.execute('''
+        INSERT INTO employees (name, designation, email, phone, username, password)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', ('Admin User', 'Admin', 'admin@erp.com', '1234567890', 'admin', 'admin123'))
+
 init_db()
 
 # ---------------- LOGIN ----------------
