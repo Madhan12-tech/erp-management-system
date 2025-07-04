@@ -459,265 +459,148 @@ def logout():
     session.pop('user', None)
     flash("Logged out successfully", "info")
     return redirect(url_for('login'))
-
-@app.route('/export_projects_excel')
-def export_projects_excel():
-    conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query('''
-        SELECT p.*, v.name as vendor_name
-        FROM projects p
-        LEFT JOIN vendors v ON p.vendor_id = v.id
-    ''', conn)
-    conn.close()
-
-    output = BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
-
-    return send_file(output,
-                     download_name="Projects.xlsx",
-                     as_attachment=True)
-
-@app.route('/export_projects_pdf')
-def export_projects_pdf():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT p.enquiry_id, v.name, p.location, p.start_date, p.end_date
-        FROM projects p
-        LEFT JOIN vendors v ON p.vendor_id = v.id
-    ''')
-    rows = cursor.fetchall()
-    conn.close()
-
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 40, "Projects Report")
-
-    y = height - 80
-    p.setFont("Helvetica", 10)
-    for row in rows:
-        line = f"Enquiry: {row[0]} | Vendor: {row[1]} | Location: {row[2]} | {row[3]} to {row[4]}"
-        p.drawString(50, y, line)
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 50
-
-    p.save()
-    buffer.seek(0)
-
-    return send_file(buffer,
-                     download_name="Projects.pdf",
-                     as_attachment=True)
-    @app.route('/export_vendors_excel')
+    
+@app.route('/export/vendors')
 def export_vendors_excel():
     conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query('SELECT * FROM vendors', conn)
-    conn.close()
-
-    output = BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
-
-    return send_file(output, download_name="Vendors.xlsx", as_attachment=True)
-
-@app.route('/export_vendors_pdf')
-def export_vendors_pdf():
-    conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT name, gst, address FROM vendors')
+    cursor.execute("SELECT id, name, gst, address, phone, email FROM vendors")
     rows = cursor.fetchall()
     conn.close()
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 40, "Vendors Report")
-
-    y = height - 80
-    p.setFont("Helvetica", 10)
-    for row in rows:
-        line = f"Vendor: {row[0]} | GST: {row[1]} | Address: {row[2]}"
-        p.drawString(50, y, line)
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 50
-
-    p.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="Vendors.pdf", as_attachment=True)
-    
-    @app.route('/export_measurements_excel')
-def export_measurements_excel():
-    conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query('SELECT * FROM measurement_sheet', conn)
-    conn.close()
+    df = pd.DataFrame(rows, columns=["ID", "Name", "GST", "Address", "Phone", "Email"])
 
     output = BytesIO()
-    df.to_excel(output, index=False)
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Vendors')
+
     output.seek(0)
-
-    return send_file(output, download_name="MeasurementSheet.xlsx", as_attachment=True)
-
-    @app.route('/export_measurements_pdf')
-def export_measurements_pdf():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT client, company, location, engineer, phone FROM measurement_sheet')
-    rows = cursor.fetchall()
-    conn.close()
-
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 40, "Measurement Sheet Report")
-
-    y = height - 80
-    p.setFont("Helvetica", 10)
-    for row in rows:
-        line = f"{row[0]} | {row[1]} | {row[2]} | Eng: {row[3]} | {row[4]}"
-        p.drawString(50, y, line)
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 50
-
-    p.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="MeasurementSheet.pdf", as_attachment=True)
-    @app.route('/export_production_excel')
-def export_production_excel():
-    conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query('SELECT * FROM production', conn)
-    conn.close()
-
-    output = BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
-
-    return send_file(output, download_name="ProductionData.xlsx", as_attachment=True)
-
-@app.route('/export_production_pdf')
-def export_production_pdf():
+    return send_file(output, download_name="vendors.xlsx", as_attachment=True)
+    @app.route('/export/projects')
+def export_projects_excel():
     conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT project_id, cutting_done, plasma_done, boxing_done,
-               quality_percent, dispatch_percent
-        FROM production
+        SELECT p.id, p.enquiry_id, v.name AS vendor_name, p.quotation_ro, 
+               p.start_date, p.end_date, p.location, p.gst, p.address, 
+               p.incharge, p.notes, p.approval_status
+        FROM projects p
+        LEFT JOIN vendors v ON p.vendor_id = v.id
     ''')
     rows = cursor.fetchall()
     conn.close()
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 40, "Production Report")
-
-    y = height - 80
-    p.setFont("Helvetica", 10)
-    for row in rows:
-        line = f"Project ID: {row[0]} | Cutting: {row[1]} | Plasma: {row[2]} | Boxing: {row[3]} | QC: {row[4]}% | Dispatch: {row[5]}%"
-        p.drawString(50, y, line)
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 50
-
-    p.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="Production.pdf", as_attachment=True)
-    @app.route('/export_ducts_excel')
-def export_ducts_excel():
-    conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query('SELECT * FROM ducts', conn)
-    conn.close()
+    df = pd.DataFrame(rows, columns=["ID", "Enquiry ID", "Vendor Name", "Quotation RO", "Start Date",
+                                     "End Date", "Location", "GST", "Address", "Incharge", "Notes", "Status"])
 
     output = BytesIO()
-    df.to_excel(output, index=False)
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Projects')
+
     output.seek(0)
-
-    return send_file(output, download_name="DuctEntries.xlsx", as_attachment=True)
-
-@app.route('/export_ducts_pdf')
-def export_ducts_pdf():
+    return send_file(output, download_name="projects.xlsx", as_attachment=True)
+    @app.route('/export/ducts/<int:project_id>')
+def export_ducts_excel(project_id):
     conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT project_id, duct_no, duct_type, duct_size, quantity, remarks 
-        FROM ducts
-    ''')
+        SELECT duct_no, duct_type, duct_size, quantity, remarks
+        FROM ducts WHERE project_id = ?
+    ''', (project_id,))
     rows = cursor.fetchall()
     conn.close()
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 40, "Duct Entries Report")
+    df = pd.DataFrame(rows, columns=["Duct No", "Type", "Size", "Quantity", "Remarks"])
 
-    y = height - 80
-    p.setFont("Helvetica", 10)
-    for row in rows:
-        line = f"Proj ID: {row[0]} | Duct: {row[1]} | Type: {row[2]} | Size: {row[3]} | Qty: {row[4]} | {row[5]}"
-        p.drawString(50, y, line)
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 50
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Ducts')
 
-    p.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="DuctEntries.pdf", as_attachment=True)
-    
-    @app.route('/export_employees_excel')
+    output.seek(0)
+    return send_file(output, download_name=f"ducts_project_{project_id}.xlsx", as_attachment=True)
+    @app.route('/export/measurements/<int:project_id>')
+def export_measurements_excel(project_id):
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT client, company, location, engineer, phone, created_at 
+        FROM measurement_sheet 
+        WHERE project_id = ?
+    ''', (project_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    df = pd.DataFrame(rows, columns=["Client", "Company", "Location", "Engineer", "Phone", "Created At"])
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Measurement Sheet')
+
+    output.seek(0)
+    return send_file(output, download_name=f"measurement_sheet_project_{project_id}.xlsx", as_attachment=True)
+    @app.route('/export/employees')
 def export_employees_excel():
     conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query('SELECT id, name, designation, email, phone FROM employees', conn)
-    conn.close()
-
-    output = BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
-
-    return send_file(output, download_name="Employees.xlsx", as_attachment=True)
-
-@app.route('/export_employees_pdf')
-def export_employees_pdf():
-    conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT name, designation, email, phone FROM employees')
+    cursor.execute("SELECT id, name, designation, email, phone, username FROM employees")
     rows = cursor.fetchall()
     conn.close()
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 40, "Employees Report")
+    df = pd.DataFrame(rows, columns=["ID", "Name", "Designation", "Email", "Phone", "Username"])
 
-    y = height - 80
-    p.setFont("Helvetica", 10)
-    for row in rows:
-        line = f"{row[0]} | {row[1]} | {row[2]} | {row[3]}"
-        p.drawString(50, y, line)
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 50
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Employees')
 
-    p.save()
-    buffer.seek(0)
-    return send_file(buffer, download_name="Employees.pdf", as_attachment=True)
-    
+    output.seek(0)
+    return send_file(output, download_name="employees.xlsx", as_attachment=True)
+    @app.route('/export/production')
+def export_production_excel():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT p.id, pr.enquiry_id, prod.cutting_done, prod.plasma_done, prod.boxing_done,
+               prod.quality_percent, prod.dispatch_percent
+        FROM production prod
+        JOIN projects pr ON prod.project_id = pr.id
+        JOIN projects p ON prod.project_id = p.id
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    df = pd.DataFrame(rows, columns=[
+        "Project ID", "Enquiry ID", "Sheet Cutting (sqm)", "Plasma & Fab (sqm)",
+        "Boxing & Assembly (sqm)", "Quality Check (%)", "Dispatch (%)"
+    ])
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Production Progress')
+
+    output.seek(0)
+    return send_file(output, download_name="production_progress.xlsx", as_attachment=True)
+    @app.route('/export/production/csv')
+def export_production_csv():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT p.id, pr.enquiry_id, prod.cutting_done, prod.plasma_done, prod.boxing_done,
+               prod.quality_percent, prod.dispatch_percent
+        FROM production prod
+        JOIN projects pr ON prod.project_id = pr.id
+        JOIN projects p ON prod.project_id = p.id
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    output = BytesIO()
+    writer = csv.writer(output)
+    writer.writerow(["Project ID", "Enquiry ID", "Sheet Cutting (sqm)", "Plasma & Fab (sqm)",
+                     "Boxing & Assembly (sqm)", "Quality Check (%)", "Dispatch (%)"])
+    writer.writerows(rows)
+    output.seek(0)
+
+    return send_file(output, download_name="production_progress.csv", as_attachment=True, mimetype='text/csv')
 
 # ---------------- START FLASK ----------------
 if __name__ == '__main__':
