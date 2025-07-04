@@ -5,30 +5,35 @@
   <title>Projects | Ducting ERP</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
       background: #f4f6f9;
     }
 
     header {
       background: #2c3e50;
-      padding: 15px 30px;
       color: white;
+      padding: 15px 25px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     header h1 {
-      font-size: 22px;
       margin: 0;
+      font-size: 20px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
     }
 
     .actions input[type="text"] {
       padding: 6px 10px;
       border-radius: 4px;
       border: 1px solid #ccc;
-      margin-right: 15px;
+      margin-right: 10px;
     }
 
     .actions button {
@@ -41,132 +46,106 @@
       cursor: pointer;
     }
 
-    .sidebar {
-      width: 240px;
-      background: #2c3e50;
-      color: white;
-      height: 100vh;
+    .container {
       padding: 20px;
-      position: fixed;
-      top: 0;
-      left: 0;
-    }
-
-    .sidebar h2 {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-
-    .sidebar a {
-      display: block;
-      color: #ecf0f1;
-      margin: 10px 0;
-      text-decoration: none;
-    }
-
-    .main {
-      margin-left: 260px;
-      padding: 30px;
     }
 
     .section-title {
-      font-size: 20px;
-      margin-bottom: 15px;
-      color: #34495e;
+      font-size: 18px;
+      color: #2c3e50;
+      margin-bottom: 10px;
     }
 
     .project-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 20px;
     }
 
     .project-card {
       background: white;
+      border-radius: 8px;
       padding: 20px;
-      border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    .project-card h3 {
-      margin: 0 0 10px;
-      color: #2c3e50;
+    .design-process {
+      margin-top: 15px;
     }
+
+    .design-process button {
+      margin: 5px 8px 5px 0;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .design-process .prep { background: #3498db; color: white; }
+    .design-process .tag  { background: #8e44ad; color: white; }
+    .design-process .done { background: #27ae60; color: white; }
+    .design-process .submit { background: #e67e22; color: white; }
+    .design-process .review { background: #d35400; color: white; }
+    .design-process .approved { background: #2ecc71; color: white; }
   </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Project Management</h2>
-  <a href="#">All Projects</a>
-  <strong>Project Dashboard</strong>
-</div>
+<header>
+  <h1>Project Management</h1>
+  <div class="actions">
+    <input type="text" placeholder="Search Projects..." id="searchInput">
+    <button onclick="openAddProject()">+ Add Project</button>
+  </div>
+</header>
 
-<div class="main">
-  <header>
-    <h1>Project Dashboard</h1>
-    <div class="actions">
-      <input type="text" placeholder="Search Projects..." id="searchInput">
-      <button onclick="openAddProject()">+ Add Project</button>
-    </div>
-  </header>
+<div class="container">
   <div class="section-title">All Projects</div>
-  <div class="project-cards">
+  <div class="project-cards" id="projectContainer">
     {% for project in projects %}
     <div class="project-card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; justify-content:space-between;">
         <div>
           <strong>Enquiry ID:</strong> {{ project[1] }}<br>
           <strong>Vendor:</strong> {{ project[-1] }}<br>
           <strong>Location:</strong> {{ project[6] }}
         </div>
         <div>
-          <span style="background:#e67e22; color:white; padding:4px 8px; border-radius:4px; font-size:12px;">
-            {{ project[12] }}
+          <span style="padding:4px 8px; background:#ecf0f1; color:#2c3e50; border-radius:4px; font-size:13px;">
+            Status: {{ project[12] }}
           </span>
         </div>
       </div>
 
-      <div class="design-process" style="margin-top:20px;">
-        <h4 style="margin-bottom:10px;">Design Process</h4>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          <button onclick="openPrepPopup({{ project[0] }}, '{{ project[1] }}')" style="background:#2980b9; color:white; border:none; padding:8px; border-radius:5px;">
-            1. Preparation
-          </button>
+      <div class="design-process">
+        <h4 style="color:#2c3e50; margin-bottom:8px;">Design Process</h4>
+        <button class="prep" onclick="openPrepPopup({{ project[0] }}, '{{ project[1] }}')">1. Preparation</button>
 
-          <form method="POST" action="/review/{{ project[0] }}" enctype="multipart/form-data">
-            <label style="background:#8e44ad; color:white; padding:8px; display:inline-block; border-radius:5px; cursor:pointer;">
-              2. Tag Drawing
-              <input type="file" name="drawing" required onchange="this.form.submit()" style="display:none;">
-            </label>
-          </form>
+        <form method="POST" action="/upload_drawing/{{ project[0] }}" enctype="multipart/form-data" style="display:inline;">
+          <label class="tag" style="cursor:pointer;">
+            2. Tag Drawing
+            <input type="file" name="file" style="display:none;" onchange="this.form.submit()">
+          </label>
+        </form>
 
-          <button disabled style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px;">
-            3. Completed
-          </button>
+        <button class="done" disabled>3. Completed</button>
 
-          {% if project[12] == 'Design Process' %}
-          <form method="POST" action="/submit_sheet/{{ project[0] }}">
-            <button type="submit" style="background:#e67e22; color:white; padding:8px; border:none; border-radius:5px;">
-              4. Submit for Approval
-            </button>
-          </form>
-          {% elif project[12] == 'Submit for Approval' %}
-          <button disabled style="background:#f39c12; color:white; padding:8px; border:none; border-radius:5px;">
-            Under Review
-          </button>
-          {% elif project[12] == 'Approved' %}
-          <a href="/push_to_production/{{ project[0] }}" style="display:inline-block; background:#27ae60; color:white; padding:8px; text-align:center; text-decoration:none; border-radius:5px;">
-            Push to Production
-          </a>
-          {% endif %}
-        </div>
+        {% if project[12] == 'Design Process' %}
+        <form method="POST" action="/submit_sheet/{{ project[0] }}" style="display:inline;">
+          <button type="submit" class="submit">4. Submit for Approval</button>
+        </form>
+        {% elif project[12] == 'Submit for Approval' %}
+        <button class="review" disabled>Waiting for Review</button>
+        {% elif project[12] == 'Approved' %}
+        <span class="approved">✔ Approved</span>
+        <a href="/push_to_production/{{ project[0] }}" style="display:inline-block; margin-top:6px; background:#2ecc71; color:white; padding:6px 12px; border-radius:4px; text-decoration:none;">Push to Production</a>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
-  </div> <!-- End project-cards -->
-  <!-- ADD PROJECT POPUP -->
-<div id="addProjectPopup" style="position:fixed; top:0; right:-100%; width:400px; height:100%; background:white; box-shadow:-2px 0 6px rgba(0,0,0,0.2); z-index:1000; padding:20px; transition:right 0.3s ease;">
+  </div> <!-- End of .project-cards -->
+  <!-- ADD NEW PROJECT POPUP -->
+<div id="addProjectPopup" style="position:fixed; top:0; right:-100%; width:400px; height:100%; background:#fff; box-shadow:-2px 0 8px rgba(0,0,0,0.2); z-index:1001; padding:20px; transition:right 0.3s ease;">
   <h3 style="margin-bottom:15px; color:#2c3e50;">Add New Project</h3>
   <form method="POST" action="/add_project" enctype="multipart/form-data">
     <input type="hidden" name="enquiry_id" id="autoEnquiryID" value="">
@@ -307,109 +286,22 @@
 
   <button onclick="closePrepPopup()" style="position:absolute; top:10px; right:15px; font-size:18px;">❌</button>
 </div>
-
 <script>
   function openPrepPopup(projectId, enquiryId) {
     document.getElementById('prepPopup').style.display = 'block';
     document.getElementById('popupEnqID').innerText = enquiryId;
     document.getElementById('prep_project_id').value = projectId;
     document.getElementById('duct_project_id').value = projectId;
+
+    // Update export & submit links dynamically
+    document.querySelector('a[href^="/export_csv"]').href = `/export_csv/${projectId}`;
+    document.querySelector('a[href^="/export_excel"]').href = `/export_excel/${projectId}`;
+    document.querySelector('form[action^="/submit_sheet"]').action = `/submit_sheet/${projectId}`;
   }
 
   function closePrepPopup() {
     document.getElementById('prepPopup').style.display = 'none';
   }
 </script>
-<h2 style="margin: 20px 0; color: #34495e;">Project Dashboard</h2>
-
-<div style="display: flex; flex-wrap: wrap; gap: 20px;">
-  {% for project in projects %}
-  <div style="background: #fff; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px; width: 300px; position:relative;">
-    <h3 style="margin:0 0 10px;">{{ project[1] }}</h3>
-    <p style="margin: 5px 0;"><strong>Vendor:</strong> {{ project[-1] }}</p>
-    <p style="margin: 5px 0;"><strong>Location:</strong> {{ project[6] }}</p>
-    <p style="margin: 5px 0;"><strong>Status:</strong>
-      {% if project[12] == 'Approved' %}
-        <span style="color: green; font-weight: bold;">✔ {{ project[12] }}</span>
-      {% elif project[12] == 'Submit for Approval' %}
-        <span style="color: orange; font-weight: bold;">🕓 {{ project[12] }}</span>
-      {% else %}
-        <span style="color: red; font-weight: bold;">{{ project[12] }}</span>
-      {% endif %}
-    </p>
-
-    <div style="margin-top: 15px;">
-      <button onclick="openPrepPopup({{ project[0] }}, '{{ project[1] }}')" style="margin-bottom: 8px; background: #2980b9; color: white; border: none; padding: 8px 12px; border-radius: 6px;">1. Preparation</button><br>
-
-      <form method="POST" action="/review/{{ project[0] }}" enctype="multipart/form-data">
-        <input type="file" name="drawing" required>
-        <button type="submit" style="margin-top: 5px; background: #8e44ad; color: white; border: none; padding: 6px 10px; border-radius: 6px;">2. Tag Drawing</button>
-      </form><br>
-
-      <button disabled style="margin-bottom: 8px; background: #2ecc71; color: white; padding: 8px 12px; border: none; border-radius: 6px;">3. Completed</button><br>
-
-      {% if project[12] == 'Design Process' %}
-      <form method="POST" action="/submit_sheet/{{ project[0] }}">
-        <button type="submit" style="background: #e67e22; color: white; padding: 8px 12px; border: none; border-radius: 6px;">4. Submit for Approval</button>
-      </form>
-      {% elif project[12] == 'Submit for Approval' %}
-      <button disabled style="background: #d35400; color: white; padding: 8px 12px; border: none; border-radius: 6px;">Waiting for Review</button>
-      {% elif project[12] == 'Approved' %}
-      <a href="/push_to_production/{{ project[0] }}" style="display: inline-block; margin-top: 8px; background: #27ae60; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none;">Push to Production</a>
-      {% endif %}
-    </div>
-  </div>
-  {% endfor %}
-</div>
-<button onclick="document.getElementById('addProjectPopup').style.right='0'" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 8px; position: fixed; top: 20px; right: 20px; z-index: 1000;">+ Add New Project</button>
-
-<script>
-  function openPrepPopup(projectId, enquiryId) {
-    document.getElementById('prepPopup').style.display = 'block';
-    document.getElementById('prepProjectId').innerText = enquiryId;
-    document.getElementById('prepProjectIdInput').value = projectId;
-    document.getElementById('ductProjectId').value = projectId;
-    document.getElementById('submitSheetForm').action = `/submit_sheet/${projectId}`;
-    document.getElementById('exportCsvBtn').href = `/export_csv/${projectId}`;
-    document.getElementById('exportExcelBtn').href = `/export_excel/${projectId}`;
-    loadDuctTable(projectId);
-  }
-
-  function closePrepPopup() {
-    document.getElementById('prepPopup').style.display = 'none';
-  }
-
-  function fillVendorDetails(select) {
-    const gst = select.options[select.selectedIndex].getAttribute('data-gst');
-    const address = select.options[select.selectedIndex].getAttribute('data-address');
-    document.getElementById('gst_input').value = gst;
-    document.getElementById('address_input').value = address;
-  }
-
-  function loadDuctTable(projectId) {
-    fetch(`/api/ducts/${projectId}`)
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.getElementById('ductTableBody');
-        tbody.innerHTML = '';
-        data.forEach(row => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${row.duct_no}</td>
-              <td>${row.duct_type}</td>
-              <td>${row.duct_size}</td>
-              <td>${row.quantity}</td>
-              <td>${row.remarks || ''}</td>
-              <td>
-                <a href="/edit_duct/${row.id}">Edit</a> |
-                <a href="/delete_duct/${row.id}" onclick="return confirm('Delete this entry?')">Delete</a>
-              </td>
-            </tr>
-          `;
-        });
-      });
-  }
-</script>
-
 </body>
 </html>
