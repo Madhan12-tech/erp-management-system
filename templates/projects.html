@@ -83,9 +83,9 @@
     <select name="vendor_id" id="vendorDropdown" onchange="autoFillVendor()" required>
   <option value="">-- Select Vendor --</option>
   {% for v in vendors %}
-  <option value="{{ v[0] }}" data-gst="{{ v[2] }}" data-address="{{ v[3] }}">
-    {{ v[1] }}
-  </option>
+    <option value="{{ v[0] }}" data-gst="{{ v[2] }}" data-address="{{ v[3] }}">
+      {{ v[1] }}
+    </option>
   {% endfor %}
     </select>
 
