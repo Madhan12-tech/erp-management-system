@@ -69,6 +69,16 @@ def logout():
     flash('Logged out successfully.', 'info')
     return redirect(url_for('login'))
 
+@app.route('/create_admin')
+def create_admin():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO employees (name, designation, email, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)",
+                   ('Admin User', 'Manager', 'admin@example.com', '1234567890', 'admin', 'admin123'))
+    conn.commit()
+    conn.close()
+    return "Admin user created. You can now log in with admin/admin123"
+
 
 # ---------------- EMPLOYEE REGISTRATION ----------------
 @app.route('/register', methods=['GET', 'POST'])
