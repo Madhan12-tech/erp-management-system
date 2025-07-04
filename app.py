@@ -118,7 +118,7 @@ cursor.execute('''
 ''')
 
 # Duct entry
-    cursor.execute('''
+cursor.execute('''
         CREATE TABLE IF NOT EXISTS ducts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER,
