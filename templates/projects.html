@@ -124,13 +124,15 @@
       3️⃣ Completed
     </button>
 
-    <form action="/submit_sheet/{{ row[0] }}" method="POST" style="display: inline;">
-      <button type="submit" style="background: #e67e22; color: white; padding: 10px 20px; border: none; border-radius: 6px;">
-        4️⃣ Submit for Approval
-      </button>
+    {% for row in projects %}
+  <div class="project-card">
+    <h3>{{ row[1] }}</h3>
+    <!-- Other details -->
+    <form action="/submit_sheet/{{ row[0] }}" method="POST">
+      <button type="submit">Submit</button>
     </form>
   </div>
-</div>
+{% endfor %}
 <!-- Preparation Popup -->
 <div id="preparationPopup" style="display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
   width: 600px; background: white; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.2); z-index: 1000; padding: 25px;">
