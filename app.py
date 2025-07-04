@@ -117,6 +117,14 @@ def init_db():
 init_db()
 # -------------------- AUTH ROUTES --------------------
 
+@app.route('/register')
+def register():
+    return render_template('register.html')
+
+
+
+
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
