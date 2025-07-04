@@ -282,6 +282,17 @@ def projects():
     cursor.execute("SELECT id, name, gst, address FROM vendors")
     vendors = cursor.fetchall()
 
+    # If vendors table is empty, insert dummy vendors for testing
+    if not vendors:
+        dummy_vendors = [
+            (1, 'ABC Ducting Ltd.', 'GST123ABC', 'Chennai'),
+            (2, 'XYZ Fabrication', 'GST456XYZ', 'Bangalore'),
+            (3, 'CoolAir Systems', 'GST789CA', 'Mumbai')
+        ]
+        cursor.executemany("INSERT INTO vendors (id, name, gst, address) VALUES (?, ?, ?, ?)", dummy_vendors)
+        conn.commit()
+        vendors = dummy_vendors
+
     conn.close()
 
     # Generate Enquiry ID like ENQ123ABC
