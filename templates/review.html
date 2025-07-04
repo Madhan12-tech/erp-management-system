@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Project Review</title>
+</head>
+<body>
+  <h2>Review Project: {{ project[1] }}</h2>
+  <p><strong>Vendor ID:</strong> {{ project[2] }}</p>
+  <p><strong>Status:</strong> {{ project[13] }}</p>
+
+  <form method="POST">
+    <button type="submit" name="action" value="approve">✅ Approve</button>
+    <button type="submit" name="action" value="sendback">🔁 Send Back</button>
+  </form>
+</body>
+</html>
