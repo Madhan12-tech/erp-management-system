@@ -600,17 +600,21 @@
     <hr>
 
     <div class="popup-duct-layout">
-      <!-- Duct Entry Form -->
-      <form method="POST" action="/add_duct" class="popup-form">
-      <input type="hidden" name="project_id" value="{{ project_id }}">
-        <h3>Add Duct Entry</h3>
-        <input type="text" name="duct_no" placeholder="Duct No" required>
-        <input type="text" name="duct_type" placeholder="Type" required>
-        <input type="text" name="duct_size" placeholder="Size" required>
-        <input type="number" name="quantity" placeholder="Quantity" required>
-        <input type="text" name="remarks" placeholder="Remarks">
-        <button type="submit" class="btn-green">Add Duct</button>
-      </form>
+      
+    <!-- Duct Entry Popup -->
+<div id="ductPopup" class="popup" style="display: none;">
+  <form method="POST" action="/add_duct" class="popup-form">
+    <input type="hidden" name="project_id" id="ductProjectId">
+    <h3>Add Duct Entry</h3>
+    <input type="text" name="duct_no" placeholder="Duct No" required>
+    <input type="text" name="duct_type" placeholder="Type" required>
+    <input type="text" name="duct_size" placeholder="Size" required>
+    <input type="number" name="quantity" placeholder="Quantity" required>
+    <input type="text" name="remarks" placeholder="Remarks">
+    <button type="submit" class="btn-green">Add Duct</button>
+    <button type="button" onclick="closeDuctPopup()" class="btn-red">Cancel</button>
+  </form>
+</div>
 
       <!-- Duct Table -->
       <div class="popup-table">
