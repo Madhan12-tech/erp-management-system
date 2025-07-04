@@ -35,17 +35,18 @@ def init_db():
         )
     ''')
 
+    # Insert dummy admin if not exists
+    cursor.execute("SELECT * FROM employees WHERE username = 'admin'")
+    if not cursor.fetchone():
+        cursor.execute('''
+            INSERT INTO employees (name, designation, email, phone, username, password)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', ('Admin User', 'Admin', 'admin@erp.com', '1234567890', 'admin', 'admin123'))
+
     conn.commit()
     conn.close()
 
-# Insert dummy admin login only if it doesn't exist
-cursor.execute("SELECT * FROM employees WHERE username = 'admin'")
-if not cursor.fetchone():
-    cursor.execute('''
-        INSERT INTO employees (name, designation, email, phone, username, password)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', ('Admin User', 'Admin', 'admin@erp.com', '1234567890', 'admin', 'admin123'))
-
+# Call DB setup
 init_db()
 
 # ---------------- LOGIN ----------------
@@ -69,24 +70,12 @@ def login():
             flash('Invalid credentials!', 'danger')
     return render_template('login.html')
 
-
 # ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Logged out successfully.', 'info')
     return redirect(url_for('login'))
-
-@app.route('/create_admin')
-def create_admin():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO employees (name, designation, email, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)",
-                   ('Admin User', 'Manager', 'admin@example.com', '1234567890', 'admin', 'admin123'))
-    conn.commit()
-    conn.close()
-    return "Admin user created. You can now log in with admin/admin123"
-
 
 # ---------------- EMPLOYEE REGISTRATION ----------------
 @app.route('/register', methods=['GET', 'POST'])
@@ -116,7 +105,6 @@ def register():
 
     return render_template('register.html', employees=employees)
 
-
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
@@ -124,7 +112,6 @@ def dashboard():
         flash("Please login to continue", "warning")
         return redirect(url_for('login'))
     return render_template('dashboard.html')
-
 
 # ---------------- VENDOR REGISTRATION ----------------
 @app.route('/vendors', methods=['GET', 'POST'])
@@ -151,7 +138,6 @@ def vendors():
     vendors = cursor.fetchall()
     conn.close()
     return render_template('vendors.html', vendors=vendors)
-
 
 # ---------------- RUN FLASK ----------------
 if __name__ == '__main__':
