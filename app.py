@@ -74,6 +74,22 @@ def init_db():
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )
     ''')
+         #production
+        CREATE TABLE IF NOT EXISTS production (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            cutting_done REAL,
+            plasma_done REAL,
+            boxing_done REAL,
+            quality_percent REAL,
+            dispatch_percent REAL,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+create_production_table()
 
     # Duct entry
     cursor.execute('''
@@ -620,6 +636,51 @@ def production_dashboard():
     return render_template('production.html', rows=rows)
 
 
+@app.route('/production/<int:project_id>', methods=['GET', 'POST'])
+def production(project_id):
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+
+    # Handle form submission
+    if request.method == 'POST':
+        cutting = float(request.form.get('cutting', 0))
+        plasma = float(request.form.get('plasma', 0))
+        boxing = float(request.form.get('boxing', 0))
+        quality = float(request.form.get('quality', 0))
+        dispatch = float(request.form.get('dispatch', 0))
+
+        # Check if record exists
+        cursor.execute("SELECT id FROM production WHERE project_id = ?", (project_id,))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute('''
+                UPDATE production 
+                SET cutting_done=?, plasma_done=?, boxing_done=?, quality_percent=?, dispatch_percent=?
+                WHERE project_id=?
+            ''', (cutting, plasma, boxing, quality, dispatch, project_id))
+        else:
+            cursor.execute('''
+                INSERT INTO production (project_id, cutting_done, plasma_done, boxing_done, quality_percent, dispatch_percent)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (project_id, cutting, plasma, boxing, quality, dispatch))
+
+        conn.commit()
+        flash("Production data updated", "success")
+        return redirect(url_for('production', project_id=project_id))
+
+    # Fetch current values
+    cursor.execute("SELECT * FROM production WHERE project_id = ?", (project_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    # Dummy total area for now (replace with actual measurement sheet total later)
+    total_area = 100  
+
+    return render_template("production.html",
+                           project_id=project_id,
+                           total_area=total_area,
+                           data=row)
 # ---------------- RUN FLASK SERVER ----------------
 if __name__ == '__main__':
     # Create uploads directory if it doesn't exist
