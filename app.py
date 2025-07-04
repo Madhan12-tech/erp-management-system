@@ -570,69 +570,6 @@ def measurement_sheet(project_id):
                            ducts=ducts)
 
 
-@app.route('/add_duct', methods=['POST'])
-def add_duct():
-    project_id = request.args.get('project_id')
-    duct_no = request.form['duct_no']
-    duct_type = request.form['duct_type']
-    duct_size = request.form['duct_size']
-    quantity = request.form['quantity']
-
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO duct_entries (project_id, duct_no, duct_type, duct_size, quantity)
-        VALUES (?, ?, ?, ?, ?)
-    """, (project_id, duct_no, duct_type, duct_size, quantity))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('measurement_sheet', project_id=project_id))
-
-
-@app.route('/delete_duct/<int:id>')
-def delete_duct(id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT project_id FROM duct_entries WHERE id=?", (id,))
-    proj_id = cursor.fetchone()[0]
-    cursor.execute("DELETE FROM duct_entries WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('measurement_sheet', project_id=proj_id))
-
-
-@app.route('/edit_duct/<int:id>', methods=['GET', 'POST'])
-def edit_duct(id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    if request.method == 'POST':
-        duct_no = request.form['duct_no']
-        duct_type = request.form['duct_type']
-        duct_size = request.form['duct_size']
-        quantity = request.form['quantity']
-        remarks = request.form['remarks']
-
-        cursor.execute("""
-            UPDATE duct_entries
-            SET duct_no=?, duct_type=?, duct_size=?, quantity=?, remarks=?
-            WHERE id=?
-        """, (duct_no, duct_type, duct_size, quantity, remarks, id))
-        conn.commit()
-
-        cursor.execute("SELECT project_id FROM duct_entries WHERE id=?", (id,))
-        proj_id = cursor.fetchone()[0]
-        conn.close()
-        return redirect(url_for('measurement_sheet', project_id=proj_id))
-
-    cursor.execute("SELECT * FROM duct_entries WHERE id=?", (id,))
-    row = cursor.fetchone()
-
-    # Get project ID to go back
-    project_id = row[1]
-    conn.close()
-    return render_template("edit_measurement.html", row=row, project_id=project_id)
-
-
 @app.route('/submit_sheet/<int:project_id>')
 def submit_sheet(project_id):
     conn = sqlite3.connect('erp.db')
