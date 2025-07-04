@@ -1,16 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Project Review</title>
+  <meta charset="UTF-8" />
+  <title>Review Project</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .label {
+      font-weight: bold;
+      color: #555;
+    }
+    .value {
+      margin-left: 10px;
+      color: #222;
+    }
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .btn-approve {
+      background-color: #28a745;
+      color: white;
+    }
+    .btn-back {
+      background-color: #dc3545;
+      color: white;
+    }
+    .status {
+      padding: 8px 12px;
+      background: #eee;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Review Project: {{ project[1] }}</h2>
-  <p><strong>Vendor ID:</strong> {{ project[2] }}</p>
-  <p><strong>Status:</strong> {{ project[13] }}</p>
+  <div class="container">
+    <h2>Review Project Submission</h2>
 
-  <form method="POST">
-    <button type="submit" name="action" value="approve">✅ Approve</button>
-    <button type="submit" name="action" value="sendback">🔁 Send Back</button>
-  </form>
+    <div class="section">
+      <div><span class="label">Project ID:</span><span class="value">{{ project[0] }}</span></div>
+      <div><span class="label">Enquiry ID:</span><span class="value">{{ project[1] }}</span></div>
+      <div><span class="label">Location:</span><span class="value">{{ project[6] }}</span></div>
+      <div><span class="label">Start Date:</span><span class="value">{{ project[4] }}</span></div>
+      <div><span class="label">End Date:</span><span class="value">{{ project[5] }}</span></div>
+      <div><span class="label">Incharge:</span><span class="value">{{ project[9] }}</span></div>
+      <div><span class="label">Approval Status:</span><span class="status">{{ project[12] }}</span></div>
+    </div>
+    {% if project[11] %}
+    <div class="section">
+      <h3>Tagged Drawing</h3>
+      <iframe src="/uploads/{{ project[11] }}" width="100%" height="400px" style="border: 1px solid #ccc;"></iframe>
+    </div>
+    {% else %}
+    <div class="section">
+      <h3>Tagged Drawing</h3>
+      <p style="color: red;">No drawing uploaded.</p>
+    </div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="section">
+        <label for="remarks" class="label">Review Remarks:</label><br />
+        <textarea name="remarks" rows="4" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;"></textarea>
+      </div>
+
+      <div class="section">
+        <button type="submit" name="action" value="approve" class="btn btn-approve">✅ Approve</button>
+        <button type="submit" name="action" value="send_back" class="btn btn-back">🔄 Send Back</button>
+      </div>
+    </form>
+
+    <a href="{{ url_for('dashboard') }}" style="text-decoration:none;">
+      <button class="btn" style="background-color:#6c757d; color:white;">⬅ Back to Dashboard</button>
+    </a>
+  </div>
 </body>
 </html>
