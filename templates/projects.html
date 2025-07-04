@@ -2,412 +2,393 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Management</title>
+  <title>Projects</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
       margin: 0;
-      background: #f1f3f5;
+      padding: 0;
     }
-
-    .header {
-      padding: 20px;
+    header {
       background: #007bff;
-      color: white;
+      color: #fff;
+      padding: 10px 20px;
+    }
+    .container {
+      padding: 20px;
+    }
+    .project-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .header h2 {
+    .project-header h2 {
       margin: 0;
     }
-
-    .tools {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .tools input[type="text"],
-    .tools select {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    .add-btn {
-      background: white;
-      color: #007bff;
-      border: none;
-      padding: 10px 20px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .popup {
-      position: fixed;
-      top: 0;
-      right: -500px;
-      width: 400px;
-      height: 100%;
-      background: white;
-      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-      transition: right 0.3s ease-in-out;
-      padding: 20px;
-      overflow-y: auto;
-      z-index: 1000;
-    }
-
-    .popup.active {
-      right: 0;
-    }
-
-    .popup h3 {
-      margin-top: 0;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    .popup button {
-      background: #28a745;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 15px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .close-btn {
-      background: #dc3545 !important;
-      float: right;
-    }
-
-    .project-container {
-      padding: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    table th, table td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-
-    table th {
-      background: #343a40;
-      color: white;
-    }
-
-    .design-process {
-      padding: 20px;
-      margin-top: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    .design-process h3 {
-      margin-bottom: 10px;
-    }
-
-    .design-process button {
+    .btn {
+      padding: 8px 16px;
       background: #007bff;
       color: white;
-      padding: 6px 15px;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
-      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .popup.active {
+      display: block;
+    }
+    .popup input, .popup textarea, .popup select {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+    }
+    .popup .form-row {
+      display: flex;
+      gap: 10px;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    .overlay.active {
+      display: block;
     }
   </style>
 </head>
 <body>
 
-  <!-- ✅ Top Header -->
-  <div class="header">
-    <h2>Project Management</h2>
-    <div class="tools">
-      <input type="text" id="search" placeholder="Search project...">
-      <select id="status-filter">
-        <option value="">All Status</option>
-        <option value="Preparation">Preparation</option>
-        <option value="Submitted">Submitted</option>
-        <option value="Approved">Approved</option>
-      </select>
-      <button class="add-btn" onclick="openPopup()">+ Add New Project</button>
-    </div>
+<header>
+  <h1>Project Management</h1>
+</header>
+
+<div class="container">
+  <div class="project-header">
+    <h2>All Projects</h2>
+    <button class="btn" onclick="openPopup()">+ Add New Project</button>
   </div>
 
-  <!-- ✅ Project Table -->
-  <div class="project-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Enquiry ID</th>
-          <th>Client Name</th>
-          <th>Project Location</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="projectTable">
-        {% for project in projects %}
-        <tr>
-          <td>{{ project.enquiry_id }}</td>
-          <td>{{ project.vendor_name }}</td>
-          <td>{{ project.location }}</td>
-          <td>{{ project.status }}</td>
-          <td>
-            <button onclick="editProject('{{ project.enquiry_id }}')">✏️ Edit</button>
-            <button onclick="deleteProject('{{ project.enquiry_id }}')">🗑️ Delete</button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ✅ Design Process -->
-  <div class="design-process">
-    <h3>Design Process</h3>
-    <div>
-      <strong>Stage: Preparation</strong>
-      <button onclick="openMeasurementPopup()">+ Add Measurement Sheet</button>
-    </div>
-  </div>
-
-  <!-- ✅ Add Project Popup -->
-  <div id="projectPopup" class="popup">
-    <button class="close-btn" onclick="closePopup()">X</button>
+  <!-- Add Project Popup -->
+  <div class="overlay" id="overlay" onclick="closePopup()"></div>
+  <div class="popup" id="projectPopup">
     <h3>Add New Project</h3>
-    <form method="POST" action="/add_project" enctype="multipart/form-data">
-      <div class="form-group">
-        <label>Enquiry ID</label>
-        <input type="text" name="enquiry_id" value="VE/TN/2526/E001" readonly>
+    <form action="/add_project" method="POST" enctype="multipart/form-data">
+      <input type="text" name="enquiry_id" placeholder="Enquiry ID" required>
+      <select name="vendor_id" required>
+        <option value="">Select Vendor</option>
+        {% for v in vendors %}
+          <option value="{{ v[0] }}">{{ v[1] }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="quotation_ro" placeholder="Quotation/RO">
+      <div class="form-row">
+        <input type="date" name="start_date" placeholder="Start Date">
+        <input type="date" name="end_date" placeholder="End Date">
       </div>
-
-      <div class="form-group">
-        <label>Client / Vendor Name</label>
-        <select name="vendor_name" id="vendorDropdown" onchange="fillVendorDetails(this)">
-          <option value="">-- Select Vendor --</option>
-          {% for vendor in vendors %}
-            <option value="{{ vendor.vendor_name }}" data-gst="{{ vendor.gst }}" data-address="{{ vendor.address }}">
-              {{ vendor.vendor_name }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>GST Number</label>
-        <input type="text" name="gst" id="gstField" readonly>
-      </div>
-
-      <div class="form-group">
-        <label>Address</label>
-        <textarea name="address" id="addressField" readonly></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Quotation RO</label>
-        <input type="text" name="quotation_ro">
-      </div>
-
-      <div class="form-group">
-        <label>Start Date</label>
-        <input type="date" name="start_date">
-      </div>
-
-      <div class="form-group">
-        <label>End Date</label>
-        <input type="date" name="end_date">
-      </div>
-
-      <div class="form-group">
-        <label>Project Location</label>
-        <input type="text" name="location">
-      </div>
-
-      <div class="form-group">
-        <label>Project Incharge</label>
-        <select name="incharge">
-          <option value="">-- Select --</option>
-          {% for emp in incharges %}
-            <option value="{{ emp }}">{{ emp }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea name="notes"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Upload Drawing File</label>
-        <input type="file" name="drawing_file">
-      </div>
-
-      <button type="submit">Save & Continue</button>
+      <input type="text" name="location" placeholder="Project Location">
+      <input type="text" name="gst_number" placeholder="GST Number" readonly>
+      <input type="text" name="address" placeholder="Address" readonly>
+      <input type="text" name="incharge" placeholder="Project Incharge">
+      <textarea name="notes" placeholder="Notes"></textarea>
+      <input type="file" name="file">
+      <button class="btn" type="submit">Save</button>
+      <button class="btn" type="button" onclick="closePopup()">Cancel</button>
     </form>
   </div>
-  <div class="design-process" style="margin-top:30px;">
-  <h3>Design Process</h3>
-  <table>
-    <thead>
+</div>
+
+<script>
+  function openPopup() {
+    document.getElementById('overlay').classList.add('active');
+    document.getElementById('projectPopup').classList.add('active');
+  }
+  function closePopup() {
+    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('projectPopup').classList.remove('active');
+  }
+</script>
+<div class="container">
+  <!-- Filter/Search Section -->
+  <input type="text" id="searchInput" placeholder="Search projects..." style="margin: 20px 0; padding: 8px; width: 300px;">
+
+  <!-- Projects Table -->
+  <table border="1" width="100%" cellspacing="0" cellpadding="8" id="projectTable" style="background:white;">
+    <thead style="background:#007bff; color:white;">
       <tr>
-        <th>Stage</th>
+        <th>Enquiry ID</th>
+        <th>Vendor</th>
+        <th>Location</th>
+        <th>Start-End</th>
+        <th>Incharge</th>
         <th>Status</th>
-        <th>Action</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
+      {% for p in projects %}
       <tr>
-        <td>Diagram Uploaded</td>
-        <td><span style="color: green;">Yes</span></td>
-        <td>-</td>
-      </tr>
-      <tr>
-        <td>Preparation</td>
+        <td>{{ p[1] }}</td>
         <td>
-          {% if design_status == 'completed' %}
-            ✅ Completed
-          {% else %}
-            🟡 In Progress
-          {% endif %}
+          {% for v in vendors %}
+            {% if v[0] == p[2] %}
+              {{ v[1] }}
+            {% endif %}
+          {% endfor %}
         </td>
+        <td>{{ p[6] }}</td>
+        <td>{{ p[4] }} to {{ p[5] }}</td>
+        <td>{{ p[9] }}</td>
+        <td>{{ p[12] }}</td>
         <td>
-          {% if design_status != 'completed' %}
-            <button onclick="window.location.href='/measurement_sheet/{{ project_id }}'">Continue Sheet</button>
-          {% endif %}
-        </td>
-      </tr>
-      <tr>
-        <td>Submitted for Approval</td>
-        <td>{{ approval_status }}</td>
-        <td>
-          {% if design_status == 'completed' and approval_status == 'Not Submitted' %}
-            <button onclick="submitForApproval('{{ project_id }}')">Submit</button>
-          {% endif %}
+          <a href="/design_process/{{ p[0] }}" class="btn" style="background:green;">View</a>
+          <a href="/edit_project/{{ p[0] }}" class="btn" style="background:orange;">Edit</a>
+          <a href="/delete_project/{{ p[0] }}" class="btn" style="background:red;" onclick="return confirm('Are you sure?')">Delete</a>
         </td>
       </tr>
-      <tr>
-        <td>Under Review</td>
-        <td>
-          {% if approval_status == 'Submitted' %}🟡 Under Review{% endif %}
-          {% if approval_status == 'Approved' %}✅ Approved{% endif %}
-        </td>
-        <td>
-          {% if approval_status == 'Submitted' %}
-            <button onclick="approveProject('{{ project_id }}')">Approve</button>
-            <button onclick="returnToPrep('{{ project_id }}')">Send Back</button>
-          {% endif %}
-        </td>
-      </tr>
+      {% endfor %}
     </tbody>
   </table>
-  </div>
+</div>
 
-  <!-- ✅ Measurement Sheet Popup -->
-  <div id="measurementPopup" class="popup">
-    <button class="close-btn" onclick="closeMeasurementPopup()">X</button>
-    <h3>Add Measurement Sheet</h3>
+<script>
+  // Simple live search
+  document.getElementById('searchInput').addEventListener('keyup', function () {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#projectTable tbody tr');
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  });
+</script>
+<!-- Design Process Section -->
+<h2 style="margin-top: 40px;">Design Process</h2>
+
+<div class="design-process" style="display: grid; gap: 20px;">
+  {% for p in projects %}
+  <div class="card" style="border: 1px solid #ccc; padding: 20px; border-radius: 12px;">
+    <h3>Project: {{ p[1] }}</h3>
+
+    <div style="display: flex; gap: 20px; align-items: center;">
+      <!-- Stage 1: Preparation -->
+      <div>
+        <span style="font-weight: bold;">1. Preparation</span><br>
+        <button onclick="openPreparationPopup({{ p[0] }})" class="btn">+ Add Measurement Sheet</button>
+      </div>
+
+      <!-- Stage 2: Completes -->
+      <div>
+        <span style="font-weight: bold;">2. Completes</span><br>
+        <span style="color: green;">✔ Completed</span>
+      </div>
+
+      <!-- Stage 3: Submit for Approval -->
+      <div>
+        <span style="font-weight: bold;">3. Submit for Approval</span><br>
+        {% if p[12] == 'Submit for Approval' %}
+          <span style="color: blue;">Under Review</span>
+        {% elif p[12] == 'Approved' %}
+          <span style="color: green;">✅ Approved → Sent to Production</span>
+        {% else %}
+          <form method="POST" action="/submit_sheet/{{ p[0] }}">
+            <button class="btn" type="submit">Submit</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- JS Function to trigger popup -->
+<script>
+  function openPreparationPopup(projectId) {
+    document.getElementById('prepPopup').style.display = 'block';
+    document.getElementById('prep_project_id').value = projectId;
+  }
+
+  function closePopup() {
+    document.getElementById('prepPopup').style.display = 'none';
+  }
+</script>
+<!-- Popup Overlay -->
+<div id="prepPopup" class="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999;">
+  <div style="background:#fff; width:500px; margin:100px auto; padding:20px; border-radius:10px; position:relative;">
+    <h2 style="margin-bottom: 20px;">Add Measurement Sheet</h2>
     <form method="POST" action="/add_measurement">
-      <div class="form-group">
-        <label>Client Name</label>
-        <input type="text" name="client_name" required>
+      <input type="hidden" name="project_id" id="prep_project_id">
+
+      <label>Client Name</label>
+      <input type="text" name="client_name" required style="width:100%; margin-bottom:10px; padding:8px;">
+
+      <label>Company Name</label>
+      <input type="text" name="company_name" required style="width:100%; margin-bottom:10px; padding:8px;">
+
+      <label>Project Location</label>
+      <input type="text" name="project_location" required style="width:100%; margin-bottom:10px; padding:8px;">
+
+      <label>Site Engineer Name</label>
+      <input type="text" name="engineer_name" required style="width:100%; margin-bottom:10px; padding:8px;">
+
+      <label>Phone Number</label>
+      <input type="text" name="phone" required style="width:100%; margin-bottom:10px; padding:8px;">
+
+      <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+        <button type="button" onclick="closePopup()" style="background:#ccc; padding:8px 20px;">Cancel</button>
+        <button type="submit" style="background:#007bff; color:#fff; padding:8px 20px;">Save & Continue</button>
       </div>
-      <div class="form-group">
-        <label>Company Name</label>
-        <input type="text" name="company_name" required>
-      </div>
-      <div class="form-group">
-        <label>Project Location</label>
-        <input type="text" name="project_location" required>
-      </div>
-      <div class="form-group">
-        <label>Site Engineer Name</label>
-        <input type="text" name="engineer_name" required>
-      </div>
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input type="text" name="phone" required>
-      </div>
-      <button type="submit">Save & Continue</button>
-      <button type="button" class="close-btn" onclick="closeMeasurementPopup()">Cancel</button>
     </form>
   </div>
+</div>
+<!-- Full Page View: Measurement Sheet Details + Duct Entry -->
+<div id="measurementSection" style="display: flex; flex-direction: column; margin-top: 30px;">
 
-  <!-- ✅ JavaScript -->
-  <script>
-    function openPopup() {
-      document.getElementById("projectPopup").classList.add("active");
-    }
+  <!-- 🟦 Top: Project + Measurement Info -->
+  <div style="background: #f1f1f1; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between;">
+    <div>
+      <p><strong>Client:</strong> {{ client_name }}</p>
+      <p><strong>Company:</strong> {{ company_name }}</p>
+      <p><strong>Location:</strong> {{ project_location }}</p>
+    </div>
+    <div>
+      <p><strong>Engineer:</strong> {{ engineer_name }}</p>
+      <p><strong>Phone:</strong> {{ phone }}</p>
+    </div>
+  </div>
 
-    function closePopup() {
-      document.getElementById("projectPopup").classList.remove("active");
-    }
+  <div style="display: flex; margin-top: 20px; gap: 20px;">
+    <!-- 🟥 Left: Duct Entry Form -->
+    <form method="POST" action="/add_duct" style="flex: 1; background: #f9f9f9; padding: 15px; border-radius: 10px;">
+      <input type="hidden" name="project_id" value="{{ project_id }}">
 
-    function fillVendorDetails(select) {
-      const gst = select.options[select.selectedIndex].getAttribute('data-gst');
-      const address = select.options[select.selectedIndex].getAttribute('data-address');
-      document.getElementById('gstField').value = gst || '';
-      document.getElementById('addressField').value = address || '';
-    }
+      <label>Duct No</label>
+      <input type="text" name="duct_no" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
 
-    function openMeasurementPopup() {
-      document.getElementById("measurementPopup").classList.add("active");
-    }
+      <label>Type</label>
+      <input type="text" name="duct_type" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
 
-    function closeMeasurementPopup() {
-      document.getElementById("measurementPopup").classList.remove("active");
-    }
+      <label>Size</label>
+      <input type="text" name="duct_size" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
 
-    document.getElementById("search").addEventListener("input", function () {
-      const searchValue = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#projectTable tr");
-      rows.forEach(row => {
-        const match = row.innerText.toLowerCase().includes(searchValue);
-        row.style.display = match ? "" : "none";
-      });
-    });
+      <label>Quantity</label>
+      <input type="number" name="quantity" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
 
-    document.getElementById("status-filter").addEventListener("change", function () {
-      const statusValue = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#projectTable tr");
-      rows.forEach(row => {
-        const status = row.children[3].innerText.toLowerCase();
-        row.style.display = !statusValue || status === statusValue ? "" : "none";
-      });
-    });
-  </script>
+      <button type="submit" style="background: #28a745; color: white; padding: 8px 20px;">Add Entry</button>
+    </form>
+
+    <!-- 🟩 Right: Live Table -->
+    <div style="flex: 2; overflow-x:auto;">
+      <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #007bff; color: white;">
+            <th>Duct No</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Quantity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for duct in ducts %}
+          <tr>
+            <td>{{ duct[2] }}</td>
+            <td>{{ duct[3] }}</td>
+            <td>{{ duct[4] }}</td>
+            <td>{{ duct[5] }}</td>
+            <td>
+              <a href="/edit_duct/{{ duct[0] }}" style="color: green;">Edit</a> |
+              <a href="/delete_duct/{{ duct[0] }}" style="color: red;" onclick="return confirm('Delete this entry?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 🟨 Bottom Buttons -->
+  <div style="margin-top: 20px; display: flex; gap: 10px;">
+    <a href="/export_csv/{{ project_id }}" style="background: #ffc107; padding: 8px 16px; text-decoration: none; color: black;">Export CSV</a>
+    <a href="/export_excel/{{ project_id }}" style="background: #17a2b8; padding: 8px 16px; text-decoration: none; color: white;">Export Excel</a>
+    <a href="/export_pdf/{{ project_id }}" style="background: #6c757d; padding: 8px 16px; text-decoration: none; color: white;">Export PDF</a>
+    <a href="#" onclick="window.print()" style="background: #343a40; padding: 8px 16px; text-decoration: none; color: white;">Print</a>
+    <form method="POST" action="/submit_sheet/{{ project_id }}" style="display:inline;">
+      <button type="submit" style="background: #28a745; color: white; padding: 8px 16px;">Submit</button>
+    </form>
+  </div>
+</<!-- 🔵 Design Process Status Area -->
+<div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+  <h3>Design Process Status</h3>
+  <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+    
+    <!-- 🟠 Preparation -->
+    <div style="text-align: center;">
+      <div style="font-size: 20px; color: #28a745;">✔️</div>
+      <div><strong>Preparation</strong></div>
+    </div>
+
+    <!-- ➡️ Arrow -->
+    <div style="font-size: 24px;">➡️</div>
+
+    <!-- 🟢 Completes -->
+    <div style="text-align: center;">
+      <div style="font-size: 20px; color: #28a745;">✔️</div>
+      <div><strong>Completed</strong></div>
+    </div>
+
+    <!-- ➡️ Arrow -->
+    <div style="font-size: 24px;">➡️</div>
+
+    <!-- 🔵 Submit for Approval -->
+    <div style="text-align: center;">
+      {% if approval_status == 'Design Process' %}
+        <form method="POST" action="/submit_sheet/{{ project_id }}">
+          <button type="submit" style="background: #007bff; color: white; padding: 6px 12px; border-radius: 5px;">Submit for Approval</button>
+        </form>
+      {% elif approval_status == 'Submit for Approval' %}
+        <div style="color: orange;"><strong>Status:</strong> Under Review</div>
+        <!-- Admin-only -->
+        {% if session.get('user') == 'admin' %}
+          <form method="POST" action="/approve_sheet/{{ project_id }}" style="display:inline;">
+            <button type="submit" style="background: #28a745; color: white; padding: 6px 12px; border-radius: 5px;">Approve</button>
+          </form>
+          <form method="POST" action="/send_back/{{ project_id }}" style="display:inline;">
+            <button type="submit" style="background: red; color: white; padding: 6px 12px; border-radius: 5px;">Send Back</button>
+          </form>
+        {% endif %}
+      {% elif approval_status == 'Approved' %}
+        <div style="color: green;"><strong>Status:</strong> Approved ✅</div>
+      {% elif approval_status == 'Sent Back' %}
+        <div style="color: red;"><strong>Status:</strong> Sent Back to Preparation</div>
+      {% endif %}
+    </div>
+
+  </div> <!-- Close Flex Row -->
+</div> <!-- Close Status Box -->div>
+  <!-- ⬅️ Close Design Process Section Here (already added above) -->
+
+<!-- Optional: Any additional scripts -->
+<script>
+  // JS for collapsibles, filter, or alerts (if used)
+</script>
 
 </body>
 </html>
