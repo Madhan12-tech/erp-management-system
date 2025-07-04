@@ -11,12 +11,11 @@ from flask import send_file
 app = Flask(__name__)
 app.secret_key = 'secret123'
 
-# ---------------- DB INIT ----------------
 def init_db():
     conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
 
-    # Employee Table
+    # ---------------- EMPLOYEES ----------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,12 +23,12 @@ def init_db():
             designation TEXT,
             email TEXT,
             phone TEXT,
-            username TEXT,
+            username TEXT UNIQUE,
             password TEXT
         )
     ''')
 
-    # Vendors Table
+    # ---------------- VENDORS ----------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,20 +40,7 @@ def init_db():
         )
     ''')
 
-    # Production Table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS production (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        duct_no TEXT,
-        duct_type TEXT,
-        duct_size TEXT,
-        quantity INTEGER,
-        remarks TEXT
-    )
-''')
-
-    # Projects Table
+    # ---------------- PROJECTS ----------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,24 +55,86 @@ cursor.execute('''
             incharge TEXT,
             notes TEXT,
             file TEXT,
-            approval_status TEXT DEFAULT 'Design Process'
+            approval_status TEXT DEFAULT 'Design Process',
+            FOREIGN KEY (vendor_id) REFERENCES vendors(id)
         )
     ''')
 
-    conn.commit()
+    # ---------------- MEASUREMENT SHEET ----------------
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS measurement_sheet (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            client TEXT,
+            company TEXT,
+            location TEXT,
+            engineer TEXT,
+            phone TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
 
-    # Insert dummy admin user if not exists
+    # ---------------- DUCT ENTRY ----------------
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ducts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            duct_no TEXT,
+            duct_type TEXT,
+            duct_size TEXT,
+            quantity INTEGER,
+            remarks TEXT,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # ---------------- APPROVAL LOGS ----------------
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS approvals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            status TEXT,
+            remarks TEXT,
+            reviewed_by TEXT,
+            reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # ---------------- PRODUCTION ----------------
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS production (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            pushed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            pushed_by TEXT,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # ---------------- DESIGN PROCESS STAGE ----------------
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS design_process (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            stage TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # ---------------- ADMIN LOGIN DEFAULT ----------------
     cursor.execute("SELECT * FROM employees WHERE username = 'admin'")
     if not cursor.fetchone():
         cursor.execute('''
             INSERT INTO employees (name, designation, email, phone, username, password)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', ('Admin User', 'Manager', 'admin@erp.com', '1234567890', 'admin', 'admin123'))
+        ''', ('Admin User', 'Admin', 'admin@erp.com', '1234567890', 'admin', 'admin123'))
 
     conn.commit()
     conn.close()
 
-init_db()
 # ---------------- LOGIN ----------------
 @app.route('/', methods=['GET', 'POST'])
 def login():
