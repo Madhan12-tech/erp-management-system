@@ -9,6 +9,7 @@
       font-family: 'Segoe UI', sans-serif;
       background: #f4f6f9;
     }
+
     header {
       background: #2c3e50;
       padding: 15px 30px;
@@ -17,20 +18,19 @@
       justify-content: space-between;
       align-items: center;
     }
+
     header h1 {
       font-size: 22px;
       margin: 0;
     }
-    .actions {
-      display: flex;
-      align-items: center;
-    }
+
     .actions input[type="text"] {
       padding: 6px 10px;
       border-radius: 4px;
       border: 1px solid #ccc;
       margin-right: 15px;
     }
+
     .actions button {
       background: #27ae60;
       color: white;
@@ -40,37 +40,81 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    .container {
+
+    .sidebar {
+      width: 240px;
+      background: #2c3e50;
+      color: white;
+      height: 100vh;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: #ecf0f1;
+      margin: 10px 0;
+      text-decoration: none;
+    }
+
+    .main {
+      margin-left: 260px;
       padding: 30px;
     }
+
     .section-title {
       font-size: 20px;
       margin-bottom: 15px;
       color: #34495e;
     }
+
     .project-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
       gap: 20px;
+    }
+
+    .project-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .project-card h3 {
+      margin: 0 0 10px;
+      color: #2c3e50;
     }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>Project Management</h1>
-  <div class="actions">
-    <input type="text" placeholder="Search Projects..." id="searchInput">
-    <button onclick="openAddProject()">+ Add Project</button>
-  </div>
-</header>
+<div class="sidebar">
+  <h2>Project Management</h2>
+  <a href="#">All Projects</a>
+  <strong>Project Dashboard</strong>
+</div>
 
-<div class="container">
+<div class="main">
+  <header>
+    <h1>Project Dashboard</h1>
+    <div class="actions">
+      <input type="text" placeholder="Search Projects..." id="searchInput">
+      <button onclick="openAddProject()">+ Add Project</button>
+    </div>
+  </header>
   <div class="section-title">All Projects</div>
-  <div class="project-cards" id="projectContainer">
+  <div class="project-cards">
     {% for project in projects %}
-    <div class="project-card" style="background:white; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <div class="project-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
           <strong>Enquiry ID:</strong> {{ project[1] }}<br>
           <strong>Vendor:</strong> {{ project[-1] }}<br>
@@ -83,43 +127,49 @@
         </div>
       </div>
 
-      <div class="design-process" style="margin-top:15px;">
-        <h4 style="margin-bottom:10px; color:#2c3e50;">Design Process</h4>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button onclick="openPrepPopup({{ project[0] }}, '{{ project[1] }}')" style="background:#3498db; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer;">
-            Preparation
+      <div class="design-process" style="margin-top:20px;">
+        <h4 style="margin-bottom:10px;">Design Process</h4>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button onclick="openPrepPopup({{ project[0] }}, '{{ project[1] }}')" style="background:#2980b9; color:white; border:none; padding:8px; border-radius:5px;">
+            1. Preparation
           </button>
-          <form action="/upload_drawing/{{ project[0] }}" method="post" enctype="multipart/form-data">
-            <label style="background:#8e44ad; color:white; padding:8px 12px; border-radius:4px; cursor:pointer;">
-              Tag Drawing <input type="file" name="file" style="display:none;" onchange="this.form.submit()">
+
+          <form method="POST" action="/review/{{ project[0] }}" enctype="multipart/form-data">
+            <label style="background:#8e44ad; color:white; padding:8px; display:inline-block; border-radius:5px; cursor:pointer;">
+              2. Tag Drawing
+              <input type="file" name="drawing" required onchange="this.form.submit()" style="display:none;">
             </label>
           </form>
-          <button disabled style="background:#27ae60; color:white; padding:8px 12px; border:none; border-radius:4px;">
-            Completed
+
+          <button disabled style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px;">
+            3. Completed
           </button>
+
           {% if project[12] == 'Design Process' %}
-          <form action="/submit_sheet/{{ project[0] }}" method="post">
-            <button type="submit" style="background:#e74c3c; color:white; padding:8px 12px; border:none; border-radius:4px;">
-              Submit for Approval
+          <form method="POST" action="/submit_sheet/{{ project[0] }}">
+            <button type="submit" style="background:#e67e22; color:white; padding:8px; border:none; border-radius:5px;">
+              4. Submit for Approval
             </button>
           </form>
           {% elif project[12] == 'Submit for Approval' %}
-          <span style="padding:8px 12px; background:#2ecc71; color:white; border-radius:4px;">Under Review</span>
+          <button disabled style="background:#f39c12; color:white; padding:8px; border:none; border-radius:5px;">
+            Under Review
+          </button>
           {% elif project[12] == 'Approved' %}
-          <a href="/push_to_production/{{ project[0] }}" style="display: inline-block; background:#27ae60; padding:8px 12px; color:white; border-radius:4px; text-decoration:none;">Push to Production</a>
+          <a href="/push_to_production/{{ project[0] }}" style="display:inline-block; background:#27ae60; color:white; padding:8px; text-align:center; text-decoration:none; border-radius:5px;">
+            Push to Production
+          </a>
           {% endif %}
         </div>
       </div>
     </div>
     {% endfor %}
-  </div>
-</div>
-
-<!-- Add Project Slide-In Popup -->
-<div id="addProjectPopup" style="position:fixed; top:0; right:-100%; width:400px; height:100%; background:#fff; box-shadow:-2px 0 6px rgba(0,0,0,0.2); z-index:1000; padding:20px; transition:right 0.3s ease;">
+  </div> <!-- End project-cards -->
+  <!-- ADD PROJECT POPUP -->
+<div id="addProjectPopup" style="position:fixed; top:0; right:-100%; width:400px; height:100%; background:white; box-shadow:-2px 0 6px rgba(0,0,0,0.2); z-index:1000; padding:20px; transition:right 0.3s ease;">
   <h3 style="margin-bottom:15px; color:#2c3e50;">Add New Project</h3>
   <form method="POST" action="/add_project" enctype="multipart/form-data">
-    <input type="hidden" name="enquiry_id" id="autoEnquiryID">
+    <input type="hidden" name="enquiry_id" id="autoEnquiryID" value="">
 
     <label>Vendor</label>
     <select name="vendor_id" id="vendorSelect" required style="width:100%; padding:8px; margin-bottom:10px;">
@@ -162,10 +212,11 @@
     </div>
   </form>
 </div>
+
 <script>
   function openAddProject() {
     document.getElementById('addProjectPopup').style.right = '0';
-    const eid = 'ENQ-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const eid = 'ENQ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     document.getElementById('autoEnquiryID').value = eid;
   }
 
@@ -173,7 +224,6 @@
     document.getElementById('addProjectPopup').style.right = '-100%';
   }
 
-  // Autofill GST and Address when vendor selected
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('vendorSelect').addEventListener('change', function () {
       const selected = this.options[this.selectedIndex];
@@ -181,19 +231,7 @@
       document.getElementById('addressField').value = selected.getAttribute('data-address');
     });
   });
-
-  function openPrepPopup(projectId, enquiryId) {
-    document.getElementById('prepPopup').style.display = 'block';
-    document.getElementById('popupEnqID').innerText = enquiryId;
-    document.getElementById('prep_project_id').value = projectId;
-    document.getElementById('duct_project_id').value = projectId;
-  }
-
-  function closePrepPopup() {
-    document.getElementById('prepPopup').style.display = 'none';
-  }
 </script>
-
 <!-- PREPARATION POPUP -->
 <div id="prepPopup" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; overflow:auto; z-index:1000; display:none; padding:20px;">
   <h3 style="margin-bottom:10px;">Measurement Sheet: <span id="popupEnqID"></span></h3>
@@ -209,9 +247,10 @@
       <button type="submit" style="padding:8px 15px; background:#2980b9; color:white; border:none; border-radius:5px;">Save & Continue</button>
     </div>
   </form>
+
   <!-- Duct Entry and Table -->
   <div style="display:flex; gap:20px;">
-    <!-- Duct Entry Form -->
+    <!-- Duct Form -->
     <form method="POST" action="/add_duct" style="flex:1;">
       <input type="hidden" name="project_id" id="duct_project_id">
       <h4>Duct Entry</h4>
@@ -254,7 +293,7 @@
         </tbody>
       </table>
 
-      <!-- Bottom Action Buttons -->
+      <!-- Buttons -->
       <div style="margin-top:15px;">
         <a href="/export_csv/{{ project_id }}" class="btn" style="margin-right:10px;">Export CSV</a>
         <a href="/export_excel/{{ project_id }}" class="btn" style="margin-right:10px;">Export Excel</a>
@@ -266,9 +305,21 @@
     </div>
   </div>
 
-  <!-- Close Button for Preparation Popup -->
   <button onclick="closePrepPopup()" style="position:absolute; top:10px; right:15px; font-size:18px;">❌</button>
 </div>
+
+<script>
+  function openPrepPopup(projectId, enquiryId) {
+    document.getElementById('prepPopup').style.display = 'block';
+    document.getElementById('popupEnqID').innerText = enquiryId;
+    document.getElementById('prep_project_id').value = projectId;
+    document.getElementById('duct_project_id').value = projectId;
+  }
+
+  function closePrepPopup() {
+    document.getElementById('prepPopup').style.display = 'none';
+  }
+</script>
 <h2 style="margin: 20px 0; color: #34495e;">Project Dashboard</h2>
 
 <div style="display: flex; flex-wrap: wrap; gap: 20px;">
@@ -310,11 +361,9 @@
   </div>
   {% endfor %}
 </div>
-<!-- Button to trigger Add Project -->
 <button onclick="document.getElementById('addProjectPopup').style.right='0'" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 8px; position: fixed; top: 20px; right: 20px; z-index: 1000;">+ Add New Project</button>
 
 <script>
-  // Preparation Popup
   function openPrepPopup(projectId, enquiryId) {
     document.getElementById('prepPopup').style.display = 'block';
     document.getElementById('prepProjectId').innerText = enquiryId;
@@ -330,7 +379,13 @@
     document.getElementById('prepPopup').style.display = 'none';
   }
 
-  // Load Duct Data
+  function fillVendorDetails(select) {
+    const gst = select.options[select.selectedIndex].getAttribute('data-gst');
+    const address = select.options[select.selectedIndex].getAttribute('data-address');
+    document.getElementById('gst_input').value = gst;
+    document.getElementById('address_input').value = address;
+  }
+
   function loadDuctTable(projectId) {
     fetch(`/api/ducts/${projectId}`)
       .then(res => res.json())
@@ -349,26 +404,11 @@
                 <a href="/edit_duct/${row.id}">Edit</a> |
                 <a href="/delete_duct/${row.id}" onclick="return confirm('Delete this entry?')">Delete</a>
               </td>
-            </tr>`;
+            </tr>
+          `;
         });
       });
   }
-
-  // Vendor Autofill
-  function fillVendorDetails(select) {
-    const gst = select.options[select.selectedIndex].getAttribute('data-gst');
-    const address = select.options[select.selectedIndex].getAttribute('data-address');
-    document.getElementById('gst_input').value = gst;
-    document.getElementById('address_input').value = address;
-  }
-
-  // Search Filter
-  document.getElementById('searchInput').addEventListener('input', function () {
-    const filter = this.value.toLowerCase();
-    document.querySelectorAll('.project-card').forEach(card => {
-      card.style.display = card.textContent.toLowerCase().includes(filter) ? 'block' : 'none';
-    });
-  });
 </script>
 
 </body>
