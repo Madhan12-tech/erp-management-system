@@ -89,18 +89,25 @@ def dashboard():
 @app.route('/vendors', methods=['GET', 'POST'])
 def vendors():
     conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
+    cursor = conn.cursor()
+
     if request.method == 'POST':
-        c.execute("INSERT INTO vendors (name, gst, address, phone, email) VALUES (?, ?, ?, ?, ?)", (
-            request.form['name'], request.form['gst'], request.form['address'],
-            request.form['phone'], request.form['email']))
+        name = request.form['name']
+        gst = request.form['gst']
+        address = request.form['address']
+        phone = request.form['phone']
+        email = request.form['email']
+        cursor.execute("INSERT INTO vendors (name, gst, address, phone, email) VALUES (?, ?, ?, ?, ?)",
+                       (name, gst, address, phone, email))
         conn.commit()
-        flash('Vendor added', 'success')
-        return redirect('/vendors')
-    c.execute("SELECT * FROM vendors")
-    vendors = c.fetchall()
+        flash('Vendor registered successfully!', 'success')
+        return redirect(url_for('vendors'))
+
+    cursor.execute("SELECT * FROM vendors")
+    vendors = cursor.fetchall()
     conn.close()
-    return render_template("vendors.html", vendors=vendors)
+    return render_template('vendors.html', vendors=vendors)
+
 
 # ---------- ADD PROJECT ----------
 @app.route('/add_project', methods=['POST'])
