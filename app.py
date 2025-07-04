@@ -189,26 +189,27 @@ def vendors():
     cursor = conn.cursor()
 
     if request.method == 'POST':
-        name = request.form['name']
-        gst = request.form['gst']
-        address = request.form['address']
-        phone = request.form['phone']
-        email = request.form['email']
+        try:
+            name = request.form['name']
+            gst = request.form['gst']
+            address = request.form['address']
+            phone = request.form['phone']
+            email = request.form['email']
 
-        cursor.execute('''
-            INSERT INTO vendors (name, gst, address, phone, email)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (name, gst, address, phone, email))
-        conn.commit()
-        flash('Vendor registered successfully!', 'success')
+            cursor.execute('''
+                INSERT INTO vendors (name, gst, address, phone, email)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (name, gst, address, phone, email))
+            conn.commit()
+            flash('Vendor registered successfully!', 'success')
+        except Exception as e:
+            flash(f'Error: {e}', 'danger')
         return redirect(url_for('vendors'))
 
     cursor.execute("SELECT * FROM vendors")
     vendors = cursor.fetchall()
     conn.close()
     return render_template('vendors.html', vendors=vendors)
-
-
 # ---------------- VENDOR DELETE ----------------
 @app.route('/vendor_delete/<int:id>')
 def vendor_delete(id):
