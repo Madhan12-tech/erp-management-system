@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>Dashboard - ERP</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
       margin: 0;
-      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
     }
+
     header {
       background: #343a40;
       color: white;
@@ -18,139 +18,92 @@
       justify-content: space-between;
       align-items: center;
     }
-    header h1 {
+
+    header h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: 24px;
     }
-    .btn {
-      background: #28a745;
+
+    header a {
       color: white;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
       text-decoration: none;
-      font-size: 14px;
-    }
-    .btn:hover {
-      background: #218838;
-    }
-    .container {
-      padding: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 12px;
-      text-align: center;
-    }
-    th {
-      background: #007bff;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background: #f9f9f9;
-    }
-    .status {
-      padding: 4px 8px;
-      border-radius: 5px;
-      font-size: 13px;
-      color: white;
-    }
-    .Design {
-      background: #ffc107;
-    }
-    .Submitted {
-      background: #17a2b8;
-    }
-    .Review {
-      background: #6c757d;
-    }
-    .Approved {
-      background: #28a745;
-    }
-    .actions a {
-      margin: 0 4px;
-      text-decoration: none;
-      color: #007bff;
-    }
-    .logout {
       background: #dc3545;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-weight: bold;
     }
-    .logout:hover {
-      background: #bd2130;
+
+    .container {
+      padding: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+    }
+
+    a.card-link {
+      text-decoration: none;
+      color: inherit;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>ERP Dashboard</h1>
-  <div>
-    <a href="{{ url_for('logout') }}" class="btn logout">Logout</a>
-  </div>
+  <h2>Welcome, {{ session['user'] }}</h2>
+  <a href="{{ url_for('logout') }}">Logout</a>
 </header>
 
 <div class="container">
-  <h2>Project Overview</h2>
+  <a class="card-link" href="{{ url_for('dashboard') }}">
+    <div class="card">
+      <h3>Project Management</h3>
+    </div>
+  </a>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+  <a class="card-link" href="#">
+    <div class="card">
+      <h3>Production Module</h3>
+    </div>
+  </a>
 
-  {% if projects %}
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Enquiry ID</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Location</th>
-          <th>Incharge</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in projects %}
-        <tr>
-          <td>{{ p[0] }}</td>
-          <td>{{ p[1] }}</td>
-          <td>{{ p[4] }}</td>
-          <td>{{ p[5] }}</td>
-          <td>{{ p[6] }}</td>
-          <td>{{ p[9] }}</td>
-          <td><span class="status {{ p[12].replace(' ', '') }}">{{ p[12] }}</span></td>
-          <td class="actions">
-            {% if p[12] == 'Design Process' %}
-              <a href="{{ url_for('measurement_sheet', project_id=p[0]) }}">Open Sheet</a>
-            {% elif p[12] == 'Submit for Approval' %}
-              <form method="POST" action="{{ url_for('submit_for_approval', project_id=p[0]) }}" style="display:inline;">
-                <button type="submit" class="btn">Submit</button>
-              </form>
-            {% elif p[12] == 'Under Review' %}
-              <a href="{{ url_for('approval_review', project_id=p[0]) }}">Review</a>
-            {% elif p[12] == 'Approved' %}
-              <span style="color: green;">✔</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No projects found.</p>
-  {% endif %}
+  <a class="card-link" href="#">
+    <div class="card">
+      <h3>Project Summary</h3>
+    </div>
+  </a>
+
+  <a class="card-link" href="{{ url_for('register') }}">
+    <div class="card">
+      <h3>Employee Registration</h3>
+    </div>
+  </a>
+
+  <a class="card-link" href="{{ url_for('vendors') }}">
+    <div class="card">
+      <h3>Vendor Registration</h3>
+    </div>
+  </a>
 </div>
 
 </body>
