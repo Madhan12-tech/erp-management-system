@@ -2,148 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vendor Registration</title>
+  <title>Vendor Registration | Ducting ERP</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
       padding: 20px;
     }
     .container {
-      max-width: 900px;
+      max-width: 800px;
       margin: auto;
       background: white;
-      padding: 25px;
+      padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 {
-      text-align: center;
-      color: #333;
       margin-bottom: 20px;
+      color: #2c3e50;
     }
-    .collapsible {
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      padding: 14px;
-      width: 100%;
-      border: none;
-      text-align: left;
-      outline: none;
-      font-size: 16px;
-      border-radius: 5px;
+    label {
+      display: block;
       margin-top: 10px;
+      font-weight: bold;
     }
-    .collapsible:hover {
-      background-color: #0056b3;
-    }
-    .content {
-      display: none;
-      padding: 20px;
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
       border: 1px solid #ccc;
-      border-top: none;
-      border-radius: 0 0 10px 10px;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    .section {
+      margin-bottom: 30px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 20px;
       background: #f9f9f9;
     }
-    form input, form select, form button {
-      padding: 10px;
-      margin: 8px 0;
-      width: 100%;
-      box-sizing: border-box;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    .btn {
-      padding: 10px 20px;
-      background: #28a745;
+    .remove-btn {
+      background: red;
       color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 15px;
+      padding: 5px 10px;
+      margin-top: 10px;
     }
-    .btn:hover {
-      background: #218838;
-    }
-    .btn-danger {
-      background: #dc3545;
-      margin-left: 5px;
-    }
-    .btn-danger:hover {
-      background: #c82333;
-    }
-    .row-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .row-group input {
-      flex: 1;
-    }
-    .back-btn {
-      background: #6c757d;
-      margin-bottom: 15px;
-    }
-    .back-btn:hover {
-      background: #5a6268;
+    .inline-btn {
+      background: green;
+      color: white;
+      padding: 8px 15px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="/dashboard" class="btn back-btn">← Back to Dashboard</a>
+    <a href="/dashboard"><button style="background: #555; color: white;">⬅ Back to Dashboard</button></a>
     <h2>Vendor Registration</h2>
+    
+    <form action="/vendors" method="POST">
 
-    <!-- Vendor Basic Details -->
-    <button class="collapsible">+ Vendor Basic Details</button>
-    <div class="content">
-      <form method="POST" action="{{ url_for('vendors') }}">
-        <input type="text" name="name" placeholder="Vendor Name" required>
-        <input type="text" name="gst" placeholder="GST Number" required>
-        <input type="text" name="address" placeholder="Address" required>
-        <input type="text" name="phone" placeholder="Phone Number" required>
-        <input type="email" name="email" placeholder="Email Address" required>
-        
-        <!-- Communication Rows -->
-        <button type="button" class="btn" onclick="addContactRow()">+ Add Communication Detail</button>
-        <div id="contact-section"></div>
+      <!-- Basic Vendor Details -->
+      <div class="section">
+        <h3>+ Vendor Basic Details</h3>
 
-        <!-- Bank Details -->
-        <button type="button" class="collapsible">+ Bank Details</button>
-        <div class="content">
-          <input type="text" name="bank_name" placeholder="Bank Name">
-          <input type="text" name="account_number" placeholder="Account Number">
-          <input type="text" name="ifsc" placeholder="IFSC Code">
-          <input type="text" name="branch" placeholder="Branch Name">
-        </div>
+        <label>Vendor Name</label>
+        <input type="text" name="vendor_name" required />
 
-        <button type="submit" class="btn">Register Vendor</button>
-      </form>
-    </div>
+        <label>GST Number</label>
+        <input type="text" name="gst_number" required />
+
+        <label>Address</label>
+        <textarea name="address" required></textarea>
+
+        <label>Phone Number</label>
+        <input type="text" name="phone" required />
+
+        <label>Email Address</label>
+        <input type="email" name="email" required />
+      </div>
+
+      <!-- Communication Details -->
+      <div class="section">
+        <h3>+ Communication Details</h3>
+        <button type="button" onclick="addCommunicationDetail()" class="inline-btn">+ Add Communication Detail</button>
+
+        <div id="communicationContainer"></div>
+      </div>
+
+      <!-- Bank Details -->
+      <div class="section">
+        <h3>+ Bank Details</h3>
+
+        <label>Bank Name</label>
+        <input type="text" name="bank_name" />
+
+        <label>Account Number</label>
+        <input type="text" name="account_number" />
+
+        <label>IFSC Code</label>
+        <input type="text" name="ifsc_code" />
+
+        <label>Branch Name</label>
+        <input type="text" name="branch_name" />
+      </div>
+
+      <button type="submit" style="background: #2ecc71; color: white; width: 100%;">Register Vendor</button>
+    </form>
   </div>
 
   <script>
-    const collapsibles = document.getElementsByClassName("collapsible");
-    for (let i = 0; i < collapsibles.length; i++) {
-      collapsibles[i].addEventListener("click", function () {
-        this.classList.toggle("active");
-        const content = this.nextElementSibling;
-        content.style.display = content.style.display === "block" ? "none" : "block";
-      });
-    }
+    function addCommunicationDetail() {
+      const container = document.getElementById('communicationContainer');
+      const html = `
+        <div style="margin-top: 20px; background: #fff; border: 1px solid #ccc; padding: 15px; border-radius: 6px;">
+          <label>Email ID</label>
+          <input type="email" name="email_multi[]" required />
 
-    function addContactRow() {
-      const container = document.getElementById('contact-section');
-      const div = document.createElement('div');
-      div.classList.add('row-group');
-      div.innerHTML = `
-        <input type="text" name="contact_name[]" placeholder="Contact Name" required>
-        <input type="email" name="contact_email[]" placeholder="Email" required>
-        <input type="text" name="contact_phone[]" placeholder="Phone" required>
-        <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">−</button>
+          <label>Phone Number</label>
+          <input type="text" name="phone_multi[]" required />
+
+          <label>Alternate Contact</label>
+          <input type="text" name="alt_contact[]" />
+
+          <button type="button" onclick="this.parentElement.remove()" class="remove-btn">Remove</button>
+        </div>
       `;
-      container.appendChild(div);
+      container.insertAdjacentHTML('beforeend', html);
     }
   </script>
 </body>
