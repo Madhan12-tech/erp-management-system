@@ -2,22 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vendors | Duct ERP</title>
+  <title>Vendor Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+    .form-box {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    table {
+      margin-top: 30px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table th, table td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
 </head>
 <body>
-  <h2>Register Vendor</h2>
-  <form method="POST" action="/vendors">
-    <input type="text" name="vendor_name" placeholder="Vendor Name" required><br><br>
-    <input type="text" name="gst" placeholder="GST Number" required><br><br>
-    <textarea name="address" placeholder="Address" required></textarea><br><br>
-    <button type="submit">Submit</button>
-  </form>
 
-  <h3>Registered Vendors</h3>
-  <ul>
-    {% for v in vendors %}
-      <li>{{ v[1] }} (GST: {{ v[2] }}) - {{ v[3] }}</li>
-    {% endfor %}
-  </ul>
+  <div class="form-box">
+    <h2>Vendor Registration</h2>
+
+    <form method="POST" action="{{ url_for('vendors') }}">
+      <input type="text" name="name" placeholder="Vendor Name" required>
+      <input type="text" name="gst" placeholder="GST Number" required>
+      <input type="text" name="address" placeholder="Address" required>
+      <input type="text" name="phone" placeholder="Phone" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <button type="submit">Register Vendor</button>
+    </form>
+
+    {% if vendors %}
+    <h3>Existing Vendors</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>GST</th>
+          <th>Address</th>
+          <th>Phone</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vendor in vendors %}
+        <tr>
+          <td>{{ vendor[1] }}</td>
+          <td>{{ vendor[2] }}</td>
+          <td>{{ vendor[3] }}</td>
+          <td>{{ vendor[4] }}</td>
+          <td>{{ vendor[5] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
 </body>
 </html>
