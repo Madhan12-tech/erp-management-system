@@ -5,16 +5,17 @@ import uuid
 import csv
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'secret123'
 
-# ---------------- DATABASE INITIALIZATION ----------------
+# ---------- DB INITIALIZATION ----------
 def init_db():
     conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
 
-    # Employee table
+    # Employee Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +28,7 @@ def init_db():
         )
     ''')
 
-    # Vendor table
+    # Vendor Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +40,20 @@ def init_db():
         )
     ''')
 
-    # Project table
+    # Dummy vendors if empty
+    cursor.execute("SELECT COUNT(*) FROM vendors")
+    if cursor.fetchone()[0] == 0:
+        dummy_vendors = [
+            ('Star Fabricators', 'GST1234ABC', 'Chennai, TN', '9876543210', 'star@example.com'),
+            ('Delta Ducts', 'GST5678XYZ', 'Coimbatore, TN', '9876543211', 'delta@example.com'),
+            ('AirMax Solutions', 'GST1111XYZ', 'Hyderabad, TS', '9876543212', 'airmax@example.com')
+        ]
+        cursor.executemany('''
+            INSERT INTO vendors (name, gst, address, phone, email)
+            VALUES (?, ?, ?, ?, ?)
+        ''', dummy_vendors)
+
+    # Project Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +73,7 @@ def init_db():
         )
     ''')
 
-    # Measurement sheet
+    # Measurement Sheet Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS measurement_sheet (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,52 +87,8 @@ def init_db():
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )
     ''')
-
-    # Production progress tracking
+    # Ducts Table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS production (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            cutting_done REAL,
-            plasma_done REAL,
-            boxing_done REAL,
-            quality_percent REAL,
-            dispatch_percent REAL,
-            FOREIGN KEY(project_id) REFERENCES projects(id)
-        )
-    ''')
-    # ✅ MAIN production progress table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS production (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        cutting_done REAL,
-        plasma_done REAL,
-        boxing_done REAL,
-        quality_percent REAL,
-        dispatch_percent REAL,
-        FOREIGN KEY(project_id) REFERENCES projects(id)
-    )
-''')
-
-# ✅ LOG of daily updates (renamed from conflicting "production")
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS production_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        duct_no TEXT,
-        duct_type TEXT,
-        duct_size TEXT,
-        quantity INTEGER,
-        remarks TEXT,
-        pushed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        pushed_by TEXT,
-        FOREIGN KEY (project_id) REFERENCES projects(id)
-    )
-''')
-
-# Duct entry
-cursor.execute('''
         CREATE TABLE IF NOT EXISTS ducts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER,
@@ -131,142 +101,75 @@ cursor.execute('''
         )
     ''')
 
-    # Insert admin login if not exists
+    # Production Progress Table (5 Phase Tracking)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS production (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            cutting_done REAL,
+            plasma_done REAL,
+            boxing_done REAL,
+            quality_percent REAL,
+            dispatch_percent REAL,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # Admin Insert if not exists
     cursor.execute("SELECT * FROM employees WHERE username = 'admin'")
     if not cursor.fetchone():
         cursor.execute('''
             INSERT INTO employees (name, designation, email, phone, username, password)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', ('Admin User', 'Admin', 'admin@erp.com', '1234567890', 'admin', 'admin123'))
+        ''', ('Admin', 'Admin', 'admin@erp.com', '9999999999', 'admin', 'admin123'))
 
     conn.commit()
     conn.close()
 
-# Call this to initialize DB when app starts
 init_db()
-
-
-# ---------------- LOGIN ----------------
+# ---------------- LOGIN & LOGOUT ----------------
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        uname = request.form['username']
-        pwd = request.form['password']
+        username = request.form['username']
+        password = request.form['password']
 
         conn = sqlite3.connect('erp.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM employees WHERE username=? AND password=?", (uname, pwd))
+        cursor.execute('SELECT * FROM employees WHERE username=? AND password=?', (username, password))
         user = cursor.fetchone()
         conn.close()
 
         if user:
-            session['user'] = user[1]
-            flash('Login successful!', 'success')
+            session['user'] = username
+            flash("Login successful!", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid credentials!', 'danger')
+            flash("Invalid credentials", "danger")
+            return redirect(url_for('login'))
 
     return render_template('login.html')
 
 
-# ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
-    session.clear()
-    flash('Logged out successfully.', 'info')
+    session.pop('user', None)
+    flash("Logged out successfully", "info")
     return redirect(url_for('login'))
 
 
-# ---------------- EMPLOYEE REGISTRATION ----------------
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    if request.method == 'POST':
-        name = request.form['name']
-        designation = request.form['designation']
-        email = request.form['email']
-        phone = request.form['phone']
-        username = request.form['username']
-        password = request.form['password']
-
-        cursor.execute('''
-            INSERT INTO employees (name, designation, email, phone, username, password)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (name, designation, email, phone, username, password))
-        conn.commit()
-        flash('Employee registered successfully!', 'success')
-        return redirect(url_for('register'))
-
-    cursor.execute("SELECT * FROM employees")
-    employees = cursor.fetchall()
-    conn.close()
-
-    return render_template('register.html', employees=employees)
-    # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         flash("Please login to continue", "warning")
         return redirect(url_for('login'))
-
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM projects")
-    projects = cursor.fetchall()
-    conn.close()
-
-    return render_template('dashboard.html', projects=projects)
-
-
-# ---------------- VENDOR REGISTRATION ----------------
-@app.route('/vendors', methods=['GET', 'POST'])
-def vendors():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    if request.method == 'POST':
-        try:
-            name = request.form['name']
-            gst = request.form['gst']
-            address = request.form['address']
-            phone = request.form['phone']
-            email = request.form['email']
-
-            cursor.execute('''
-                INSERT INTO vendors (name, gst, address, phone, email)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (name, gst, address, phone, email))
-            conn.commit()
-            flash('Vendor registered successfully!', 'success')
-        except Exception as e:
-            flash(f'Error: {e}', 'danger')
-        return redirect(url_for('vendors'))
-
-    cursor.execute("SELECT * FROM vendors")
-    vendors = cursor.fetchall()
-    conn.close()
-    return render_template('vendors.html', vendors=vendors)
-
-
-# ---------------- VENDOR DELETE ----------------
-@app.route('/vendor_delete/<int:id>')
-def vendor_delete(id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM vendors WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-    flash('Vendor deleted.', 'danger')
-    return redirect(url_for('vendors'))
-
-
-# ---------------- VENDOR EDIT ----------------
-@app.route('/vendor_edit/<int:id>', methods=['GET', 'POST'])
-def vendor_edit(id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
+    return render_template('dashboard.html')
+    # ---------------- VENDOR ROUTES ----------------
+@app.route('/vendor_register', methods=['GET', 'POST'])
+def vendor_register():
+    if 'user' not in session:
+        flash("Please login to continue", "warning")
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         name = request.form['name']
@@ -275,21 +178,41 @@ def vendor_edit(id):
         phone = request.form['phone']
         email = request.form['email']
 
+        conn = sqlite3.connect('erp.db')
+        cursor = conn.cursor()
         cursor.execute('''
-            UPDATE vendors SET name = ?, gst = ?, address = ?, phone = ?, email = ?
-            WHERE id = ?
-        ''', (name, gst, address, phone, email, id))
+            INSERT INTO vendors (name, gst, address, phone, email)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (name, gst, address, phone, email))
         conn.commit()
-        flash('Vendor updated successfully!', 'success')
-        return redirect(url_for('vendors'))
+        conn.close()
+        flash("Vendor added successfully", "success")
+        return redirect(url_for('vendor_register'))
 
-    cursor.execute("SELECT * FROM vendors WHERE id = ?", (id,))
-    row = cursor.fetchone()
+    # Dummy vendors for dropdown prefill test
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM vendors')
+    vendors = cursor.fetchall()
     conn.close()
-    return render_template('vendor_edit.html', row=row)
-    
 
-# ---------------- PROJECT DASHBOARD ----------------
+    return render_template('vendors.html', vendors=vendors)
+
+
+@app.route('/delete_vendor/<int:vendor_id>')
+def delete_vendor(vendor_id):
+    if 'user' not in session:
+        flash("Please login to continue", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM vendors WHERE id = ?', (vendor_id,))
+    conn.commit()
+    conn.close()
+    flash("Vendor deleted", "info")
+    return redirect(url_for('vendor_register'))
+    # ---------------- PROJECT ROUTES ----------------
 @app.route('/projects')
 def projects():
     if 'user' not in session:
@@ -311,17 +234,6 @@ def projects():
     cursor.execute("SELECT id, name, gst, address FROM vendors")
     vendors = cursor.fetchall()
 
-    # If vendors table is empty, insert dummy vendors for testing
-    if not vendors:
-        dummy_vendors = [
-            (1, 'ABC Ducting Ltd.', 'GST123ABC', 'Chennai'),
-            (2, 'XYZ Fabrication', 'GST456XYZ', 'Bangalore'),
-            (3, 'CoolAir Systems', 'GST789CA', 'Mumbai')
-        ]
-        cursor.executemany("INSERT INTO vendors (id, name, gst, address) VALUES (?, ?, ?, ?)", dummy_vendors)
-        conn.commit()
-        vendors = dummy_vendors
-
     conn.close()
 
     # Generate Enquiry ID like ENQ123ABC
@@ -331,11 +243,13 @@ def projects():
                            projects=projects,
                            vendors=vendors,
                            enquiry_id=enquiry_id)
-    # ---------------- ADD PROJECT ----------------
+
+
 @app.route('/add_project', methods=['POST'])
 def add_project():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
+    if 'user' not in session:
+        flash("Please login to continue", "warning")
+        return redirect(url_for('login'))
 
     enquiry_id = request.form['enquiry_id']
     vendor_id = request.form['vendor_id']
@@ -343,293 +257,35 @@ def add_project():
     start_date = request.form['start_date']
     end_date = request.form['end_date']
     location = request.form['location']
-    gst_number = request.form['gst_number']
+    gst = request.form['gst']
     address = request.form['address']
     incharge = request.form['incharge']
     notes = request.form['notes']
     file = request.files['file']
 
-    # Handle drawing file upload
-    drawing_file = ''
-    if file and file.filename:
-        filename = f"{uuid.uuid4().hex}_{file.filename}"
-        drawing_file = filename
-        os.makedirs('uploads', exist_ok=True)
-        file.save(os.path.join('uploads', filename))
+    filename = ''
+    if file:
+        filename = file.filename
+        upload_path = os.path.join('static/uploads', filename)
+        file.save(upload_path)
 
-    # Insert into DB
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO projects (
             enquiry_id, vendor_id, quotation_ro, start_date, end_date,
-            location, gst, address, incharge, notes, file, approval_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        enquiry_id, vendor_id, quotation_ro, start_date, end_date,
-        location, gst_number, address, incharge, notes, drawing_file, 'Design Process'
-    ))
-
+            location, gst, address, incharge, notes, file
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (enquiry_id, vendor_id, quotation_ro, start_date, end_date,
+          location, gst, address, incharge, notes, filename))
     conn.commit()
     conn.close()
-    flash("Project added successfully!", "success")
+
+    flash("Project added successfully", "success")
     return redirect(url_for('projects'))
-    # ---------------- ADD MEASUREMENT SHEET ----------------
-@app.route('/add_measurement', methods=['POST'])
-def add_measurement():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    project_id = request.form['project_id']
-    client_name = request.form['client_name']
-    company_name = request.form['company_name']
-    project_location = request.form['project_location']
-    engineer_name = request.form['engineer_name']
-    phone = request.form['phone']
-
-    cursor.execute('''
-        INSERT INTO measurement_sheet (
-            project_id, client, company, location, engineer, phone
-        ) VALUES (?, ?, ?, ?, ?, ?)
-    ''', (
-        project_id, client_name, company_name, project_location, engineer_name, phone
-    ))
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for('measurement_sheet', project_id=project_id))
-
-
-# ---------------- MEASUREMENT SHEET VIEW ----------------
+    # ---------------- MEASUREMENT SHEET ROUTES ----------------
 @app.route('/measurement_sheet/<int:project_id>')
 def measurement_sheet(project_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM measurement_sheet WHERE project_id = ?", (project_id,))
-    ms = cursor.fetchone()
-
-    cursor.execute("SELECT * FROM ducts WHERE project_id = ?", (project_id,))
-    ducts = cursor.fetchall()
-
-    conn.close()
-
-    if not ms:
-        flash("Measurement sheet not found.", "danger")
-        return redirect(url_for('dashboard'))
-
-    return render_template("measurement_sheet.html",
-        project_id=project_id,
-        client_name=ms[2],
-        company=ms[3],
-        location=ms[4],
-        engineer=ms[5],
-        phone=ms[6],
-        ducts=ducts
-    )
-
-
-# ---------------- ADD DUCT ENTRY ----------------
-@app.route('/add_duct', methods=['POST'])
-def add_duct():
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    project_id = request.form['project_id']
-    duct_no = request.form['duct_no']
-    duct_type = request.form['duct_type']
-    duct_size = request.form['duct_size']
-    quantity = request.form['quantity']
-    remarks = request.form.get('remarks', '')
-
-    cursor.execute('''
-        INSERT INTO ducts (project_id, duct_no, duct_type, duct_size, quantity, remarks)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (project_id, duct_no, duct_type, duct_size, quantity, remarks))
-
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for('measurement_sheet', project_id=project_id))
-    # ---------------- EDIT DUCT ENTRY ----------------
-@app.route('/edit_duct/<int:duct_id>', methods=['GET', 'POST'])
-def edit_duct(duct_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    if request.method == 'POST':
-        duct_no = request.form['duct_no']
-        duct_type = request.form['duct_type']
-        duct_size = request.form['duct_size']
-        quantity = request.form['quantity']
-        remarks = request.form['remarks']
-
-        cursor.execute('''
-            UPDATE ducts
-            SET duct_no = ?, duct_type = ?, duct_size = ?, quantity = ?, remarks = ?
-            WHERE id = ?
-        ''', (duct_no, duct_type, duct_size, quantity, remarks, duct_id))
-
-        conn.commit()
-
-        cursor.execute("SELECT project_id FROM ducts WHERE id = ?", (duct_id,))
-        project_id = cursor.fetchone()[0]
-        conn.close()
-
-        flash("Duct entry updated!", "success")
-        return redirect(url_for('measurement_sheet', project_id=project_id))
-
-    else:
-        cursor.execute("SELECT * FROM ducts WHERE id = ?", (duct_id,))
-        row = cursor.fetchone()
-        conn.close()
-        return render_template('edit_measurement.html', row=row)
-
-
-# ---------------- DELETE DUCT ----------------
-@app.route('/delete_duct/<int:duct_id>')
-def delete_duct(duct_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT project_id FROM ducts WHERE id = ?", (duct_id,))
-    row = cursor.fetchone()
-    if not row:
-        conn.close()
-        flash("Duct not found!", "danger")
-        return redirect(url_for('dashboard'))
-
-    project_id = row[0]
-
-    cursor.execute("DELETE FROM ducts WHERE id = ?", (duct_id,))
-    conn.commit()
-    conn.close()
-
-    flash("Duct deleted!", "warning")
-    return redirect(url_for('measurement_sheet', project_id=project_id))
-
-
-# ---------------- EXPORT TO CSV ----------------
-@app.route('/export_csv/<int:project_id>')
-def export_csv(project_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT duct_no, duct_type, duct_size, quantity FROM ducts WHERE project_id = ?", (project_id,))
-    data = cursor.fetchall()
-    conn.close()
-
-    output = BytesIO()
-    writer = csv.writer(output)
-    writer.writerow(['Duct No', 'Type', 'Size', 'Quantity'])
-    writer.writerows(data)
-    output.seek(0)
-
-    return send_file(output, mimetype='text/csv', download_name='duct_data.csv', as_attachment=True)
-
-
-# ---------------- EXPORT TO EXCEL ----------------
-@app.route('/export_excel/<int:project_id>')
-def export_excel(project_id):
-    conn = sqlite3.connect('erp.db')
-    df = pd.read_sql_query(
-        "SELECT duct_no, duct_type, duct_size, quantity FROM ducts WHERE project_id = ?",
-        conn,
-        params=(project_id,)
-    )
-    conn.close()
-
-    output = BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
-
-    return send_file(output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        download_name='duct_data.xlsx',
-        as_attachment=True)
-
-
-# ---------------- SUBMIT FOR APPROVAL ----------------
-@app.route('/submit_sheet/<int:project_id>', methods=['POST'])
-def submit_sheet(project_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE projects SET approval_status = ? WHERE id = ?", ("Submit for Approval", project_id))
-    conn.commit()
-    conn.close()
-
-    flash("Submitted for approval!", "success")
-    return redirect(url_for('dashboard'))
-    # ---------------- REVIEW PROJECT ----------------
-@app.route('/review/<int:project_id>', methods=['GET', 'POST'])
-def review(project_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    if request.method == 'POST':
-        action = request.form['action']
-        if action == 'approve':
-            new_status = 'Approved'
-        else:
-            new_status = 'Design Process'
-
-        cursor.execute("UPDATE projects SET approval_status = ? WHERE id = ?", (new_status, project_id))
-        conn.commit()
-        conn.close()
-
-        flash(f'Project {action.capitalize()}d Successfully!', 'success')
-        return redirect(url_for('dashboard'))
-
-    cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
-    project = cursor.fetchone()
-    conn.close()
-
-    if not project:
-        flash('Project not found!', 'danger')
-        return redirect(url_for('dashboard'))
-
-    return render_template('review.html', project=project)
-
-
-# ---------------- PUSH TO PRODUCTION ----------------
-@app.route('/push_to_production/<int:project_id>')
-def push_to_production(project_id):
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    # Ensure project is approved
-    cursor.execute("SELECT approval_status FROM projects WHERE id = ?", (project_id,))
-    status = cursor.fetchone()
-    if not status or status[0] != "Approved":
-        flash("Project is not approved yet.", "danger")
-        conn.close()
-        return redirect(url_for('dashboard'))
-
-    # Prevent duplicate pushes
-    cursor.execute("SELECT * FROM production WHERE project_id = ?", (project_id,))
-    if cursor.fetchone():
-        flash("Project already pushed to production.", "info")
-        conn.close()
-        return redirect(url_for('dashboard'))
-
-    # Get ducts from measurement sheet
-    cursor.execute("SELECT duct_no, duct_type, duct_size, quantity, remarks FROM ducts WHERE project_id = ?", (project_id,))
-    ducts = cursor.fetchall()
-
-    # Insert ducts into production
-    for duct in ducts:
-        cursor.execute('''
-            INSERT INTO production (project_id, duct_no, duct_type, duct_size, quantity, remarks)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (project_id, *duct))
-
-    conn.commit()
-    conn.close()
-
-    flash("Project pushed to production!", "success")
-    return redirect(url_for('production_dashboard'))
-
-
-# ---------------- PRODUCTION DASHBOARD ----------------
-@app.route('/production')
-def production_dashboard():
     if 'user' not in session:
         flash("Please login to continue", "warning")
         return redirect(url_for('login'))
@@ -637,72 +293,433 @@ def production_dashboard():
     conn = sqlite3.connect('erp.db')
     cursor = conn.cursor()
 
+    # Get project info
+    cursor.execute('SELECT * FROM projects WHERE id = ?', (project_id,))
+    project = cursor.fetchone()
+
+    # Get ducts for this project
+    cursor.execute('SELECT * FROM ducts WHERE project_id = ?', (project_id,))
+    ducts = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('measurement_sheet.html',
+                           project=project,
+                           ducts=ducts,
+                           project_id=project_id)
+
+
+@app.route('/add_measurement', methods=['POST'])
+def add_measurement():
+    if 'user' not in session:
+        flash("Please login to continue", "warning")
+        return redirect(url_for('login'))
+
+    project_id = request.form['project_id']
+    client = request.form['client']
+    company = request.form['company']
+    location = request.form['location']
+    engineer = request.form['engineer']
+    phone = request.form['phone']
+
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
     cursor.execute('''
-        SELECT d.project_id, pr.enquiry_id, d.duct_no, d.duct_type, d.duct_size, d.quantity, d.remarks
-        FROM production d
-        LEFT JOIN projects pr ON d.project_id = pr.id
-        GROUP BY d.id
+        INSERT INTO measurement_sheet 
+        (project_id, client, company, location, engineer, phone)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (project_id, client, company, location, engineer, phone))
+    conn.commit()
+    conn.close()
+
+    flash("Measurement sheet submitted", "success")
+    return redirect(url_for('measurement_sheet', project_id=project_id))
+
+
+@app.route('/add_duct', methods=['POST'])
+def add_duct():
+    project_id = request.form['project_id']
+    duct_no = request.form['duct_no']
+    duct_type = request.form['duct_type']
+    duct_size = request.form['duct_size']
+    quantity = request.form['quantity']
+    remarks = request.form.get('remarks', '')
+
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO ducts (project_id, duct_no, duct_type, duct_size, quantity, remarks)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (project_id, duct_no, duct_type, duct_size, quantity, remarks))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('measurement_sheet', project_id=project_id))
+    # ---------------- PRODUCTION MODULE ROUTES ----------------
+@app.route('/production/<int:project_id>')
+def production(project_id):
+    if 'user' not in session:
+        flash("Please login to continue", "warning")
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+
+    # Get total area from measurement ducts
+    cursor.execute('SELECT SUM(quantity) FROM ducts WHERE project_id = ?', (project_id,))
+    total_area = cursor.fetchone()[0] or 0
+
+    # Get existing production data
+    cursor.execute('SELECT * FROM production WHERE project_id = ?', (project_id,))
+    data = cursor.fetchone()
+
+    if data:
+        cutting = data[2] or 0
+        plasma = data[3] or 0
+        boxing = data[4] or 0
+        quality = data[5] or 0
+        dispatch = data[6] or 0
+    else:
+        cutting = plasma = boxing = quality = dispatch = 0
+
+    conn.close()
+
+    # Calculate percentages only if total_area > 0
+    cutting_percent = (cutting / total_area * 100) if total_area else 0
+    plasma_percent = (plasma / total_area * 100) if total_area else 0
+    boxing_percent = (boxing / total_area * 100) if total_area else 0
+    quality_percent = quality
+    dispatch_percent = dispatch
+
+    overall = (cutting_percent + plasma_percent + boxing_percent + quality_percent + dispatch_percent) / 5
+
+    return render_template('production.html',
+                           project_id=project_id,
+                           cutting=cutting,
+                           plasma=plasma,
+                           boxing=boxing,
+                           quality=quality,
+                           dispatch=dispatch,
+                           cutting_percent=cutting_percent,
+                           plasma_percent=plasma_percent,
+                           boxing_percent=boxing_percent,
+                           quality_percent=quality_percent,
+                           dispatch_percent=dispatch_percent,
+                           overall=overall,
+                           total_area=total_area)
+
+
+@app.route('/update_production/<int:project_id>', methods=['POST'])
+def update_production(project_id):
+    cutting = float(request.form.get('cutting', 0))
+    plasma = float(request.form.get('plasma', 0))
+    boxing = float(request.form.get('boxing', 0))
+    quality = float(request.form.get('quality', 0))
+    dispatch = float(request.form.get('dispatch', 0))
+
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+
+    # Check if already exists
+    cursor.execute('SELECT id FROM production WHERE project_id = ?', (project_id,))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.execute('''
+            UPDATE production SET 
+            cutting_done = ?, plasma_done = ?, boxing_done = ?, 
+            quality_percent = ?, dispatch_percent = ?
+            WHERE project_id = ?
+        ''', (cutting, plasma, boxing, quality, dispatch, project_id))
+    else:
+        cursor.execute('''
+            INSERT INTO production 
+            (project_id, cutting_done, plasma_done, boxing_done, quality_percent, dispatch_percent)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (project_id, cutting, plasma, boxing, quality, dispatch))
+
+    conn.commit()
+    conn.close()
+
+    flash("Production updated successfully", "success")
+    return redirect(url_for('production', project_id=project_id))
+    # ---------------- DASHBOARD ROUTE ----------------
+@app.route('/dashboard')
+def dashboard():
+    if 'user' not in session:
+        flash("Please login to continue", "warning")
+        return redirect(url_for('login'))
+
+    return render_template('dashboard.html')
+
+
+# ---------------- LOGOUT ----------------
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash("Logged out successfully", "info")
+    return redirect(url_for('login'))
+
+@app.route('/export_projects_excel')
+def export_projects_excel():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query('''
+        SELECT p.*, v.name as vendor_name
+        FROM projects p
+        LEFT JOIN vendors v ON p.vendor_id = v.id
+    ''', conn)
+    conn.close()
+
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return send_file(output,
+                     download_name="Projects.xlsx",
+                     as_attachment=True)
+
+@app.route('/export_projects_pdf')
+def export_projects_pdf():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT p.enquiry_id, v.name, p.location, p.start_date, p.end_date
+        FROM projects p
+        LEFT JOIN vendors v ON p.vendor_id = v.id
     ''')
     rows = cursor.fetchall()
     conn.close()
 
-    return render_template('production.html', rows=rows)
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
 
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 40, "Projects Report")
 
-@app.route('/production/<int:project_id>', methods=['GET', 'POST'])
-def production(project_id):
+    y = height - 80
+    p.setFont("Helvetica", 10)
+    for row in rows:
+        line = f"Enquiry: {row[0]} | Vendor: {row[1]} | Location: {row[2]} | {row[3]} to {row[4]}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+
+    return send_file(buffer,
+                     download_name="Projects.pdf",
+                     as_attachment=True)
+    @app.route('/export_vendors_excel')
+def export_vendors_excel():
     conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-
-    # Handle form submission
-    if request.method == 'POST':
-        cutting = float(request.form.get('cutting', 0))
-        plasma = float(request.form.get('plasma', 0))
-        boxing = float(request.form.get('boxing', 0))
-        quality = float(request.form.get('quality', 0))
-        dispatch = float(request.form.get('dispatch', 0))
-
-        # Check if record exists
-        cursor.execute("SELECT id FROM production WHERE project_id = ?", (project_id,))
-        existing = cursor.fetchone()
-
-        if existing:
-            cursor.execute('''
-                UPDATE production 
-                SET cutting_done=?, plasma_done=?, boxing_done=?, quality_percent=?, dispatch_percent=?
-                WHERE project_id=?
-            ''', (cutting, plasma, boxing, quality, dispatch, project_id))
-        else:
-            cursor.execute('''
-                INSERT INTO production (project_id, cutting_done, plasma_done, boxing_done, quality_percent, dispatch_percent)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (project_id, cutting, plasma, boxing, quality, dispatch))
-
-        conn.commit()
-        flash("Production data updated", "success")
-        return redirect(url_for('production', project_id=project_id))
-
-    # Fetch current values
-    cursor.execute("SELECT * FROM production WHERE project_id = ?", (project_id,))
-    row = cursor.fetchone()
+    df = pd.read_sql_query('SELECT * FROM vendors', conn)
     conn.close()
 
-    # Dummy total area for now (replace with actual measurement sheet total later)
-    total_area = 100  
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
 
-    return render_template("production.html",
-                           project_id=project_id,
-                           total_area=total_area,
-                           data=row)
-# ---------------- RUN FLASK SERVER ----------------
-if __name__ == '__main__':
-    # Create uploads directory if it doesn't exist
-    if not os.path.exists('uploads'):
-        os.makedirs('uploads')
+    return send_file(output, download_name="Vendors.xlsx", as_attachment=True)
 
-    # Initialize the database
-    init_db()
+@app.route('/export_vendors_pdf')
+def export_vendors_pdf():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT name, gst, address FROM vendors')
+    rows = cursor.fetchall()
+    conn.close()
 
-    # Run the Flask app
-    app.run(debug=True)
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 40, "Vendors Report")
+
+    y = height - 80
+    p.setFont("Helvetica", 10)
+    for row in rows:
+        line = f"Vendor: {row[0]} | GST: {row[1]} | Address: {row[2]}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="Vendors.pdf", as_attachment=True)
     
+    @app.route('/export_measurements_excel')
+def export_measurements_excel():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query('SELECT * FROM measurement_sheet', conn)
+    conn.close()
+
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return send_file(output, download_name="MeasurementSheet.xlsx", as_attachment=True)
+
+    @app.route('/export_measurements_pdf')
+def export_measurements_pdf():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT client, company, location, engineer, phone FROM measurement_sheet')
+    rows = cursor.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 40, "Measurement Sheet Report")
+
+    y = height - 80
+    p.setFont("Helvetica", 10)
+    for row in rows:
+        line = f"{row[0]} | {row[1]} | {row[2]} | Eng: {row[3]} | {row[4]}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="MeasurementSheet.pdf", as_attachment=True)
+    @app.route('/export_production_excel')
+def export_production_excel():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query('SELECT * FROM production', conn)
+    conn.close()
+
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return send_file(output, download_name="ProductionData.xlsx", as_attachment=True)
+
+@app.route('/export_production_pdf')
+def export_production_pdf():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT project_id, cutting_done, plasma_done, boxing_done,
+               quality_percent, dispatch_percent
+        FROM production
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 40, "Production Report")
+
+    y = height - 80
+    p.setFont("Helvetica", 10)
+    for row in rows:
+        line = f"Project ID: {row[0]} | Cutting: {row[1]} | Plasma: {row[2]} | Boxing: {row[3]} | QC: {row[4]}% | Dispatch: {row[5]}%"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="Production.pdf", as_attachment=True)
+    @app.route('/export_ducts_excel')
+def export_ducts_excel():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query('SELECT * FROM ducts', conn)
+    conn.close()
+
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return send_file(output, download_name="DuctEntries.xlsx", as_attachment=True)
+
+@app.route('/export_ducts_pdf')
+def export_ducts_pdf():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT project_id, duct_no, duct_type, duct_size, quantity, remarks 
+        FROM ducts
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 40, "Duct Entries Report")
+
+    y = height - 80
+    p.setFont("Helvetica", 10)
+    for row in rows:
+        line = f"Proj ID: {row[0]} | Duct: {row[1]} | Type: {row[2]} | Size: {row[3]} | Qty: {row[4]} | {row[5]}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="DuctEntries.pdf", as_attachment=True)
+    
+    @app.route('/export_employees_excel')
+def export_employees_excel():
+    conn = sqlite3.connect('erp.db')
+    df = pd.read_sql_query('SELECT id, name, designation, email, phone FROM employees', conn)
+    conn.close()
+
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return send_file(output, download_name="Employees.xlsx", as_attachment=True)
+
+@app.route('/export_employees_pdf')
+def export_employees_pdf():
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT name, designation, email, phone FROM employees')
+    rows = cursor.fetchall()
+    conn.close()
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 40, "Employees Report")
+
+    y = height - 80
+    p.setFont("Helvetica", 10)
+    for row in rows:
+        line = f"{row[0]} | {row[1]} | {row[2]} | {row[3]}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+    return send_file(buffer, download_name="Employees.pdf", as_attachment=True)
+    
+
+# ---------------- START FLASK ----------------
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True)
