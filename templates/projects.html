@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Projects | Ducting ERP</title>
   <style>
     body {
@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
     }
-    h2 {
+    h2, h3 {
       color: #2c3e50;
     }
     label {
@@ -27,6 +27,8 @@
     }
     button {
       cursor: pointer;
+      border: none;
+      border-radius: 6px;
     }
     .project-card {
       background: white;
@@ -38,152 +40,189 @@
   </style>
 </head>
 <body>
-  <!-- Add Project Button -->
+
+<!-- Add Project Button -->
 <div style="padding: 20px;">
   <button onclick="document.getElementById('addProjectPopup').style.right = '0'"
-          style="padding: 10px 20px; background-color: #2ecc71; color: white; border: none; border-radius: 6px;">
+          style="padding: 10px 20px; background-color: #2ecc71; color: white;">
     ➕ Add New Project
   </button>
 </div>
 
 <!-- Add Project Slide-in Popup -->
 <div id="addProjectPopup"
-     style="position: fixed; top: 0; right: -500px; width: 400px; height: 100vh; background: #fff; box-shadow: -2px 0 10px rgba(0,0,0,0.2); padding: 20px; overflow-y: auto; transition: right 0.4s ease-in-out; z-index: 1000;">
-  
+     style="position: fixed; top: 0; right: -500px; width: 400px; height: 100vh; background: #fff;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2); padding: 20px; overflow-y: auto;
+            transition: right 0.4s ease-in-out; z-index: 1000;">
   <h2 style="margin-top: 0;">Add New Project</h2>
   <form action="/add_project" method="POST" enctype="multipart/form-data">
     <label>Enquiry ID</label>
-    <input type="text" name="enquiry_id" required>
+    <input type="text" name="enquiry_id" required />
 
     <label>Vendor</label>
     <select name="vendor_id" id="vendorDropdown" onchange="autoFillVendor()" required>
       <option value="">-- Select Vendor --</option>
       {% for v in vendors %}
-        <option value="{{ v[0] }}" data-gst="{{ v[2] }}" data-address="{{ v[3] }}">{{ v[1] }}</option>
+      <option value="{{ v[0] }}" data-gst="{{ v[2] }}" data-address="{{ v[3] }}">{{ v[1] }}</option>
       {% endfor %}
     </select>
 
     <label>Quotation RO</label>
-    <input type="text" name="quotation_ro">
+    <input type="text" name="quotation_ro" />
 
     <label>Start Date</label>
-    <input type="date" name="start_date">
+    <input type="date" name="start_date" />
 
     <label>End Date</label>
-    <input type="date" name="end_date">
+    <input type="date" name="end_date" />
 
     <label>Location</label>
-    <input type="text" name="location">
+    <input type="text" name="location" />
 
     <label>GST Number</label>
-    <input type="text" name="gst_number" id="gstField" readonly>
+    <input type="text" name="gst_number" id="gstField" readonly />
 
     <label>Address</label>
     <textarea name="address" id="addressField" rows="3" readonly></textarea>
 
     <label>Project Incharge</label>
-    <input type="text" name="incharge">
+    <input type="text" name="incharge" />
 
     <label>Notes</label>
     <textarea name="notes" rows="3"></textarea>
 
     <label>Upload Drawing File</label>
-    <input type="file" name="file">
+    <input type="file" name="file" />
 
     <div style="margin-top: 20px;">
-      <button type="submit" style="background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px;">Save</button>
-      <button type="button" onclick="document.getElementById('addProjectPopup').style.right = '-500px'"
-              style="margin-left: 10px; background-color: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px;">Cancel</button>
+      <button type="submit" style="background-color: #3498db; color: white; padding: 10px 20px;">Save</button>
+      <button type="button" onclick="closeAddProjectPopup()"
+              style="margin-left: 10px; background-color: #e74c3c; color: white; padding: 10px 20px;">Cancel</button>
     </div>
   </form>
 </div>
 
 <script>
+  // Vendor dropdown auto-fill GST and Address
   function autoFillVendor() {
     const dropdown = document.getElementById("vendorDropdown");
     const selected = dropdown.options[dropdown.selectedIndex];
-    document.getElementById("gstField").value = selected.getAttribute("data-gst");
-    document.getElementById("addressField").value = selected.getAttribute("data-address");
+    document.getElementById("gstField").value = selected.getAttribute("data-gst") || '';
+    document.getElementById("addressField").value = selected.getAttribute("data-address") || '';
+  }
+
+  // Close Add Project popup by sliding out
+  function closeAddProjectPopup() {
+    document.getElementById('addProjectPopup').style.right = '-500px';
   }
 </script>
 <!-- Design Process Section -->
 <div style="padding: 20px; margin-top: 30px; border-top: 2px solid #ccc;">
   <h2 style="margin-bottom: 15px;">Design Process</h2>
-  
   <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-    <button onclick="openPreparationPopup()" style="background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 6px;">
-      1️⃣ Preparation
-    </button>
 
-    <button onclick="document.getElementById('uploadDrawing').click()" style="background: #9b59b6; color: white; padding: 10px 20px; border: none; border-radius: 6px;">
+    <!-- Preparation Button (Opens Preparation Popup for each project) -->
+    <!-- We'll generate these buttons inside the project cards below -->
+
+    <!-- Tag Drawing Upload Button -->
+    <button onclick="document.getElementById('uploadDrawing').click()"
+            style="background: #9b59b6; color: white; padding: 10px 20px; border: none; border-radius: 6px;">
       2️⃣ Tag Drawing
     </button>
-    <input type="file" id="uploadDrawing" style="display: none;" onchange="alert('Drawing uploaded!')">
+    <input type="file" id="uploadDrawing" style="display: none;" onchange="alert('Drawing uploaded!')" />
 
-    <button disabled style="background: #2ecc71; color: white; padding: 10px 20px; border: none; border-radius: 6px; opacity: 0.8;">
+    <!-- Completed Button -->
+    <button disabled
+            style="background: #2ecc71; color: white; padding: 10px 20px; border: none; border-radius: 6px; opacity: 0.8;">
       3️⃣ Completed
     </button>
 
-    {% for row in projects %}
-  <div class="project-card">
-    <h3>{{ row[1] }}</h3>
-    <!-- Other details -->
-    <form action="/submit_sheet/{{ row[0] }}" method="POST">
-      <button type="submit">Submit</button>
-    </form>
   </div>
-{% endfor %}
+</div>
+
+<!-- Projects List -->
+<div style="padding: 20px;">
+  {% if projects %}
+    {% for row in projects %}
+      <div class="project-card">
+        <h3>{{ row[1] }}</h3>
+        <!-- Other details can be added here -->
+
+        <!-- Preparation Button -->
+        <button onclick="openPreparationPopup({{ row[0] }})"
+                style="background: #3498db; color: white; padding: 10px 20px; margin-bottom: 10px;">
+          1️⃣ Preparation
+        </button>
+
+        <!-- Submit Sheet Form -->
+        <form action="/submit_sheet/{{ row[0] }}" method="POST" style="display:inline;">
+          <button type="submit" style="background: #27ae60; color: white; padding: 8px 16px;">Submit</button>
+        </form>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No projects found.</p>
+  {% endif %}
+</div>
+
 <!-- Preparation Popup -->
 <div id="preparationPopup" style="display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
-  width: 600px; background: white; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.2); z-index: 1000; padding: 25px;">
+  width: 600px; background: white; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  z-index: 1000; padding: 25px;">
   <h3 style="margin-bottom: 20px;">Preparation Details</h3>
   <form action="/add_measurement" method="POST">
-    <input type="hidden" name="project_id" value="{{ row[0] }}">
-    
+    <input type="hidden" name="project_id" value="" />
+
     <div style="margin-bottom: 15px;">
       <label>Client Name:</label>
-      <input type="text" name="client_name" required style="width: 100%; padding: 8px;">
+      <input type="text" name="client_name" required />
     </div>
     <div style="margin-bottom: 15px;">
       <label>Company Name:</label>
-      <input type="text" name="company_name" required style="width: 100%; padding: 8px;">
+      <input type="text" name="company_name" required />
     </div>
     <div style="margin-bottom: 15px;">
       <label>Project Location:</label>
-      <input type="text" name="project_location" required style="width: 100%; padding: 8px;">
+      <input type="text" name="project_location" required />
     </div>
     <div style="margin-bottom: 15px;">
       <label>Site Engineer:</label>
-      <input type="text" name="engineer_name" required style="width: 100%; padding: 8px;">
+      <input type="text" name="engineer_name" required />
     </div>
     <div style="margin-bottom: 15px;">
       <label>Phone Number:</label>
-      <input type="text" name="phone" required style="width: 100%; padding: 8px;">
+      <input type="text" name="phone" required />
     </div>
 
     <div style="text-align: right; margin-top: 20px;">
-      <button type="submit" style="background: #27ae60; color: white; padding: 8px 16px; border: none; border-radius: 5px;">Save & Continue</button>
-      <button type="button" onclick="closePreparationPopup()" style="margin-left: 10px; background: #ccc; padding: 8px 16px; border: none; border-radius: 5px;">Cancel</button>
+      <button type="submit" style="background: #27ae60; color: white; padding: 8px 16px;">Save & Continue</button>
+      <button type="button" onclick="closePreparationPopup()" style="margin-left: 10px; background: #ccc; padding: 8px 16px;">Cancel</button>
     </div>
   </form>
 </div>
 
-<!-- Popup Overlay -->
+<!-- Overlay -->
 <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.4); z-index: 900;" onclick="closePreparationPopup()"></div>
 
 <script>
-  function openPreparationPopup() {
+  // Open Preparation popup and set project_id dynamically
+  function openPreparationPopup(projectId) {
     document.getElementById('preparationPopup').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
+    const projectIdInput = document.querySelector('#preparationPopup input[name="project_id"]');
+    if (projectIdInput) {
+      projectIdInput.value = projectId;
+    }
   }
 
+  // Close Preparation popup and overlay
   function closePreparationPopup() {
     document.getElementById('preparationPopup').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
   }
 </script>
-<!-- Only show this after Save & Continue on preparation -->
+<!-- Only show this section after Save & Continue on Preparation -->
 <div id="ductEntrySection" style="margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 30px;">
 
   <!-- Display project/client info at top -->
@@ -196,24 +235,24 @@
   </div>
 
   <div style="display: flex; margin-top: 30px; gap: 30px;">
-    
+
     <!-- Left: Duct Entry Form -->
     <div style="flex: 1; background: #f9f9f9; padding: 20px; border-radius: 10px;">
       <h3 style="margin-bottom: 15px;">Duct Entry</h3>
       <form action="/add_duct" method="POST">
-        <input type="hidden" name="project_id" value="{{ project_id }}">
+        <input type="hidden" name="project_id" value="{{ project_id }}" />
 
         <label>Duct No:</label>
-        <input type="text" name="duct_no" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+        <input type="text" name="duct_no" required style="width: 100%; margin-bottom: 10px; padding: 8px;" />
 
         <label>Type:</label>
-        <input type="text" name="duct_type" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+        <input type="text" name="duct_type" required style="width: 100%; margin-bottom: 10px; padding: 8px;" />
 
         <label>Size:</label>
-        <input type="text" name="duct_size" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+        <input type="text" name="duct_size" required style="width: 100%; margin-bottom: 10px; padding: 8px;" />
 
         <label>Quantity:</label>
-        <input type="number" name="quantity" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+        <input type="number" name="quantity" required style="width: 100%; margin-bottom: 10px; padding: 8px;" />
 
         <label>Remarks:</label>
         <textarea name="remarks" style="width: 100%; margin-bottom: 10px; padding: 8px;"></textarea>
@@ -222,7 +261,7 @@
       </form>
     </div>
 
-    <!-- Right: Live Table -->
+    <!-- Right: Live Duct Table -->
     <div style="flex: 2;">
       <h3 style="margin-bottom: 10px;">Duct Table</h3>
       <table border="1" cellpadding="10" cellspacing="0" width="100%" style="background: white;">
@@ -255,6 +294,7 @@
         </tbody>
       </table>
     </div>
+
   </div>
 
   <!-- Bottom Buttons -->
@@ -267,18 +307,20 @@
     </form>
   </div>
 </div>
+
 <!-- Design Process Buttons (Stage Controls) -->
 <div id="designProcessStages" style="margin-top: 50px; border-top: 2px dashed #ccc; padding-top: 30px;">
   <h3 style="margin-bottom: 15px;">Design Process</h3>
 
-  <!-- Stage Buttons -->
   <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-    <button onclick="openPreparation()" style="padding: 10px 20px;">1. Preparation</button>
+
+    <!-- Preparation Stage -->
+    <button onclick="openPreparationPopup({{ project_id }})" style="padding: 10px 20px;">1. Preparation</button>
 
     <!-- Tag Drawing Upload -->
     <form action="/upload_drawing/{{ project_id }}" method="POST" enctype="multipart/form-data">
       <label for="drawing_file" style="padding: 10px 20px; border: 1px solid #ccc; cursor: pointer;">2. Tag Drawing</label>
-      <input type="file" name="drawing_file" id="drawing_file" style="display:none;" onchange="this.form.submit();">
+      <input type="file" name="drawing_file" id="drawing_file" style="display:none;" onchange="this.form.submit();" />
     </form>
 
     <!-- Mark Completed -->
@@ -290,6 +332,7 @@
     <form action="/submit_sheet/{{ project_id }}" method="POST">
       <button type="submit" style="background: #3498db; color: white; padding: 10px 20px;">4. Submit for Approval</button>
     </form>
+
   </div>
 
   <!-- Show Status -->
@@ -308,60 +351,31 @@
   </div>
 </div>
 <script>
-  // Toggle Add Project Popup
+  // Toggle Add Project Popup sliding in/out
   function openAddProjectPopup() {
-    document.getElementById('addProjectPopup').style.display = 'block';
+    document.getElementById('addProjectPopup').style.right = '0';
   }
-
   function closeAddProjectPopup() {
-    document.getElementById('addProjectPopup').style.display = 'none';
+    document.getElementById('addProjectPopup').style.right = '-500px';
   }
 
-  // Fill GST and Address from vendor selection
-  function fillVendorDetails() {
-    var select = document.getElementById('vendor_id');
-    var gst = select.options[select.selectedIndex].getAttribute('data-gst');
-    var address = select.options[select.selectedIndex].getAttribute('data-address');
-    document.getElementById('gst_number').value = gst;
-    document.getElementById('address').value = address;
-  }
-
-  // Toggle collapsible sections inside add project form
-  function toggleCollapsible(id) {
-    var el = document.getElementById(id);
-    if (el.style.display === "none" || el.style.display === "") {
-      el.style.display = "block";
-    } else {
-      el.style.display = "none";
-    }
-  }
-
-  // Filter project cards by search
+  // Filter project cards by search (if you add a search input with id="projectSearch")
   function filterProjects() {
-    var input = document.getElementById('projectSearch').value.toLowerCase();
-    var cards = document.getElementsByClassName('project-card');
-    for (var i = 0; i < cards.length; i++) {
-      var text = cards[i].innerText.toLowerCase();
+    const input = document.getElementById('projectSearch').value.toLowerCase();
+    const cards = document.getElementsByClassName('project-card');
+    for (let i = 0; i < cards.length; i++) {
+      const text = cards[i].innerText.toLowerCase();
       cards[i].style.display = text.includes(input) ? '' : 'none';
     }
   }
 
-  // Preparation form popup
-  function openPreparation() {
-    document.getElementById('preparationPopup').style.display = 'block';
-  }
-
-  function closePreparation() {
-    document.getElementById('preparationPopup').style.display = 'none';
-  }
-
-  // Optional: close popup when clicking outside
+  // Optional: close Add Project popup when clicking outside popup area
   window.onclick = function(event) {
     const popup = document.getElementById('addProjectPopup');
-    if (event.target == popup) {
+    if (event.target === popup) {
       closeAddProjectPopup();
     }
-  }
+  };
 </script>
 
 </body>
