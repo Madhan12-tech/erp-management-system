@@ -166,6 +166,34 @@ def register():
     conn.close()
 
     return render_template('register.html', employees=employees)
+
+@app.route('/employee_edit/<int:id>', methods=['GET', 'POST'])
+def employee_edit(id):
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        designation = request.form['designation']
+        email = request.form['email']
+        phone = request.form['phone']
+        username = request.form['username']
+        password = request.form['password']
+
+        cursor.execute('''
+            UPDATE employees
+            SET name = ?, designation = ?, email = ?, phone = ?, username = ?, password = ?
+            WHERE id = ?
+        ''', (name, designation, email, phone, username, password, id))
+        conn.commit()
+        conn.close()
+        flash("Employee updated!", "success")
+        return redirect(url_for('register'))
+
+    cursor.execute("SELECT * FROM employees WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    conn.close()
+    return render_template('employee_edit.html', row=row)
     # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
