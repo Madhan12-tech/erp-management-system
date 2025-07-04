@@ -167,6 +167,7 @@ def register():
 
     return render_template('register.html', employees=employees)
 
+# ---------------- EMPLOYEE EDIT ----------------
 @app.route('/employee_edit/<int:id>', methods=['GET', 'POST'])
 def employee_edit(id):
     conn = sqlite3.connect('erp.db')
@@ -186,14 +187,25 @@ def employee_edit(id):
             WHERE id = ?
         ''', (name, designation, email, phone, username, password, id))
         conn.commit()
-        conn.close()
-        flash("Employee updated!", "success")
+        flash("Employee updated successfully!", "success")
         return redirect(url_for('register'))
 
     cursor.execute("SELECT * FROM employees WHERE id = ?", (id,))
     row = cursor.fetchone()
     conn.close()
-    return render_template('employee_edit.html', row=row)
+    return render_template("employee_edit.html", row=row)
+
+# ---------------- EMPLOYEE DELETE ----------------
+@app.route('/employee_delete/<int:id>')
+def employee_delete(id):
+    conn = sqlite3.connect('erp.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM employees WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    flash("Employee deleted successfully!", "warning")
+    return redirect(url_for('register'))
+    
     # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
