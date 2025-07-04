@@ -2,87 +2,178 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Production Dashboard</title>
+  <title>Production Module</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f7f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7f9;
       margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background: #34495e;
+      color: white;
       padding: 20px;
     }
-    h2 {
-      color: #2c3e50;
-      text-align: center;
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
     }
-    table {
+    .progress-bar {
       width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-top: 20px;
+      background: #ecf0f1;
+      border-radius: 20px;
+      height: 20px;
+      overflow: hidden;
+      margin-top: 10px;
     }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: center;
+    .progress-fill {
+      background: #2ecc71;
+      height: 100%;
+      width: 0%;
+      border-radius: 20px;
+      transition: 0.4s;
     }
-    th {
-      background-color: #3498db;
+    .main-content {
+      flex: 1;
+      padding: 30px;
+    }
+    .phase-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+    }
+    .phase-card h3 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: #2c3e50;
+    }
+    input[type="number"] {
+      width: 100px;
+      padding: 5px;
+      margin-right: 10px;
+    }
+    .percent-display {
+      font-weight: bold;
+      color: #27ae60;
+    }
+    .btn {
+      padding: 5px 15px;
+      background: #2980b9;
       color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-    .back-button {
-      display: inline-block;
-      padding: 10px 16px;
-      background-color: #2ecc71;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      margin-top: 20px;
-    }
-    .back-button:hover {
-      background-color: #27ae60;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-
-  <h2>Production Dashboard</h2>
-
-  {% if rows %}
-  <table>
-    <thead>
-      <tr>
-        <th>Project ID</th>
-        <th>Duct No</th>
-        <th>Duct Type</th>
-        <th>Duct Size</th>
-        <th>Quantity</th>
-        <th>Remarks</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in rows %}
-      <tr>
-        <td>{{ row[0] }}</td>
-        <td>{{ row[1] }}</td>
-        <td>{{ row[2] }}</td>
-        <td>{{ row[3] }}</td>
-        <td>{{ row[4] }}</td>
-        <td>{{ row[5] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-    <p style="text-align: center; margin-top: 20px;">No production data available.</p>
-  {% endif %}
-
-  <div style="text-align: center;">
-    <a href="{{ url_for('dashboard') }}" class="back-button">⬅ Back to Dashboard</a>
+<div class="container">
+  <div class="sidebar">
+    <h2>Overall Progress</h2>
+    <div class="progress-bar">
+      <div class="progress-fill" id="overall-progress"></div>
+    </div>
+    <p id="overall-text">0%</p>
+    <button class="btn" onclick="showBreakdown()">View Breakdown</button>
   </div>
+  <div class="main-content">
+    <!-- Sheet Cutting -->
+    <div class="phase-card" id="phase1">
+      <h3>1. Sheet Cutting</h3>
+      <label>Completed Sq.m: 
+        <input type="number" id="cuttingDone" oninput="updateProgress()" />
+      </label>
+      / <span id="cuttingTotal">100</span> Sq.m
+      <p>Progress: <span class="percent-display" id="cuttingPercent">0%</span></p>
+    </div>
+
+    <!-- Plasma & Fabrication -->
+    <div class="phase-card" id="phase2">
+      <h3>2. Plasma & Fabrication</h3>
+      <label>Completed Sq.m: 
+        <input type="number" id="plasmaDone" oninput="updateProgress()" />
+      </label>
+      / <span id="plasmaTotal">100</span> Sq.m
+      <p>Progress: <span class="percent-display" id="plasmaPercent">0%</span></p>
+    </div>
+
+    <!-- Boxing & Assembly -->
+    <div class="phase-card" id="phase3">
+      <h3>3. Boxing & Assembly</h3>
+      <label>Completed Sq.m: 
+        <input type="number" id="boxingDone" oninput="updateProgress()" />
+      </label>
+      / <span id="boxingTotal">100</span> Sq.m
+      <p>Progress: <span class="percent-display" id="boxingPercent">0%</span></p>
+    </div>
+
+    <!-- Quality Checking -->
+    <div class="phase-card" id="phase4">
+      <h3>4. Quality Checking</h3>
+      <label>Progress %: 
+        <input type="number" id="qualityPercent" oninput="updateProgress()" />
+      </label>
+    </div>
+
+    <!-- Dispatch -->
+    <div class="phase-card" id="phase5">
+      <h3>5. Dispatch</h3>
+      <label>Progress %: 
+        <input type="number" id="dispatchPercent" oninput="updateProgress()" />
+      </label>
+    </div>
+
+  </div> <!-- main-content -->
+</div> <!-- container -->
+
+<script>
+  const totals = {
+    cutting: 100,
+    plasma: 100,
+    boxing: 100
+  };
+
+  function updateProgress() {
+    const cutting = parseFloat(document.getElementById('cuttingDone').value) || 0;
+    const plasma = parseFloat(document.getElementById('plasmaDone').value) || 0;
+    const boxing = parseFloat(document.getElementById('boxingDone').value) || 0;
+    const quality = parseFloat(document.getElementById('qualityPercent').value) || 0;
+    const dispatch = parseFloat(document.getElementById('dispatchPercent').value) || 0;
+
+    const cuttingPct = (cutting / totals.cutting) * 100;
+    const plasmaPct = (plasma / totals.plasma) * 100;
+    const boxingPct = (boxing / totals.boxing) * 100;
+
+    document.getElementById('cuttingPercent').textContent = `${cuttingPct.toFixed(1)}%`;
+    document.getElementById('plasmaPercent').textContent = `${plasmaPct.toFixed(1)}%`;
+    document.getElementById('boxingPercent').textContent = `${boxingPct.toFixed(1)}%`;
+
+    const totalPct = (cuttingPct + plasmaPct + boxingPct + quality + dispatch) / 5;
+    document.getElementById('overall-progress').style.width = `${totalPct}%`;
+    document.getElementById('overall-text').textContent = `${totalPct.toFixed(1)}%`;
+  }
+
+  function showBreakdown() {
+    alert(
+      `Breakdown:\n
+      Sheet Cutting: ${document.getElementById('cuttingPercent').textContent}
+      Plasma & Fabrication: ${document.getElementById('plasmaPercent').textContent}
+      Boxing & Assembly: ${document.getElementById('boxingPercent').textContent}
+      Quality Checking: ${document.getElementById('qualityPercent').value || 0}%
+      Dispatch: ${document.getElementById('dispatchPercent').value || 0}%`
+    );
+  }
+</script>
 
 </body>
 </html>
+    
