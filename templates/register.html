@@ -2,123 +2,223 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Employee Registration</title>
+  <title>Vendor Registration | Ducting ERP</title>
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
       padding: 20px;
+      background: #f4f7f9;
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 20px;
-      color: #343a40;
+      color: #2c3e50;
     }
 
     form {
-      max-width: 600px;
-      margin: 0 auto 40px;
       background: white;
-      padding: 20px;
+      padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      max-width: 900px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    form input {
+    label {
+      display: block;
+      margin-top: 15px;
+      color: #34495e;
+    }
+
+    input, select {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
+      padding: 8px;
+      margin-top: 5px;
       border-radius: 5px;
+      border: 1px solid #ccc;
     }
 
-    form button {
-      padding: 10px 20px;
-      background: #007bff;
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .section-title {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2980b9;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 10px 18px;
+      background: #27ae60;
       color: white;
       border: none;
-      border-radius: 5px;
-      font-weight: bold;
+      border-radius: 6px;
       cursor: pointer;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    .add-remove {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
     }
 
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background: #007bff;
+    .btn-small {
+      padding: 6px 10px;
+      background: #3498db;
       color: white;
+      border: none;
+      border-radius: 5px;
+      margin-left: 10px;
+      cursor: pointer;
     }
 
-    tr:hover {
-      background: #f1f1f1;
+    .remove-row {
+      background: #e74c3c;
     }
 
-    .actions a {
-      margin-right: 10px;
-      color: #007bff;
-      text-decoration: none;
+    .collapsible {
+      background-color: #f1f1f1;
+      color: #333;
+      cursor: pointer;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 16px;
+      margin-top: 20px;
     }
 
-    .actions a:hover {
-      text-decoration: underline;
+    .content {
+      padding: 0 15px;
+      display: none;
+      overflow: hidden;
+      background-color: #fff;
     }
+
+    .flash-message {
+      padding: 10px;
+      color: white;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+
+    .flash-success { background: #2ecc71; }
+    .flash-error { background: #e74c3c; }
   </style>
 </head>
 <body>
 
-  <h2>Employee Registration</h2>
+<h2>Vendor Registration</h2>
 
-  <form method="POST" action="{{ url_for('register') }}">
-    <input type="text" name="name" placeholder="Full Name" required>
-    <input type="text" name="designation" placeholder="Designation" required>
-    <input type="email" name="email" placeholder="Email ID" required>
-    <input type="text" name="phone" placeholder="Phone Number" required>
-    <input type="text" name="username" placeholder="Username" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Register Employee</button>
-  </form>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash-message {% if category == 'success' %}flash-success{% else %}flash-error{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
-  <h2>All Registered Employees</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Designation</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Username</th>
-        <th class="actions">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for emp in employees %}
-      <tr>
-        <td>{{ emp[1] }}</td>
-        <td>{{ emp[2] }}</td>
-        <td>{{ emp[3] }}</td>
-        <td>{{ emp[4] }}</td>
-        <td>{{ emp[5] }}</td>
-        <td class="actions">
-          <a href="{{ url_for('employee_edit', id=emp[0]) }}">Edit</a>
-          <a href="{{ url_for('employee_delete', id=emp[0]) }}" onclick="return confirm('Are you sure?')">Delete</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<form method="POST" action="/vendor_register">
+
+  <div class="section-title">Vendor Details</div>
+  <div class="form-grid">
+    <div>
+      <label>Vendor Name</label>
+      <input type="text" name="vendor_name" required>
+    </div>
+    <div>
+      <label>GST Number</label>
+      <input type="text" name="gst_number" required>
+    </div>
+    <div>
+      <label>Address</label>
+      <input type="text" name="address" required>
+    </div>
+    <div>
+      <label>Email</label>
+      <input type="email" name="email" required>
+    </div>
+  </div>
+
+  <div class="section-title">Communication Details</div>
+  <div id="contactSection">
+    <div class="form-grid contact-row">
+      <div>
+        <label>Contact Person</label>
+        <input type="text" name="contact_person[]">
+      </div>
+      <div>
+        <label>Phone</label>
+        <input type="text" name="contact_phone[]">
+      </div>
+    </div>
+  </div>
+  <div class="add-remove">
+    <span>Add more contacts</span>
+    <div>
+      <button type="button" class="btn-small" onclick="addContactRow()">+</button>
+      <button type="button" class="btn-small remove-row" onclick="removeContactRow()">–</button>
+    </div>
+  </div>
+
+  <button type="button" class="collapsible">Bank Details (Optional)</button>
+  <div class="content">
+    <div class="form-grid">
+      <div>
+        <label>Bank Name</label>
+        <input type="text" name="bank_name">
+      </div>
+      <div>
+        <label>Account Number</label>
+        <input type="text" name="account_number">
+      </div>
+      <div>
+        <label>IFSC Code</label>
+        <input type="text" name="ifsc">
+      </div>
+      <div>
+        <label>Branch</label>
+        <input type="text" name="branch">
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn">Submit Registration</button>
+</form>
+
+<script>
+function addContactRow() {
+  const section = document.getElementById('contactSection');
+  const row = document.querySelector('.contact-row').cloneNode(true);
+  row.querySelectorAll('input').forEach(input => input.value = '');
+  section.appendChild(row);
+}
+
+function removeContactRow() {
+  const rows = document.querySelectorAll('.contact-row');
+  if (rows.length > 1) {
+    rows[rows.length - 1].remove();
+  }
+}
+
+document.querySelectorAll(".collapsible").forEach(btn => {
+  btn.addEventListener("click", function () {
+    this.classList.toggle("active");
+    const content = this.nextElementSibling;
+    content.style.display = content.style.display === "block" ? "none" : "block";
+  });
+});
+</script>
 
 </body>
 </html>
