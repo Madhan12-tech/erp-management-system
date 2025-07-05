@@ -157,22 +157,22 @@ def login():
 
         conn = sqlite3.connect('erp.db')
         c = conn.cursor()
-        c.execute("SELECT * FROM employees WHERE email = ?", (email,))
+        c.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = c.fetchone()
         conn.close()
 
-        if user and check_password_hash(user[3], password):
+        if user and check_password_hash(user[3], password):  # adjust index based on schema
             session['user_id'] = user[0]
-            session['email'] = user[2]
-            session['name'] = user[1]
-            session['role'] = user[4]
-            flash("Login successful", "success")
+            session['email'] = user[1]
+            session['name'] = user[2]   # <-- add this to fix the error
+            flash("Login successful!", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid credentials", "error")
+            flash("Invalid email or password", "error")
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
 
 @app.route('/')
 def home():
@@ -221,12 +221,14 @@ def dashboard():
 
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM projects ORDER BY id DESC")
-    projects = c.fetchall()
+    try:
+        c.execute("SELECT * FROM projects ORDER BY id DESC")
+        projects = c.fetchall()
+    except:
+        projects = []
     conn.close()
 
-    return render_template('dashboard.html', name=session['name'], projects=projects)
-
+    return render_template('dashboard.html', name=session.get('name', 'User'), projects=projects)
 # ---------- VENDOR REGISTRATION ----------
 
 @app.route('/vendor_register', methods=['GET', 'POST'])
