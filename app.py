@@ -149,7 +149,7 @@ init_db()
 insert_dummy_data()
 
 # ---------- LOGIN ----------
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form['email']
