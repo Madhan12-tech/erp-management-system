@@ -17,6 +17,13 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
 
+    # Dummy users for quick login testing
+dummy_users = {
+    "admin": "admin123",
+    "user1": "pass123",
+    "vendor1": "vendorpass"
+}
+
     # Users (employees) table
     c.execute('''
     CREATE TABLE IF NOT EXISTS employees (
@@ -184,13 +191,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect(DB_NAME)
-        c = conn.cursor()
-        c.execute("SELECT id, password FROM employees WHERE username=?", (username,))
-        user = c.fetchone()
-        conn.close()
-
-        if user and check_password_hash(user[1], password):
+        # Check dummy credentials
+        if username in dummy_users and dummy_users[username] == password:
             session['user'] = username
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
@@ -198,7 +200,6 @@ def login():
             flash('Invalid credentials', 'danger')
 
     return render_template('login.html')
-
 @app.route('/register_vendor', methods=['GET', 'POST'])
 def register_vendor():
     if request.method == 'POST':
