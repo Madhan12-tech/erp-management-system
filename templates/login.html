@@ -2,98 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login | Ducting ERP</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #ecf0f1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    .login-container {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-      width: 400px;
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 25px;
-      color: #2c3e50;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #2980b9;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .register-link {
-      margin-top: 20px;
-      display: block;
-      color: #2980b9;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .flash-message {
-      margin-bottom: 20px;
-      padding: 10px;
-      border-radius: 5px;
-      color: white;
-    }
-
-    .flash-success {
-      background: #2ecc71;
-    }
-
-    .flash-error {
-      background: #e74c3c;
-    }
-  </style>
+  <title>Login | ERP System</title>
 </head>
 <body>
-
-<div class="login-container">
-  <h2>Ducting ERP Login</h2>
-
+  <h2>Login</h2>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="flash-message {% if category == 'success' %}flash-success{% else %}flash-error{% endif %}">
-          {{ message }}
-        </div>
+        <div style="color: {{ 'green' if category == 'success' else 'red' }}">{{ message }}</div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 
   <form method="POST" action="{{ url_for('login') }}">
-    <input type="text" name="username">
-    <input type="password" name="password">
+    <label>Email:</label>
+    <input type="email" name="email" required><br><br>
+
+    <label>Password:</label>
+    <input type="password" name="password" required><br><br>
+
     <button type="submit">Login</button>
   </form>
 
-  <a href="/register" class="register-link">Don't have an account? Register here</a>
-</div>
-
+  <br>
+  <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
 </body>
 </html>
