@@ -41,6 +41,7 @@
 <h2>Welcome, {{ user }}</h2>
 
 <div class="dashboard">
+
   <div class="card" onclick="location.href='{{ url_for('projects') }}'">
     <h3>Projects</h3>
   </div>
@@ -49,9 +50,12 @@
     <h3>Vendors</h3>
   </div>
 
-  <div class="card" onclick="location.href='{{ url_for('production') }}'">
+  <!-- ✅ Optional: Add Production Selector Later -->
+  <!--
+  <div class="card" onclick="location.href='{{ url_for('production_selector') }}'">
     <h3>Production</h3>
   </div>
+  -->
 
   <div class="card" onclick="location.href='{{ url_for('measurement') }}'">
     <h3>Measurement Sheets</h3>
@@ -64,6 +68,7 @@
   <div class="card" onclick="location.href='{{ url_for('logout') }}'">
     <h3>Logout</h3>
   </div>
+
 </div>
 
 </body>
