@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Project | ERP</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      padding: 40px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Select Project</h2>
+    <form method="get" action="/redirect_to_phase">
+      <input type="hidden" name="next_page" value="{{ next_page }}">
+      <select name="project_id" required>
+        <option value="" disabled selected>Select a project</option>
+        {% for id, name in projects %}
+          <option value="{{ id }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+</body>
+</html>
