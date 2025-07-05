@@ -151,15 +151,15 @@ insert_dummy_data()
 # ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-if request.method == 'POST':
-email = request.form['email']
-password = request.form['password']
+  if request.method == 'POST':
+     email = request.form['email']
+    password = request.form['password']
 
-conn = sqlite3.connect('erp.db')  
-    c = conn.cursor()  
-    c.execute("SELECT * FROM employees WHERE email = ?", (email,))  
-    user = c.fetchone()  
-    conn.close()  
+     conn = sqlite3.connect('erp.db')  
+        c = conn.cursor()  
+        c.execute("SELECT * FROM employees WHERE email = ?", (email,))  
+        user = c.fetchone()  
+        conn.close()  
 
     if user and check_password_hash(user[3], password):  
         session['user_id'] = user[0]  
