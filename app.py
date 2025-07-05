@@ -279,15 +279,6 @@ def add_project():
     flash("Project added successfully", "success")
     return redirect(url_for('dashboard'))
 
-# ---------- DASHBOARD SHOWING PROJECTS ----------
-@app.route('/dashboard')
-def dashboard():
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
-    c.execute("SELECT p.*, v.name FROM projects p LEFT JOIN vendors v ON p.vendor_id = v.id")
-    projects = c.fetchall()
-    conn.close()
-    return render_template('dashboard.html', projects=projects)
 
 # ---------- ADD MEASUREMENT SHEET ----------
 @app.route('/add_measurement', methods=['POST'])
