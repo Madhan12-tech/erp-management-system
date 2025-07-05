@@ -41,7 +41,6 @@
 <h2>Welcome, {{ user }}</h2>
 
 <div class="dashboard">
-  <!-- Example modules -->
   <div class="card" onclick="location.href='{{ url_for('projects') }}'">
     <h3>Projects</h3>
   </div>
@@ -50,7 +49,8 @@
     <h3>Vendors</h3>
   </div>
 
-  <div class="card" onclick="location.href='{{ url_for('production') }}'">
+  <!-- ✅ Fixed: Go to projects page instead of direct production route -->
+  <div class="card" onclick="location.href='{{ url_for('projects') }}'">
     <h3>Production</h3>
   </div>
 
