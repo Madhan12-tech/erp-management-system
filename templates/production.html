@@ -2,178 +2,164 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Production Module</title>
+  <title>Production Progress | ERP</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f7f9;
+      background: #f4f6f9;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
     .container {
-      display: flex;
-      flex-direction: row;
-      height: 100vh;
+      max-width: 1200px;
+      margin: auto;
     }
-    .sidebar {
-      width: 250px;
-      background: #34495e;
-      color: white;
-      padding: 20px;
-    }
-    .sidebar h2 {
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-    .progress-bar {
-      width: 100%;
-      background: #ecf0f1;
-      border-radius: 20px;
-      height: 20px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    .progress-fill {
-      background: #2ecc71;
-      height: 100%;
-      width: 0%;
-      border-radius: 20px;
-      transition: 0.4s;
-    }
-    .main-content {
-      flex: 1;
-      padding: 30px;
-    }
-    .phase-card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-bottom: 25px;
-    }
-    .phase-card h3 {
-      margin: 0 0 15px 0;
-      font-size: 18px;
+    h2 {
       color: #2c3e50;
+      margin-bottom: 20px;
     }
-    input[type="number"] {
-      width: 100px;
-      padding: 5px;
-      margin-right: 10px;
+    .project-summary {
+      display: flex;
+      gap: 40px;
     }
-    .percent-display {
+    .left-overall {
+      width: 250px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .left-overall h3 {
+      margin: 10px 0;
+    }
+    .progress-circle {
+      font-size: 36px;
       font-weight: bold;
       color: #27ae60;
+      cursor: pointer;
+    }
+    .right-table {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    input[type="number"] {
+      width: 80px;
+      padding: 5px;
     }
     .btn {
-      padding: 5px 15px;
-      background: #2980b9;
+      padding: 6px 12px;
+      background: #3498db;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
+      margin-top: 10px;
+    }
+    .export-btns {
+      margin-top: 20px;
+    }
+    .export-btns a {
+      margin-right: 10px;
+      background: #2ecc71;
+      padding: 8px 14px;
+      border-radius: 6px;
+      color: white;
+      text-decoration: none;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="sidebar">
-    <h2>Overall Progress</h2>
-    <div class="progress-bar">
-      <div class="progress-fill" id="overall-progress"></div>
+  <div class="container">
+    <h2>Production Progress</h2>
+    <div class="project-summary">
+      <div class="left-overall">
+        <h3>Overall Progress</h3>
+        <div class="progress-circle" onclick="showBreakdown()">
+          {{ overall_percent }}%
+        </div>
+        <div class="export-btns">
+          <a href="/export_pdf/{{ project_id }}">Export PDF</a>
+          <a href="/export_excel/{{ project_id }}">Export Excel</a>
+        </div>
+      </div>
+
+      <div class="right-table">
+        <form method="POST" action="/update_production/{{ project_id }}">
+          <table>
+            <thead>
+              <tr>
+                <th>Phase</th>
+                <th>Total Area (sqm)</th>
+                <th>Completed</th>
+                <th>Progress (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in production_data %}
+              <tr>
+                <td>{{ row.phase }}</td>
+                <td>{% if row.phase_num < 4 %}{{ row.total_area }}{% else %}-{% endif %}</td>
+                <td>
+                  {% if row.phase_num < 4 %}
+                    <input type="number" name="done_{{ row.phase_num }}" value="{{ row.done_area }}" min="0" max="{{ row.total_area }}">
+                  {% else %}
+                    <input type="number" name="done_{{ row.phase_num }}" value="{{ row.done_percent }}" min="0" max="100">
+                  {% endif %}
+                </td>
+                <td>{{ row.percent }}%</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <button class="btn" type="submit">Update Progress</button>
+        </form>
+      </div>
     </div>
-    <p id="overall-text">0%</p>
-    <button class="btn" onclick="showBreakdown()">View Breakdown</button>
+
+    <div id="breakdownSection" class="hidden">
+      <h3>Detailed Progress Breakdown</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Phase</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for detail in breakdown %}
+          <tr>
+            <td>{{ detail.type }}</td>
+            <td>{{ detail.phase }}</td>
+            <td>{{ detail.progress }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  <div class="main-content">
-    <!-- Sheet Cutting -->
-    <div class="phase-card" id="phase1">
-      <h3>1. Sheet Cutting</h3>
-      <label>Completed Sq.m: 
-        <input type="number" id="cuttingDone" oninput="updateProgress()" />
-      </label>
-      / <span id="cuttingTotal">100</span> Sq.m
-      <p>Progress: <span class="percent-display" id="cuttingPercent">0%</span></p>
-    </div>
 
-    <!-- Plasma & Fabrication -->
-    <div class="phase-card" id="phase2">
-      <h3>2. Plasma & Fabrication</h3>
-      <label>Completed Sq.m: 
-        <input type="number" id="plasmaDone" oninput="updateProgress()" />
-      </label>
-      / <span id="plasmaTotal">100</span> Sq.m
-      <p>Progress: <span class="percent-display" id="plasmaPercent">0%</span></p>
-    </div>
-
-    <!-- Boxing & Assembly -->
-    <div class="phase-card" id="phase3">
-      <h3>3. Boxing & Assembly</h3>
-      <label>Completed Sq.m: 
-        <input type="number" id="boxingDone" oninput="updateProgress()" />
-      </label>
-      / <span id="boxingTotal">100</span> Sq.m
-      <p>Progress: <span class="percent-display" id="boxingPercent">0%</span></p>
-    </div>
-
-    <!-- Quality Checking -->
-    <div class="phase-card" id="phase4">
-      <h3>4. Quality Checking</h3>
-      <label>Progress %: 
-        <input type="number" id="qualityPercent" oninput="updateProgress()" />
-      </label>
-    </div>
-
-    <!-- Dispatch -->
-    <div class="phase-card" id="phase5">
-      <h3>5. Dispatch</h3>
-      <label>Progress %: 
-        <input type="number" id="dispatchPercent" oninput="updateProgress()" />
-      </label>
-    </div>
-
-  </div> <!-- main-content -->
-</div> <!-- container -->
-
-<script>
-  const totals = {
-    cutting: 100,
-    plasma: 100,
-    boxing: 100
-  };
-
-  function updateProgress() {
-    const cutting = parseFloat(document.getElementById('cuttingDone').value) || 0;
-    const plasma = parseFloat(document.getElementById('plasmaDone').value) || 0;
-    const boxing = parseFloat(document.getElementById('boxingDone').value) || 0;
-    const quality = parseFloat(document.getElementById('qualityPercent').value) || 0;
-    const dispatch = parseFloat(document.getElementById('dispatchPercent').value) || 0;
-
-    const cuttingPct = (cutting / totals.cutting) * 100;
-    const plasmaPct = (plasma / totals.plasma) * 100;
-    const boxingPct = (boxing / totals.boxing) * 100;
-
-    document.getElementById('cuttingPercent').textContent = `${cuttingPct.toFixed(1)}%`;
-    document.getElementById('plasmaPercent').textContent = `${plasmaPct.toFixed(1)}%`;
-    document.getElementById('boxingPercent').textContent = `${boxingPct.toFixed(1)}%`;
-
-    const totalPct = (cuttingPct + plasmaPct + boxingPct + quality + dispatch) / 5;
-    document.getElementById('overall-progress').style.width = `${totalPct}%`;
-    document.getElementById('overall-text').textContent = `${totalPct.toFixed(1)}%`;
-  }
-
-  function showBreakdown() {
-    alert(
-      `Breakdown:\n
-      Sheet Cutting: ${document.getElementById('cuttingPercent').textContent}
-      Plasma & Fabrication: ${document.getElementById('plasmaPercent').textContent}
-      Boxing & Assembly: ${document.getElementById('boxingPercent').textContent}
-      Quality Checking: ${document.getElementById('qualityPercent').value || 0}%
-      Dispatch: ${document.getElementById('dispatchPercent').value || 0}%`
-    );
-  }
-</script>
-
+  <script>
+    function showBreakdown() {
+      const bd = document.getElementById("breakdownSection");
+      bd.classList.toggle("hidden");
+    }
+  </script>
 </body>
 </html>
-    
