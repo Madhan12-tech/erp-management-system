@@ -174,9 +174,7 @@ conn = sqlite3.connect('erp.db')
 
 return render_template('login.html')
 
-@app.route('/')
-def home():
-return redirect(url_for('login'))
+
 
 
 
