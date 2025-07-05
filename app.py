@@ -151,27 +151,34 @@ insert_dummy_data()
 # ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+if request.method == 'POST':
+email = request.form['email']
+password = request.form['password']
 
-        conn = sqlite3.connect('erp.db')
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = c.fetchone()
-        conn.close()
+conn = sqlite3.connect('erp.db')  
+    c = conn.cursor()  
+    c.execute("SELECT * FROM employees WHERE email = ?", (email,))  
+    user = c.fetchone()  
+    conn.close()  
 
-        if user and check_password_hash(user[3], password):  # adjust index based on schema
-            session['user_id'] = user[0]
-            session['email'] = user[1]
-            session['name'] = user[2]   # <-- add this to fix the error
-            flash("Login successful!", "success")
-            return redirect(url_for('dashboard'))
-        else:
-            flash("Invalid email or password", "error")
-            return redirect(url_for('login'))
+    if user and check_password_hash(user[3], password):  
+        session['user_id'] = user[0]  
+        session['email'] = user[2]  
+        session['name'] = user[1]  
+        session['role'] = user[4]  
+        flash("Login successful", "success")  
+        return redirect(url_for('dashboard'))  
+    else:  
+        flash("Invalid credentials", "error")  
+        return redirect(url_for('login'))  
 
-    return render_template('login.html')
+return render_template('login.html')
+
+@app.route('/')
+def home():
+return redirect(url_for('login'))
+
+
 
 
 @app.route('/')
