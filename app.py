@@ -289,6 +289,17 @@ def project_selector():
 
     return render_template('project_selector.html', projects=projects, next_page=next_page)
 
+@app.route('/redirect_to_phase')
+def redirect_to_phase():
+    project_id = request.args.get('project_id')
+    next_page = request.args.get('next_page')
+
+    if not project_id or not next_page:
+        flash("Missing project or destination.")
+        return redirect(url_for('dashboard'))
+
+    return redirect(url_for(next_page, project_id=project_id))
+
 # -------------------- EXPORT PROJECTS TO EXCEL --------------------
 
 @app.route('/export_projects_excel')
