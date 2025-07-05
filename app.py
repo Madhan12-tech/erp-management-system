@@ -451,41 +451,7 @@ def vendor_selector():
     return render_template("vendor_selector.html", vendors=vendors)
 
 
-@app.route('/vendor_registration', methods=['GET', 'POST'])
-def vendor_registration():
-    if 'user' not in session:
-        return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        name = request.form['name']
-        category = request.form['category']
-        contact = request.form['contact']
-        email = request.form['email']
-
-        conn = sqlite3.connect('erp.db')
-        cur = conn.cursor()
-        cur.execute("INSERT INTO vendors (name, category, contact, email) VALUES (?, ?, ?, ?)",
-                    (name, category, contact, email))
-        conn.commit()
-        conn.close()
-
-        flash("Vendor registered successfully!", "success")
-        return redirect(url_for('vendors'))
-
-    return render_template("vendor_registration.html")
-
-
-@app.route('/vendors')
-def vendors():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    conn = sqlite3.connect('erp.db')
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM vendors")
-    vendors = cur.fetchall()
-    conn.close()
-    return render_template("vendors.html", vendors=vendors)
 
 # ----------------------- MEASUREMENT MODULE -----------------------
 @app.route('/measurement_selector')
