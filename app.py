@@ -228,28 +228,42 @@ def dashboard():
     return render_template('dashboard.html', name=session['name'], projects=projects)
 
 # ---------- VENDOR REGISTRATION ----------
+
 @app.route('/vendor_register', methods=['GET', 'POST'])
 def vendor_register():
     if request.method == 'POST':
         name = request.form['vendor_name']
-        gst = request.form['gst']
+        gst = request.form['gst_number']
         address = request.form['address']
         contacts = request.form.getlist('contact_person[]')
         phones = request.form.getlist('contact_phone[]')
-        banks = request.form['bank']
-        acc_no = request.form['account_no']
-        ifsc = request.form['ifsc']
+
+        # ✅ Corrected to match HTML field names
+        bank_name = request.form.get('bank_name', '')
+        account_no = request.form.get('account_number', '')
+        ifsc = request.form.get('ifsc', '')
 
         conn = sqlite3.connect('erp.db')
         c = conn.cursor()
+
         c.execute("INSERT INTO vendors (name, gst_number, address) VALUES (?, ?, ?)", (name, gst, address))
         vendor_id = c.lastrowid
 
         for person, phone in zip(contacts, phones):
-            c.execute("INSERT INTO vendor_contacts (vendor_id, contact_person, phone) VALUES (?, ?, ?)", (vendor_id, person, phone))
+            c.execute("INSERT INTO vendor_contacts (vendor_id, name, phone) VALUES (?, ?, ?)", (vendor_id, person, phone))
 
-        c.execute("INSERT INTO vendor_banks (vendor_id, bank_name, account_no, ifsc_code) VALUES (?, ?, ?, ?)",
-                  (vendor_id, banks, acc_no, ifsc))
+        if bank_name and account_no and ifsc:
+            # Safe: create bank table if not exists
+            c.execute('''CREATE TABLE IF NOT EXISTS vendor_banks (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            vendor_id INTEGER,
+                            bank_name TEXT,
+                            account_no TEXT,
+                            ifsc_code TEXT,
+                            FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+                        )''')
+            c.execute("INSERT INTO vendor_banks (vendor_id, bank_name, account_no, ifsc_code) VALUES (?, ?, ?, ?)",
+                      (vendor_id, bank_name, account_no, ifsc))
 
         conn.commit()
         conn.close()
@@ -257,6 +271,7 @@ def vendor_register():
         return redirect(url_for('vendor_register'))
 
     return render_template('vendor_register.html')
+
 
 # ---------- GET VENDOR LIST FOR DROPDOWN (PROJECTS) ----------
 @app.route('/api/vendors')
