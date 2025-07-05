@@ -146,8 +146,7 @@ def login():
         else:
             flash("Invalid credentials", "error")
             return redirect(url_for('login'))
-
-    return render_template('login.html')
+return render_template('login.html')
 
 @app.route('/logout')
 def logout():
@@ -361,7 +360,6 @@ def view_ducts(project_id):
     cursor.execute("SELECT * FROM projects WHERE id=?", (project_id,))
     project = cursor.fetchone()
     conn.close()
-
     return render_template('ducts_live_table.html', ducts=ducts, project=project)
     @app.route('/update_design_status/<int:project_id>', methods=['POST'])
 def update_design_status(project_id):
