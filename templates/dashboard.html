@@ -50,12 +50,10 @@
     <h3>Vendors</h3>
   </div>
 
-  <!-- ✅ Optional: Add Production Selector Later -->
-  <!--
-  <div class="card" onclick="location.href='{{ url_for('production_selector') }}'">
+  <!-- ✅ Fixed: Added valid project_id -->
+  <div class="card" onclick="location.href='{{ url_for('production', project_id=1) }}'">
     <h3>Production</h3>
   </div>
-  -->
 
   <div class="card" onclick="location.href='{{ url_for('measurement') }}'">
     <h3>Measurement Sheets</h3>
