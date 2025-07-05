@@ -818,7 +818,6 @@ def export_summary_pdf():
     p.save()
     buffer.seek(0)
     return send_file(buffer, download_name="summary.pdf", as_attachment=True)
-#---------------------- INIT + START ----------------------
 
 if __name__ == '__main__':
     init_db()
