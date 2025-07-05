@@ -174,6 +174,14 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/')
+def home():
+    return redirect(url_for('login'))  # Or render_template('login.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204  # Return empty 204 No Content to skip errors
+
 # ---------- REGISTER EMPLOYEE ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
