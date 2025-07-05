@@ -638,9 +638,11 @@ def submit_projects():
     return redirect(url_for('projects'))
 
 
-
-if 'username' not in session:
+@app.route('/some_route')
+def some_route():
+    # some code
     return redirect(url_for('login'))
+
 
 
 # ------------------ Measurement Sheet Module ------------------
