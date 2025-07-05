@@ -1,53 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Dashboard | Ducting ERP</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
       margin: 0;
       padding: 0;
-      background-color: #f4f6f9;
     }
-    .dashboard {
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
-      padding: 40px;
     }
     .card {
       background: white;
-      padding: 30px;
+      padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       text-align: center;
       cursor: pointer;
-      transition: 0.3s;
+      transition: transform 0.2s ease;
     }
     .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      transform: scale(1.05);
+      background: #eaf4ff;
     }
-    h1 {
-      text-align: center;
-      margin-top: 30px;
-      color: #2c3e50;
+    .value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #34495e;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome, {{ user }}</h1>
-  <div class="dashboard">
-    <div class="card" onclick="location.href='{{ url_for('project_module') }}'">Projects</div>
-    <div class="card" onclick="location.href='{{ url_for('vendor_module') }}'">Vendors</div>
-    <div class="card" onclick="location.href='{{ url_for('employee_module') }}'">Employees</div>
-    <div class="card" onclick="location.href='{{ url_for('design_process') }}'">Design Process</div>
-    <div class="card" onclick="location.href='/project_selector?next=duct_entry'">Duct Entry</div>
-    <div class="card" onclick="location.href='/project_selector?next=measurement_sheet'">Measurement Sheet</div>
-    <div class="card" onclick="location.href='/project_selector?next=production'">Production</div>
-    <div class="card" onclick="location.href='{{ url_for('summary_module') }}'">Summary</div>
-    <div class="card" onclick="location.href='{{ url_for('logout') }}'">Logout</div>
+  <div class="container">
+    <h2>Welcome, {{ user }}</h2>
+
+    <div class="grid">
+      <div class="card" onclick="location.href='{{ url_for('projects') }}'">
+        <div>Projects</div>
+        <div class="value">{{ total_projects }}</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('vendors') }}'">
+        <div>Vendors</div>
+        <div class="value">{{ total_vendors }}</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('employees') }}'">
+        <div>Employees</div>
+        <div class="value">{{ total_employees }}</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('measurement_sheet') }}'">
+        <div>Measurement Sheet</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('duct_entry') }}'">
+        <div>Duct Entry</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('production_selector') }}'">
+        <div>Production</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('design_status') }}'">
+        <div>Design Process</div>
+      </div>
+
+      <div class="card" onclick="location.href='{{ url_for('summary') }}'">
+        <div>Summary</div>
+      </div>
+    </div>
   </div>
 </body>
 </html>
