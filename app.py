@@ -199,6 +199,13 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/register_vendor', methods=['GET', 'POST'])
+def register_vendor():
+    if request.method == 'POST':
+        # handle form submission
+        pass
+    return render_template('register_vendor.html')
+
 @app.route('/logout')
 def logout():
     session.pop('user', None)
