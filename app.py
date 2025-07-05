@@ -637,6 +637,17 @@ def submit_projects():
     flash('Projects data submitted successfully.', 'success')
     return redirect(url_for('projects'))
 
+@app.route('/review')
+def review():
+    # Example: Fetch project from DB or define dummy
+    project = (1, 'Project ABC', 'Location XYZ')  # Replace with actual DB query
+    return render_template('review.html', project=project)
+
+
+if 'username' not in session:
+    return redirect(url_for('login'))
+
+
 # ------------------ Measurement Sheet Module ------------------
 
 @app.route('/measurement_sheets')
