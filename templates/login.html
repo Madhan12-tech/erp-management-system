@@ -86,9 +86,9 @@
     {% endif %}
   {% endwith %}
 
-  <form method="POST" action="/login">
-    <input type="text" name="username" placeholder="Username" required value="admin">
-    <input type="password" name="password" placeholder="Password" required value="admin123">
+  <form method="POST" action="{{ url_for('login') }}">
+    <input type="text" name="username">
+    <input type="password" name="password">
     <button type="submit">Login</button>
   </form>
 
