@@ -2,59 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard | Ducting ERP</title>
+  <title>Dashboard | ERP System</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f4;
+      padding: 0;
     }
-    .sidebar {
-      width: 220px;
-      height: 100vh;
+    header {
       background: #2c3e50;
-      position: fixed;
-      top: 0;
-      left: 0;
-      padding-top: 20px;
-    }
-    .sidebar a {
-      display: block;
-      color: #ecf0f1;
-      padding: 12px 20px;
-      text-decoration: none;
-      transition: background 0.3s;
-    }
-    .sidebar a:hover {
-      background: #34495e;
-    }
-    .main {
-      margin-left: 220px;
-      padding: 20px;
+      color: white;
+      padding: 10px 20px;
     }
     h1 {
-      color: #2c3e50;
+      margin: 0;
+    }
+    .container {
+      display: flex;
+    }
+    nav {
+      width: 220px;
+      background: #34495e;
+      min-height: 100vh;
+      padding-top: 20px;
+    }
+    nav a {
+      display: block;
+      padding: 12px 20px;
+      color: white;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+    nav a:hover {
+      background: #1abc9c;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <h3 style="color:white; text-align:center;">ERP Menu</h3>
+<header>
+  <h1>Welcome, {{ username }}</h1>
+</header>
+
+<div class="container">
+  <nav>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
     <a href="{{ url_for('projects') }}">Projects</a>
-    <a href="{{ url_for('vendors') }}">Vendors</a>
-    <a href="{{ url_for('register') }}">Employee Registration</a>
+    <a href="{{ url_for('register_vendor') }}">Vendor Registration</a>
     <a href="{{ url_for('measurement_sheet') }}">Measurement Sheet</a>
     <a href="{{ url_for('production') }}">Production</a>
     <a href="{{ url_for('summary') }}">Summary</a>
-    <a href="{{ url_for('design_process') }}">Design Review</a>
+    <a href="{{ url_for('review') }}">Design Review</a>
     <a href="{{ url_for('logout') }}">Logout</a>
-  </div>
+  </nav>
 
-  <div class="main">
-    <h1>Welcome to Ducting ERP Dashboard</h1>
-    <p>Select any module from the left menu to proceed.</p>
-  </div>
+  <main>
+    <h2>ERP Modules Overview</h2>
+    <p>Select a module from the left menu to proceed.</p>
+  </main>
+</div>
 
 </body>
 </html>
