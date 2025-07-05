@@ -395,51 +395,6 @@ def export_vendors_pdf():
     return send_file(buffer, download_name="vendors.pdf", as_attachment=True)
 # ------------------ EMPLOYEE MODULE ------------------ #
 
-@app.route('/register_user', methods=['GET', 'POST'])
-def register_user():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        name = request.form['name']
-        role = request.form['role']
-        email = request.form['email']
-        username = request.form['username']
-        password = generate_password_hash(request.form['password'])
-
-        conn = sqlite3.connect('erp.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO employees (name, role, email, username, password)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (name, role, email, username, password))
-        conn.commit()
-        conn.close()
-
-        flash("Employee registered successfully", "success")
-        return redirect(url_for('employees'))
-
-    return render_template('register.html')
-
-@app.route('/employees')
-def employees():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    search = request.args.get('search', '')
-
-    conn = sqlite3.connect('erp.db')
-    cursor = conn.cursor()
-    if search:
-        cursor.execute("SELECT * FROM employees WHERE name LIKE ? OR email LIKE ? OR role LIKE ?", 
-                       (f"%{search}%", f"%{search}%", f"%{search}%"))
-    else:
-        cursor.execute("SELECT * FROM employees")
-    employees = cursor.fetchall()
-    conn.close()
-
-    return render_template('employees.html', employees=employees, search=search)
-
 # -------- EXPORT EMPLOYEES TO EXCEL -------- #
 @app.route('/export_employees_excel')
 def export_employees_excel():
