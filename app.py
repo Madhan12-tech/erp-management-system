@@ -573,10 +573,8 @@ def seed_dummy_data():
               ("proj001", "ENQ-001", 1, "Bangalore"))
 
     # Dummy measurement sheet
-    c.execute("INSERT OR IGNORE INTO measurement_sheet (project_id, client_name, company_name, engineer_name, phone, project_location)
-              VALUES (?, ?, ?, ?, ?, ?)",
+    c.execute("INSERT OR IGNORE INTO measurement_sheet (project_id, client_name, company_name, engineer_name, phone, project_location) VALUES (?, ?, ?, ?, ?, ?)",
               ("proj001", "Client A", "Company A", "Er. Kumar", "9999999999", "Bangalore Site"))
-
     # Dummy production entry
     c.execute("INSERT OR IGNORE INTO production (project_id, area_sqm, sheet_cutting, plasma_fabrication, boxing_assembly, quality_checking, dispatch, overall_progress)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
