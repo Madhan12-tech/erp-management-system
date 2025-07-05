@@ -17,12 +17,6 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
 
-    # Dummy users for quick login testing
-dummy_users = {
-    "admin": "admin123",
-    "user1": "pass123",
-    "vendor1": "vendorpass"
-}
 
     # Users (employees) table
     c.execute('''
@@ -103,6 +97,12 @@ dummy_users = {
 
     conn.commit()
     conn.close()
+
+dummy_users = {
+    "admin": "admin123",
+    "user1": "pass123",
+    "vendor1": "vendorpass"
+}
 
 # ---------- Dummy Data Insertion ----------
 def insert_dummy_data():
