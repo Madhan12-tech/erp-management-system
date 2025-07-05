@@ -1007,6 +1007,17 @@ def submit_summary():
     flash('Summary submitted successfully.', 'success')
     return redirect(url_for('summary'))
 
+@app.route('/review')
+def review():
+    return render_template('review.html')
+
+@app.route('/routes')
+def show_routes():
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append(str(rule))
+    return "<br>".join(routes)
+
 if __name__ == '__main__':
     # Insert dummy data on first run
 
