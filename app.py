@@ -638,10 +638,11 @@ def submit_projects():
     return redirect(url_for('projects'))
 
 
-@app.route('/some_route')
-def some_route():
-    # some code
-    return redirect(url_for('login'))
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    # continue to load dashboard
 
 
 
