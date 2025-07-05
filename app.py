@@ -275,6 +275,20 @@ def projects():
     conn.close()
     return render_template('projects.html', projects=project_data, search=search)
 
+@app.route('/project_selector')
+def project_selector():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    next_page = request.args.get('next')
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("SELECT id, name FROM projects")
+    projects = c.fetchall()
+    conn.close()
+
+    return render_template('project_selector.html', projects=projects, next_page=next_page)
+
 # -------------------- EXPORT PROJECTS TO EXCEL --------------------
 
 @app.route('/export_projects_excel')
