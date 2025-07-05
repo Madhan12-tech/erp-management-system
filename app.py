@@ -96,6 +96,23 @@ def init_db():
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )
     ''')
+    
+
+    # Create users table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL
+        )
+    ''')
+
+    # Insert dummy user
+    c.execute("SELECT * FROM users WHERE username = 'admin'")
+    if not c.fetchone():
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin123'))
+
+
 
     conn.commit()
     conn.close()
