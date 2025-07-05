@@ -5,168 +5,97 @@
   <title>Dashboard | Ducting ERP</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f0f2f5;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
     }
 
-    .sidebar {
-      width: 230px;
-      background: #2c3e50;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      padding-top: 30px;
+    .header {
+      background-color: #2c3e50;
       color: white;
-    }
-
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 30px;
+      padding: 15px 30px;
       font-size: 22px;
     }
 
-    .sidebar a {
-      display: block;
-      padding: 12px 25px;
-      color: white;
-      text-decoration: none;
-      transition: background 0.3s;
-    }
-
-    .sidebar a:hover {
-      background: #34495e;
-    }
-
-    .main {
-      margin-left: 230px;
-      padding: 30px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: 24px;
-      color: #2c3e50;
-    }
-
-    .card-grid {
+    .modules {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
+      margin-top: 30px;
     }
 
     .card {
       background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      border-radius: 10px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      transition: 0.3s;
     }
 
-    .card h3 {
-      margin-top: 0;
-      font-size: 20px;
-      color: #2980b9;
+    .card:hover {
+      transform: scale(1.02);
     }
 
-    .card p {
-      margin: 10px 0;
-      font-size: 15px;
-      color: #333;
+    .card a {
+      text-decoration: none;
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: bold;
     }
 
-    .btn {
-      display: inline-block;
-      margin-top: 10px;
-      background: #3498db;
+    .logout {
+      float: right;
+      font-size: 16px;
+      background: #e74c3c;
       color: white;
-      padding: 8px 14px;
+      padding: 6px 14px;
       border-radius: 6px;
       text-decoration: none;
     }
 
-    .btn:hover {
-      background: #2980b9;
-    }
-
     .flash-message {
-      padding: 12px;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
       color: white;
-      border-radius: 6px;
-      margin-bottom: 20px;
+      font-weight: bold;
     }
 
     .flash-success {
-      background: #2ecc71;
+      background-color: #2ecc71;
     }
 
     .flash-error {
-      background: #e74c3c;
+      background-color: #e74c3c;
     }
   </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Ducting ERP</h2>
-  <a href="/dashboard">🏠 Dashboard</a>
-  <a href="/projects">📂 Projects</a>
-  <a href="/production">🏗️ Production</a>
-  <a href="/summary">📄 Summary</a>
-  <a href="/vendor_register">📋 Vendor Registration</a>
-  <a href="/employee_register">👤 Employee Register</a>
-  <a href="/logout">🚪 Logout</a>
-</div>
-
-<div class="main">
-  <div class="topbar">
-    <h1>Welcome, {{ session['user'] }}</h1>
-    <p style="color:#888;">Logged in as <strong>{{ session['role'] }}</strong></p>
+  <div class="header">
+    Welcome to Ducting ERP
+    <a class="logout" href="{{ url_for('logout') }}">Logout</a>
   </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="flash-message {% if category == 'success' %}flash-success{% else %}flash-error{% endif %}">
+        <div class="flash-message {{ 'flash-success' if category == 'success' else 'flash-error' }}">
           {{ message }}
         </div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 
-  <div class="card-grid">
-    <div class="card">
-      <h3>Total Projects</h3>
-      <p>{{ total_projects }} Projects</p>
-      <a href="/projects" class="btn">View Projects</a>
-    </div>
-
-    <div class="card">
-      <h3>Production In Progress</h3>
-      <p>{{ ongoing_production }} Active</p>
-      <a href="/production" class="btn">Go to Production</a>
-    </div>
-
-    <div class="card">
-      <h3>Vendors</h3>
-      <p>{{ total_vendors }} Registered</p>
-      <a href="/vendor_register" class="btn">View Vendors</a>
-    </div>
-
-    <div class="card">
-      <h3>Employees</h3>
-      <p>{{ total_employees }} Total</p>
-      <a href="/employee_register" class="btn">Register New</a>
-    </div>
+  <div class="modules">
+    <div class="card"><a href="{{ url_for('projects') }}">Projects</a></div>
+    <div class="card"><a href="{{ url_for('production') }}">Production</a></div>
+    <div class="card"><a href="{{ url_for('summary') }}">Production Summary</a></div>
+    <div class="card"><a href="{{ url_for('vendor_register') }}">Vendor Registration</a></div>
+    <div class="card"><a href="{{ url_for('employee_register') }}">Employee Registration</a></div>
   </div>
-</div>
 
 </body>
 </html>
