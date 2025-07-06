@@ -72,18 +72,18 @@ def init_db():
     ''')
 
     # Measurement Sheet
-    c.execute('''
+    c.execute("""
         CREATE TABLE IF NOT EXISTS measurement_sheet (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER,
             client_name TEXT,
             company_name TEXT,
-            project_location TEXT,
-            engineer_name TEXT,
-            phone TEXT,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
+            site_engineer TEXT,
+            mobile TEXT,
+            location TEXT,
+            area_sqm REAL DEFAULT 0
         )
-    ''')
+    """)
 
     # Duct Entries
     c.execute('''
@@ -454,34 +454,41 @@ def approve_project(project_id):
     return redirect(url_for('dashboard'))
 
 # ---------- EXPORT PROJECT SUMMARY PDF ----------
-@app.route('/export_project_pdf/<int:project_id>')
-def export_project_pdf(project_id):
+@app.route("/export_pdf/<int:project_id>")
+def export_pdf(project_id):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
-    project = c.fetchone()
+    c.execute("""
+        SELECT ms.client_name, ms.company_name, ms.site_engineer, ms.location,
+               ms.area_sqm, pr.sheet_cutting, pr.plasma_fabrication, pr.boxing_assembly,
+               pr.quality_checking, pr.dispatch
+        FROM measurement_sheet ms
+        JOIN production pr ON pr.project_id = ms.project_id
+        WHERE ms.project_id = ?
+    """, (project_id,))
+    
+    row = c.fetchone()
     conn.close()
 
-    buffer = BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-    pdf.setTitle("Project Summary")
-    pdf.drawString(100, 800, f"Project Summary for ID: {project_id}")
-    pdf.drawString(100, 780, f"Vendor ID: {project[2]}")
-    pdf.drawString(100, 760, f"GST: {project[3]}")
-    pdf.drawString(100, 740, f"Address: {project[4]}")
-    pdf.drawString(100, 720, f"Start Date: {project[6]}")
-    pdf.drawString(100, 700, f"End Date: {project[7]}")
-    pdf.drawString(100, 680, f"Location: {project[8]}")
-    pdf.drawString(100, 660, f"Incharge: {project[9]}")
-    pdf.drawString(100, 640, f"Status: {project[12]}")
-    pdf.drawString(100, 600, "Director Signature: ___________________")
-    pdf.drawString(100, 580, "Project Manager Signature: ____________")
-    pdf.showPage()
-    pdf.save()
-
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f"project_{project_id}_summary.pdf", mimetype='application/pdf')
-
+    if row:
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        pdf.drawString(50, 800, f"Project ID: {project_id}")
+        pdf.drawString(50, 780, f"Client: {row[0]}, Company: {row[1]}")
+        pdf.drawString(50, 760, f"Site Engineer: {row[2]}, Location: {row[3]}")
+        pdf.drawString(50, 740, f"Area: {row[4]} sqm")
+        pdf.drawString(50, 700, f"Sheet Cutting: {row[5]}%")
+        pdf.drawString(50, 680, f"Plasma & Fabrication: {row[6]}%")
+        pdf.drawString(50, 660, f"Boxing & Assembly: {row[7]}%")
+        pdf.drawString(50, 640, f"Quality Checking: {row[8]}%")
+        pdf.drawString(50, 620, f"Dispatch: {row[9]}%")
+        pdf.showPage()
+        pdf.save()
+        buffer.seek(0)
+        return send_file(buffer, as_attachment=True, download_name=f"production_{project_id}.pdf", mimetype='application/pdf')
+    else:
+        flash("No data found.")
+        return redirect(url_for('production'))
 # ---------- PRODUCTION DASHBOARD ----------
 @app.route('/production')
 def production():
@@ -522,6 +529,28 @@ def update_phase(prod_id):
     flash("Progress updated", "success")
     return redirect(url_for('production'))
 
+@app.route('/update_production/<int:project_id>', methods=['POST'])
+def update_production(project_id):
+    sheet_cutting = request.form.get('sheet_cutting', type=float)
+    plasma_fabrication = request.form.get('plasma_fabrication', type=float)
+    boxing_assembly = request.form.get('boxing_assembly', type=float)
+    quality_checking = request.form.get('quality_checking', type=float)
+    dispatch = request.form.get('dispatch', type=float)
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("""
+        UPDATE production SET
+            sheet_cutting = ?, plasma_fabrication = ?, boxing_assembly = ?,
+            quality_checking = ?, dispatch = ?
+        WHERE project_id = ?
+    """, (sheet_cutting, plasma_fabrication, boxing_assembly, quality_checking, dispatch, project_id))
+    conn.commit()
+    conn.close()
+    
+    flash("Production updated successfully!", "success")
+    return redirect(url_for('production'))
+
 # ---------- SHOW PHASE BREAKDOWN ----------
 @app.route('/progress_breakdown/<int:prod_id>')
 def progress_breakdown(prod_id):
@@ -546,18 +575,30 @@ def progress_breakdown(prod_id):
 def production_summary():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
+    
     c.execute("""
-        SELECT p.project_id, pj.enquiry_id, pj.location, pr.client_name, pr.company_name,
-               pr.engineer_name, pr.phone, pr.project_location, p.area_sqm,
-               p.sheet_cutting, p.plasma_fabrication, p.boxing_assembly, 
-               p.quality_checking, p.dispatch, p.overall_progress
-        FROM production p
-        JOIN projects pj ON pj.id = p.project_id
-        JOIN measurement_sheet pr ON pr.project_id = p.project_id
+        SELECT 
+            p.project_id,
+            pj.enquiry_id,
+            pj.location,
+            ms.client_name,
+            ms.company_name,
+            ms.area_sqm,
+            pr.sheet_cutting,
+            pr.plasma_fabrication,
+            pr.boxing_assembly,
+            pr.quality_checking,
+            pr.dispatch
+        FROM production pr
+        JOIN projects pj ON pj.id = pr.project_id
+        JOIN measurement_sheet ms ON ms.project_id = pr.project_id
+        JOIN projects p ON p.id = pr.project_id
     """)
-    summary_data = c.fetchall()
+    
+    data = c.fetchall()
     conn.close()
-    return render_template('production_summary.html', summary=summary_data)
+
+    return render_template('production_summary.html', data=data)
 
 # ---------- EXPORT PRODUCTION SUMMARY TO EXCEL ----------
 @app.route('/export_summary_excel')
