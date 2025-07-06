@@ -485,8 +485,9 @@ def mark_completion(project_id):
     flash("✅ Phase 2: Design marked as completed.", "success")
     return redirect(url_for('projects_page'))
 
+
 @app.route('/submit_for_approval_final/<int:project_id>', methods=['POST'])
-def submit_for_approval(project_id):
+def submit_for_approval_final(project_id):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
     c.execute("UPDATE projects SET status = 'Submitted for Approval' WHERE id = ?", (project_id,))
@@ -495,6 +496,18 @@ def submit_for_approval(project_id):
 
     flash("📤 Phase 3: Design submitted for approval.", "info")
     return redirect(url_for('projects_page'))
+
+
+@app.route('/submit_for_approval/<int:project_id>')
+def submit_for_approval(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status = 'Under Review' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+
+    flash("Project is now under review.", "success")
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/under_review/<int:project_id>', methods=['POST'])
@@ -612,15 +625,7 @@ def upload_drawing(project_id):
     return redirect(url_for('dashboard'))
 
 # ---------- SUBMIT FOR APPROVAL ----------
-@app.route('/submit_for_approval/<int:project_id>')
-def submit_for_approval(project_id):
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
-    c.execute("UPDATE projects SET status = 'Under Review' WHERE id = ?", (project_id,))
-    conn.commit()
-    conn.close()
-    flash("Project submitted for approval", "success")
-    return redirect(url_for('dashboard'))
+
 
 # ---------- APPROVE PROJECT ----------
 @app.route('/approve_project/<int:project_id>')
