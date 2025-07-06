@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Production Summary</title>
+    <style>
+        body { font-family: 'Segoe UI'; background: #f4f4f4; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background: #2c3e50; color: white; }
+        h2 { color: #2c3e50; }
+        .signature { margin-top: 40px; display: flex; justify-content: space-between; }
+        .signature div { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Production Summary Report</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Project ID</th>
+                <th>Enquiry ID</th>
+                <th>Location</th>
+                <th>Client</th>
+                <th>Company</th>
+                <th>Area (sqm)</th>
+                <th>Sheet Cutting</th>
+                <th>Plasma/Fab</th>
+                <th>Boxing/Assembly</th>
+                <th>Quality Check</th>
+                <th>Dispatch</th>
+                <th>Overall (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in summary_data %}
+            <tr>
+                <td>{{ item.project_id }}</td>
+                <td>{{ item.enquiry_id }}</td>
+                <td>{{ item.location }}</td>
+                <td>{{ item.client_name }}</td>
+                <td>{{ item.company_name }}</td>
+                <td>{{ item.area_sqm }}</td>
+                <td>{{ item.sheet_cutting }}%</td>
+                <td>{{ item.plasma_fab }}%</td>
+                <td>{{ item.boxing_assembly }}%</td>
+                <td>{{ item.quality_check }}%</td>
+                <td>{{ item.dispatch }}%</td>
+                <td><b>{{ item.overall }}%</b></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="signature">
+        <div>Project Manager Signature</div>
+        <div>Director Signature</div>
+    </div>
+</body>
+</html>
