@@ -587,31 +587,49 @@ def progress_breakdown(prod_id):
 def production_summary():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    
+
     c.execute("""
         SELECT 
-            p.project_id,
+            p.id AS project_id,
             pj.enquiry_id,
             pj.location,
-            ms.client_name,
-            ms.company_name,
-            ms.area_sqm,
-            pr.sheet_cutting,
-            pr.plasma_fabrication,
-            pr.boxing_assembly,
-            pr.quality_checking,
-            pr.dispatch
-        FROM production pr
-        JOIN projects pj ON pj.id = pr.project_id
-        JOIN measurement_sheet ms ON ms.project_id = pr.project_id
-        JOIN projects p ON p.id = pr.project_id
+            pj.client_name,
+            pj.company_name,
+            m.area_sqm,
+            s.sheet_cutting_progress,
+            s.plasma_fab_progress,
+            s.boxing_assembly_progress,
+            s.quality_check_progress,
+            s.dispatch_progress
+        FROM projects p
+        JOIN project_enquiry pj ON pj.project_id = p.id
+        JOIN project_registration pr ON pr.project_id = p.id
+        JOIN measurement_sheet m ON m.project_id = p.id
+        JOIN production_status s ON s.project_id = p.id
     """)
-    
-    data = c.fetchall()
+
+    rows = c.fetchall()
     conn.close()
 
-    return render_template('production_summary.html', data=data)
+    summary_data = []
+    for row in rows:
+        project = {
+            'project_id': row[0],
+            'enquiry_id': row[1],
+            'location': row[2],
+            'client_name': row[3],
+            'company_name': row[4],
+            'area_sqm': row[5],
+            'sheet_cutting': row[6],
+            'plasma_fab': row[7],
+            'boxing_assembly': row[8],
+            'quality_check': row[9],
+            'dispatch': row[10],
+            'overall': round((row[6] + row[7] + row[8] + row[9] + row[10]) / 5, 2)
+        }
+        summary_data.append(project)
 
+    return render_template('production_summary.html', summary_data=summary_data)
 # ---------- EXPORT PRODUCTION SUMMARY TO EXCEL ----------
 @app.route('/export_summary_excel')
 def export_summary_excel():
