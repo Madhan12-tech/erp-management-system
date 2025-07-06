@@ -90,11 +90,12 @@
   {% endwith %}
 
   <div class="modules">
-    <div class="card"><a href="{{ url_for('add_project') }}">Projects</a></div>
+    <!-- Fixed this line: changed 'projects' to 'projects_page' -->
+    <div class="card"><a href="{{ url_for('projects_page') }}">Projects</a></div>
     <div class="card"><a href="{{ url_for('production') }}">Production</a></div>
-    <div class="card"><a href="{{ url_for('summary') }}">Production Summary</a></div>
+    <div class="card"><a href="{{ url_for('production_summary') }}">Production Summary</a></div>
     <div class="card"><a href="{{ url_for('vendor_register') }}">Vendor Registration</a></div>
-    <div class="card"><a href="{{ url_for('employee_register') }}">Employee Registration</a></div>
+    <div class="card"><a href="{{ url_for('register') }}">Employee Registration</a></div>
   </div>
 
 </body>
