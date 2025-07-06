@@ -1,18 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Production Summary</title>
+    <meta charset="UTF-8">
+    <title>Production Summary | Ducting ERP</title>
     <style>
-        body { font-family: 'Segoe UI'; background: #f4f4f4; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background: #2c3e50; color: white; }
-        h2 { color: #2c3e50; }
-        .signature { margin-top: 40px; display: flex; justify-content: space-between; }
-        .signature div { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #ecf0f1;
+        }
+
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 50px;
+        }
+
+        .signature {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 250px;
+            margin-top: 60px;
+        }
     </style>
 </head>
 <body>
+
     <h2>Production Summary Report</h2>
 
     <table>
@@ -21,40 +66,47 @@
                 <th>Project ID</th>
                 <th>Enquiry ID</th>
                 <th>Location</th>
-                <th>Client</th>
-                <th>Company</th>
-                <th>Area (sqm)</th>
-                <th>Sheet Cutting</th>
-                <th>Plasma/Fab</th>
-                <th>Boxing/Assembly</th>
-                <th>Quality Check</th>
-                <th>Dispatch</th>
-                <th>Overall (%)</th>
+                <th>Client Name</th>
+                <th>Company Name</th>
+                <th>Area (sq.m)</th>
+                <th>Sheet Cutting (%)</th>
+                <th>Plasma & Fab (%)</th>
+                <th>Boxing & Assembly (%)</th>
+                <th>Quality Check (%)</th>
+                <th>Dispatch (%)</th>
+                <th>Overall Progress (%)</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in summary_data %}
+            {% for row in summary_data %}
             <tr>
-                <td>{{ item.project_id }}</td>
-                <td>{{ item.enquiry_id }}</td>
-                <td>{{ item.location }}</td>
-                <td>{{ item.client_name }}</td>
-                <td>{{ item.company_name }}</td>
-                <td>{{ item.area_sqm }}</td>
-                <td>{{ item.sheet_cutting }}%</td>
-                <td>{{ item.plasma_fab }}%</td>
-                <td>{{ item.boxing_assembly }}%</td>
-                <td>{{ item.quality_check }}%</td>
-                <td>{{ item.dispatch }}%</td>
-                <td><b>{{ item.overall }}%</b></td>
+                <td>{{ row.project_id }}</td>
+                <td>{{ row.enquiry_id or '-' }}</td>
+                <td>{{ row.location or '-' }}</td>
+                <td>{{ row.client_name or '-' }}</td>
+                <td>{{ row.company_name or '-' }}</td>
+                <td>{{ row.area_sqm or '0' }}</td>
+                <td>{{ row.sheet_cutting }}%</td>
+                <td>{{ row.plasma_fab }}%</td>
+                <td>{{ row.boxing_assembly }}%</td>
+                <td>{{ row.quality_check }}%</td>
+                <td>{{ row.dispatch }}%</td>
+                <td><strong>{{ row.overall }}%</strong></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="signature">
-        <div>Project Manager Signature</div>
-        <div>Director Signature</div>
+    <div class="signature-section">
+        <div class="signature">
+            <div class="signature-line"></div>
+            <p>Project Manager</p>
+        </div>
+        <div class="signature">
+            <div class="signature-line"></div>
+            <p>Director</p>
+        </div>
     </div>
+
 </body>
 </html>
