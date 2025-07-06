@@ -183,9 +183,22 @@ def favicon():
 def projects():
     return redirect(url_for('dashboard'))  # or render_template(...) if it's a real page
 
-@app.route('/projects_page')
+@app.route("/projects_page")
 def projects_page():
-    return render_template('projects.html')  # Create this HTML file properly
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute('''
+        SELECT p.*, v.name 
+        FROM projects p 
+        LEFT JOIN vendors v ON p.vendor_id = v.id
+    ''')
+    projects = c.fetchall()
+
+    c.execute("SELECT id, name FROM vendors")  # <-- for dropdown
+    vendors = c.fetchall()
+
+    conn.close()
+    return render_template("projects.html", projects=projects, vendors=vendors)
 
 # ---------- REGISTER EMPLOYEE ----------
 @app.route('/register', methods=['GET', 'POST'])
