@@ -229,18 +229,26 @@ def dashboard():
 
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
+
     try:
-        c.execute("SELECT * FROM projects ORDER BY id DESC")
+        c.execute("""
+            SELECT p.*, v.name AS vendor_name
+            FROM projects p
+            LEFT JOIN vendors v ON p.vendor_id = v.id
+            ORDER BY p.id DESC
+        """)
         projects = c.fetchall()
 
-        c.execute("SELECT id, name, gst_number, address FROM vendors")
+        c.execute("SELECT id, name, gst, address FROM vendors")
         vendors = c.fetchall()
-    except:
+    except Exception as e:
+        print("Dashboard error:", e)
         projects = []
         vendors = []
-    conn.close()
 
+    conn.close()
     return render_template('dashboard.html', name=session.get('name', 'User'), projects=projects, vendors=vendors)
+
 # ---------- VENDOR REGISTRATION ----------
 
 @app.route('/vendor_register', methods=['GET', 'POST'])
