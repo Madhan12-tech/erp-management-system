@@ -186,6 +186,10 @@ def favicon():
 def projects():
     return redirect(url_for('dashboard'))  # or render_template(...) if it's a real page
 
+@app.route('/projects_page')
+def projects_page():
+    return render_template('projects.html')  # Create this HTML file properly
+
 # ---------- REGISTER EMPLOYEE ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
