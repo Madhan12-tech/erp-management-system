@@ -177,11 +177,15 @@
     <input type="hidden" name="enquiry_id" id="autoEnquiryID" value="">
 
     <label>Vendor</label>
-    <select name="vendor_id" id="vendorSelect" required>
-      <option value="">-- Select Vendor --</option>
-      {% for v in vendors %}
-      <option value="{{ v[0] }}" data-gst="{{ v[2] }}" data-address="{{ v[3] }}">{{ v[1] }}</option>
-      {% endfor %}
+    <select id="vendorSelect" name="vendor_id" required onchange="fillVendorDetails()">
+  <option value="">-- Select Vendor --</option>
+  {% for vendor in vendors %}
+    <option value="{{ vendor[0] }}"
+            data-gst="{{ vendor[2] }}"
+            data-address="{{ vendor[3] }}">
+      {{ vendor[1] }}
+    </option>
+  {% endfor %}
     </select>
 
     <label>GST Number</label>
@@ -245,6 +249,20 @@
     margin-bottom: 10px;
   }
 </style>
+
+  <script>
+  function fillVendorDetails() {
+    const vendorSelect = document.getElementById('vendorSelect');
+    const selectedOption = vendorSelect.options[vendorSelect.selectedIndex];
+
+    const gst = selectedOption.getAttribute('data-gst') || '';
+    const address = selectedOption.getAttribute('data-address') || '';
+
+    document.getElementsByName('gst')[0].value = gst;
+    document.getElementsByName('address')[0].value = address;
+  }
+  </script>
+  
 
 <script>
   function openAddProject() {
