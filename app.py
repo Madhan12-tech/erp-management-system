@@ -224,6 +224,12 @@ def favicon():
 def projects():
     return redirect(url_for('dashboard'))  # or render_template(...) if it's a real page
 
+@app.route('/seed')
+def seed_once():
+    init_db()
+    seed_dummy_data()
+    return "Database seeded!"
+
 @app.route("/projects_page")
 def projects_page():
     conn = sqlite3.connect('erp.db')
