@@ -8,6 +8,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import json
+
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -284,6 +286,16 @@ def logout():
     session.clear()
     flash("Logged out successfully", "info")
     return redirect(url_for('login'))
+
+@app.route('/project_register', methods=['GET', 'POST'])
+def project_register():
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("SELECT id, name, gst, address FROM vendors")
+    vendors = [{'id': row[0], 'name': row[1], 'gst': row[2], 'address': row[3]} for row in c.fetchall()]
+    conn.close()
+
+    return render_template('project_register.html', vendors=vendors, vendor_json=json.dumps(vendors))
 
 # ---------- DASHBOARD ----------
 @app.route('/dashboard')
