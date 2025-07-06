@@ -244,49 +244,44 @@
   <div>
     <button class="btn" onclick="openPreparationPopup()">1️⃣ Preparation</button>
   </div>
-
-  <!-- Phase 2: Completion -->
 {% for project in projects %}
-  <!-- Phase 2: Completion -->
-  <form method="POST" action="/mark_completion/{{ project.id }}">
-    <button type="submit" class="btn btn-secondary" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>
-      2️⃣ Completion ✅
-    </button>
-  </form>
+  <div class="phase-buttons">
+    <!-- Phase 2 -->
+    <form method="POST" action="/mark_completion/{{ project.id }}">
+      <button type="submit" class="btn btn-secondary" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>
+        2️⃣ Completion ✅
+      </button>
+    </form>
+
+    <!-- Phase 3 -->
+    <form method="POST" action="/submit_for_approval/{{ project.id }}">
+      <button type="submit" class="btn btn-warning" {% if project.status != 'Completion Completed' %}disabled{% endif %}>
+        3️⃣ Submit for Approval 📤
+      </button>
+    </form>
+
+    <!-- Phase 4 -->
+    <form method="POST" action="/under_review/{{ project.id }}">
+      <button type="submit" class="btn btn-info" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>
+        4️⃣ Under Review 🔍
+      </button>
+    </form>
+
+    <!-- Phase 5 Approve -->
+    <form method="POST" action="/approve_project/{{ project.id }}" style="display: inline-block;">
+      <button type="submit" class="btn btn-success" {% if project.status != 'Under Review' %}disabled{% endif %}>
+        5️⃣ Approve ✅
+      </button>
+    </form>
+
+    <!-- Phase 5 Reject -->
+    <form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display: inline-block;">
+      <button type="submit" class="btn btn-danger" {% if project.status != 'Under Review' %}disabled{% endif %}>
+        🔁 Send Back to Preparation
+      </button>
+    </form>
+  </div>
 {% endfor %}
-  
-{% for project in projects %}
-  <!-- Phase 3: Submit for Approval -->
-  <form method="POST" action="/submit_for_approval/{{ project.id }}">
-    <button type="submit" class="btn btn-warning"
-      {% if project.status != 'Completion Completed' %}disabled{% endif %}>
-      3️⃣ Submit for Approval 📤
-    </button>
-  </form>
-{% endfor %}
-
-  <!-- Phase 4: Under Review -->
-<form method="POST" action="/under_review/{{ project.id }}">
-  <button type="submit" class="btn btn-info" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>
-    4️⃣ Under Review 🔍
-  </button>
-</form>
-
-{% for project in projects %}
-  <!-- Phase 5: Approve or Reject -->
-  <form method="POST" action="/approve_project/{{ project.id }}" style="display: inline-block;">
-    <button type="submit" class="btn btn-success" {% if project.status != 'Under Review' %}disabled{% endif %}>
-      5️⃣ Approve ✅
-    </button>
-  </form>
-
-  <form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display: inline-block;">
-    <button type="submit" class="btn btn-danger" {% if project.status != 'Under Review' %}disabled{% endif %}>
-      🔁 Send Back to Preparation
-    </button>
-  </form>
-{% endfor %}
-
 </div>
   <style>
   .btn {
