@@ -232,11 +232,15 @@ def dashboard():
     try:
         c.execute("SELECT * FROM projects ORDER BY id DESC")
         projects = c.fetchall()
+
+        c.execute("SELECT id, name, gst_number, address FROM vendors")
+        vendors = c.fetchall()
     except:
         projects = []
+        vendors = []
     conn.close()
 
-    return render_template('dashboard.html', name=session.get('name', 'User'), projects=projects)
+    return render_template('dashboard.html', name=session.get('name', 'User'), projects=projects, vendors=vendors)
 # ---------- VENDOR REGISTRATION ----------
 
 @app.route('/vendor_register', methods=['GET', 'POST'])
