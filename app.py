@@ -398,6 +398,147 @@ def add_project():
         flash("Failed to add project.", "error")
     return redirect(url_for('projects_page'))
 
+@app.route("/start_preparation", methods=["POST"])
+def start_preparation():
+    project_id = request.form["project_id"]
+    client_name = request.form["client_name"]
+    location = request.form["location"]
+    site_engineer = request.form["site_engineer"]
+    mobile = request.form["mobile"]
+
+    # Save to measurement_sheet
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO measurement_sheet (project_id, client_name, location, site_engineer, mobile)
+        VALUES (?, ?, ?, ?, ?)
+    """, (project_id, client_name, location, site_engineer, mobile))
+    conn.commit()
+    conn.close()
+
+    flash("Preparation phase saved! Proceed with duct entry.", "success")
+    return redirect(url_for('duct_entry', project_id=project_id))
+
+
+@app.route('/duct_entry/<int:project_id>')
+def duct_entry(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+
+    # Fetch measurement sheet details
+    c.execute("SELECT client_name, location, site_engineer, mobile FROM measurement_sheet WHERE project_id = ?", (project_id,))
+    project_details = c.fetchone()
+
+    # Fetch existing duct entries
+    c.execute("SELECT * FROM measurement_entries WHERE project_id = ?", (project_id,))
+    duct_entries = c.fetchall()
+
+    conn.close()
+
+    return render_template('duct_entry.html', project_id=project_id, project_details=project_details, duct_entries=duct_entries)
+
+@app.route('/add_duct_entry', methods=['POST'])
+def add_duct_entry():
+    project_id = request.form['project_id']
+    duct_no = request.form['duct_no']
+    duct_type = request.form['duct_type']
+    duct_size = request.form['duct_size']
+    quantity = request.form['quantity']
+    remarks = request.form['remarks']
+
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO measurement_entries (project_id, duct_no, duct_type, duct_size, quantity, remarks)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (project_id, duct_no, duct_type, duct_size, quantity, remarks))
+    conn.commit()
+    conn.close()
+
+    flash("Duct entry added successfully.", "success")
+    return redirect(url_for('duct_entry', project_id=project_id))
+
+@app.route('/delete_duct/<int:entry_id>/<int:project_id>')
+def delete_duct(entry_id, project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM measurement_entries WHERE id = ?", (entry_id,))
+    conn.commit()
+    conn.close()
+
+    flash("Duct entry deleted.", "info")
+    return redirect(url_for('duct_entry', project_id=project_id))
+
+@app.route('/submit_duct/<int:project_id>')
+def submit_duct(project_id):
+    flash("Duct entry submitted successfully! Proceed to Completion phase.", "success")
+    return redirect(url_for('projects_page'))
+
+@app.route('/mark_completion/<int:project_id>', methods=['POST'])
+def mark_completion(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status = 'Completion Done' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+
+    flash("✅ Phase 2: Design marked as completed.", "success")
+    return redirect(url_for('projects_page'))
+
+@app.route('/submit_for_approval/<int:project_id>', methods=['POST'])
+def submit_for_approval(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status = 'Submitted for Approval' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+
+    flash("📤 Phase 3: Design submitted for approval.", "info")
+    return redirect(url_for('projects_page'))
+
+
+@app.route('/under_review/<int:project_id>', methods=['POST'])
+def under_review(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status = 'Under Review' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    flash("🔍 Phase 4: Design moved to Under Review.", "info")
+    return redirect(url_for('projects_page'))
+
+@app.route('/approve_project/<int:project_id>', methods=['POST'])
+def approve_project(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+
+    # Get area from measurement sheet to pass to production_status
+    c.execute("SELECT area_sqm FROM measurement_sheet WHERE project_id = ?", (project_id,))
+    area = c.fetchone()
+    total_area = area[0] if area else 0
+
+    # Insert into production_status
+    c.execute('''
+        INSERT OR IGNORE INTO production_status (project_id, sheet_cutting_progress, plasma_fab_progress, 
+        boxing_assembly_progress, quality_check_progress, dispatch_progress)
+        VALUES (?, 0, 0, 0, 0, 0)
+    ''', (project_id,))
+    
+    c.execute("UPDATE projects SET status = 'Approved' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    flash("✅ Phase 5: Project approved and sent to Production.", "success")
+    return redirect(url_for('projects_page'))
+
+@app.route('/reject_to_preparation/<int:project_id>', methods=['POST'])
+def reject_to_preparation(project_id):
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("UPDATE projects SET status = 'Preparation' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    flash("⚠️ Review failed. Sent back to Preparation phase.", "warning")
+    return redirect(url_for('projects_page'))
 
 # ---------- ADD MEASUREMENT SHEET ----------
 @app.route('/add_measurement', methods=['POST'])
