@@ -161,20 +161,29 @@ init_db()
 # ---------- INSERT DUMMY DATA ----------
 
 def seed_dummy_data():
+    from werkzeug.security import generate_password_hash
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
+    # Dummy Vendors
+    vendors = [
+        ('ABC Constructions', 'GSTTN1234A1Z5', 'Chennai, Tamil Nadu'),
+        ('Skyline Infra', 'GSTMH5678B2X6', 'Mumbai, Maharashtra'),
+        ('GreenBuild Ltd', 'GSTKA9012C3Y7', 'Bangalore, Karnataka')
+    ]
+    for name, gst, address in vendors:
+        c.execute("INSERT OR IGNORE INTO vendors (name, gst, address) VALUES (?, ?, ?)", (name, gst, address))
 
-# Insert dummy employees
-employees = [
-    ('John Doe', 'john.doe@example.com', generate_password_hash('password123')),
-    ('Priya Sharma', 'priya.sharma@example.com', generate_password_hash('securepass')),
-    ('Arun Kumar', 'arun.kumar@example.com', generate_password_hash('adminpass'))
-]
-
-for name, email, password in employees:
-    c.execute("INSERT OR IGNORE INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)", 
-              (name, email, password, 'admin'))
+    # Dummy Employees with hashed passwords
+    employees = [
+        ('John Doe', 'john.doe@example.com', generate_password_hash('password123'), 'admin'),
+        ('Priya Sharma', 'priya.sharma@example.com', generate_password_hash('securepass'), 'admin'),
+        ('Arun Kumar', 'arun.kumar@example.com', generate_password_hash('adminpass'), 'admin')
+    ]
+    for name, email, password, role in employees:
+        c.execute("INSERT OR IGNORE INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)", 
+                  (name, email, password, role))
 
     conn.commit()
     conn.close()
