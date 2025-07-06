@@ -246,14 +246,15 @@ def register():
         first_name = request.form['first_name']
         last_name = request.form['last_name']
         email = request.form['email']
-        username = request.form['username']
         password = request.form['password']
         role = request.form['role']
 
+        name = first_name + " " + last_name  # 👈 Combine names
+
         conn = sqlite3.connect("erp.db")
         c = conn.cursor()
-        c.execute("INSERT INTO employees (first_name, last_name, email, username, password, role) VALUES (?, ?, ?, ?, ?, ?)",
-                  (first_name, last_name, email, username, password, role))
+        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
+                  (name, email, generate_password_hash(password), role))
         conn.commit()
         conn.close()
         flash("Employee registered successfully!", "success")
