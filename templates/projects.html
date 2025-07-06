@@ -171,29 +171,30 @@
 
 <!-- Next part: Add Project Popup -->
   <!-- ADD PROJECT POPUP -->
-<div id="addProjectPopup" class="popup-right">
-  <h3 style="margin-bottom: 15px; color: #2c3e50;">Add New Project</h3>
+<!-- ADD PROJECT POPUP -->
+<div id="addProjectPopup" style="display:none;">
   <form method="POST" action="/add_project" enctype="multipart/form-data">
-    <input type="hidden" name="enquiry_id" id="autoEnquiryID" value="">
+    <h3>Add New Project</h3>
 
-    <label>Vendor</label>
-    <select id="vendorSelect" name="vendor_id" required onchange="fillVendorDetails()">
-  <option value="">-- Select Vendor --</option>
-  {% for vendor in vendors %}
-    <option value="{{ vendor[0] }}"
-            data-gst="{{ vendor[2] }}"
-            data-address="{{ vendor[3] }}">
-      {{ vendor[1] }}
-    </option>
-  {% endfor %}
+    <!-- Vendor Dropdown -->
+    <label for="vendor">Vendor</label>
+    <select name="vendor_id" id="vendorSelect" onchange="fillVendorDetails(this.value)" required>
+      <option value="">-- Select Vendor --</option>
+      {% for v in vendors %}
+        <option value="{{ v.id }}" data-gst="{{ v.gst_number }}" data-address="{{ v.address }}">
+          {{ v.name }}
+        </option>
+      {% endfor %}
     </select>
 
+    <!-- Auto-Fill Fields -->
     <label>GST Number</label>
-    <input type="text" name="gst_number" id="gstField" readonly required>
+    <input type="text" name="gst" id="gstField" readonly>
 
     <label>Address</label>
-    <input type="text" name="address" id="addressField" readonly required>
+    <input type="text" name="address" id="addressField" readonly>
 
+    <!-- Other Fields -->
     <label>Quotation RO</label>
     <input type="text" name="quotation_ro" required>
 
@@ -210,17 +211,32 @@
     <input type="text" name="incharge" required>
 
     <label>Notes</label>
-    <textarea name="notes" rows="3" style="width:100%; padding:8px;"></textarea>
+    <textarea name="notes"></textarea>
 
+    <!-- File Upload -->
     <label>Upload Drawing</label>
-    <input type="file" name="file">
+    <input type="file" name="drawing">
 
-    <div style="margin-top: 15px; text-align: right;">
-      <button type="button" onclick="closeAddProject()" style="margin-right: 10px;">Cancel</button>
-      <button type="submit" style="background: #27ae60; color: white; padding: 8px 12px; border: none; border-radius: 4px;">Save</button>
-    </div>
+    <!-- Buttons -->
+    <br><br>
+    <button type="submit" class="btn-green">Save</button>
+    <button type="button" onclick="closeAddPopup()" class="btn-orange">Cancel</button>
   </form>
 </div>
+
+<script>
+function fillVendorDetails(vendorId) {
+  const selected = document.querySelector(`#vendorSelect option[value='${vendorId}']`);
+  if (selected) {
+    document.getElementById("gstField").value = selected.dataset.gst || "";
+    document.getElementById("addressField").value = selected.dataset.address || "";
+  }
+}
+
+function closeAddPopup() {
+  document.getElementById('addProjectPopup').style.display = 'none';
+}
+</script>
 
 <style>
   .popup-right {
