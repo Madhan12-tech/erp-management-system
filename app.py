@@ -318,24 +318,44 @@ def get_vendors():
 # ---------- ADD PROJECT ----------
 @app.route('/add_project', methods=['POST'])
 def add_project():
-    data = request.form
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
-    c.execute("""
-        INSERT INTO projects (
-            enquiry_id, vendor_id, gst, address, quotation_ro,
-            quotation_date, quotation_amount, order_date, order_amount,
-            incharge, notes, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        data['enquiry_id'], data['vendor_id'], data['gst'], data['address'],
-        data['quotation_ro'], data['quotation_date'], data['quotation_amount'],
-        data['order_date'], data['order_amount'],
-        data['incharge'], data['notes'], "Design Process"
-    ))
-    conn.commit()
-    conn.close()
-    flash("Project added successfully!", "success")
+    try:
+        data = {
+            'vendor_id': request.form.get('vendor_id'),
+            'gst': request.form.get('gst'),
+            'address': request.form.get('address'),
+            'quotation_ro': request.form.get('quotation_ro'),
+            'start_date': request.form.get('start_date'),
+            'end_date': request.form.get('end_date'),
+            'location': request.form.get('location'),
+            'incharge': request.form.get('incharge'),
+            'notes': request.form.get('notes')
+        }
+
+        drawing = request.files.get('drawing')
+        drawing_path = ''
+        if drawing and drawing.filename:
+            filename = secure_filename(drawing.filename)
+            drawing_path = os.path.join('static/uploads', filename)
+            drawing.save(drawing_path)
+
+        conn = sqlite3.connect('erp.db')
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO projects (
+              vendor_id, gst_number, address, quotation_ro,
+              start_date, end_date, location, incharge, notes, file_path, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            data['vendor_id'], data['gst'], data['address'], data['quotation_ro'],
+            data['start_date'], data['end_date'], data['location'],
+            data['incharge'], data['notes'], drawing_path, 'Design Process'
+        ))
+        conn.commit()
+        conn.close()
+        flash("Project added successfully!", "success")
+    except Exception as e:
+        print("Error in /add_project:", e)
+        flash("Failed to add project.", "error")
     return redirect(url_for('projects_page'))
 
 
