@@ -246,11 +246,14 @@
   </div>
 
   <!-- Phase 2: Completion -->
+{% for project in projects %}
+  <!-- Phase 2: Completion -->
   <form method="POST" action="/mark_completion/{{ project.id }}">
     <button type="submit" class="btn btn-secondary" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>
       2️⃣ Completion ✅
     </button>
   </form>
+{% endfor %}
 
   <!-- Phase 3: Submit for Approval -->
   <form method="POST" action="/submit_for_approval/{{ project.id }}">
