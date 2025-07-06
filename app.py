@@ -319,27 +319,25 @@ def dashboard():
 def vendor_register():
     if request.method == 'POST':
         name = request.form['vendor_name']
-        gst = request.form['gst_number']
+        gst = request.form['gst']  # ✅ fixed
         address = request.form['address']
         contacts = request.form.getlist('contact_person[]')
         phones = request.form.getlist('contact_phone[]')
 
-        # ✅ Corrected to match HTML field names
-        bank_name = request.form.get('bank_name', '')
-        account_no = request.form.get('account_number', '')
-        ifsc = request.form.get('ifsc', '')
+        bank_name = request.form.get('bank')        # ✅ fixed
+        account_no = request.form.get('account_no') # ✅ fixed
+        ifsc = request.form.get('ifsc')             # ✅ fixed
 
         conn = sqlite3.connect('erp.db')
         c = conn.cursor()
 
-        c.execute("INSERT INTO vendors (name, gst_number, address) VALUES (?, ?, ?)", (name, gst, address))
+        c.execute("INSERT INTO vendors (name, gst, address) VALUES (?, ?, ?)", (name, gst, address))
         vendor_id = c.lastrowid
 
         for person, phone in zip(contacts, phones):
             c.execute("INSERT INTO vendor_contacts (vendor_id, name, phone) VALUES (?, ?, ?)", (vendor_id, person, phone))
 
         if bank_name and account_no and ifsc:
-            # Safe: create bank table if not exists
             c.execute('''CREATE TABLE IF NOT EXISTS vendor_banks (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             vendor_id INTEGER,
@@ -357,6 +355,7 @@ def vendor_register():
         return redirect(url_for('vendor_register'))
 
     return render_template('vendor_register.html')
+
 
 
 # ---------- GET VENDOR LIST FOR DROPDOWN (PROJECTS) ----------
