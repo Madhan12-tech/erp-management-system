@@ -159,18 +159,17 @@ def init_db():
 init_db()
 
 # ---------- INSERT DUMMY DATA ----------
+
 def seed_dummy_data():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    hashed_password = generate_password_hash('password123')
+    hashed_pw = generate_password_hash('password123')
     c.execute("INSERT OR IGNORE INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)", 
-              ('John Doe', 'john.doe@example.com', hashed_password, 'admin'))
+              ('John Doe', 'john.doe@example.com', hashed_pw, 'admin'))
 
     conn.commit()
     conn.close()
-
-
 # ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
