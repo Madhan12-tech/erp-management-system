@@ -188,28 +188,28 @@ def seed_dummy_data():
     conn.commit()
     conn.close()
 
-# ---------- LOGIN ----------
+# ---------- LOGIN ---------
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        email = request.form['email'].strip()
         password = request.form['password']
 
-        conn = sqlite3.connect('erp.db')
-        c = conn.cursor()
-        c.execute("SELECT * FROM employees WHERE email = ?", (email,))
-        user = c.fetchone()
-        conn.close()
+        with sqlite3.connect('erp.db') as conn:
+            c = conn.cursor()
+            c.execute("SELECT id, name, email, password, role FROM employees WHERE email = ?", (email,))
+            user = c.fetchone()
 
         if user and check_password_hash(user[3], password):
             session['user_id'] = user[0]
-            session['email'] = user[2]
             session['name'] = user[1]
+            session['email'] = user[2]
             session['role'] = user[4]
-            flash("Login successful", "success")
+            flash("Login successful!", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid credentials", "error")
+            flash("Invalid credentials. Please try again.", "error")
             return redirect(url_for('login'))
 
     return render_template('login.html')
