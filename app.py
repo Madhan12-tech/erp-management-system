@@ -201,28 +201,25 @@ def projects_page():
     return render_template("projects.html", projects=projects, vendors=vendors)
 
 # ---------- REGISTER EMPLOYEE ----------
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        name = request.form['name']
+    if request.method == "POST":
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
         email = request.form['email']
-        password = generate_password_hash(request.form['password'])
+        username = request.form['username']
+        password = request.form['password']
         role = request.form['role']
 
-        conn = sqlite3.connect('erp.db')
+        conn = sqlite3.connect("erp.db")
         c = conn.cursor()
-        try:
-            c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                      (name, email, password, role))
-            conn.commit()
-            flash("Registration successful", "success")
-            return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash("Email already exists", "error")
-        finally:
-            conn.close()
-
-    return render_template('register.html')
+        c.execute("INSERT INTO employees (first_name, last_name, email, username, password, role) VALUES (?, ?, ?, ?, ?, ?)",
+                  (first_name, last_name, email, username, password, role))
+        conn.commit()
+        conn.close()
+        flash("Employee registered successfully!", "success")
+        return redirect(url_for("login"))
+    return render_template("employee_register.html")
 
 # ---------- LOGOUT ----------
 @app.route('/logout')
