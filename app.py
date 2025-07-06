@@ -857,62 +857,28 @@ def seed_dummy_data():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Dummy Employee
-    hashed_password = generate_password_hash('admin123')
-    c.execute("SELECT * FROM employees WHERE email='admin@ducting.com'")
-    if not c.fetchone():
-        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                  ('Admin User', 'admin@ducting.com', hashed_password, 'Admin'))
+    # Insert dummy vendors
+    vendors = [
+        ('ABC Constructions', 'GSTTN1234A1Z5', 'Chennai, Tamil Nadu'),
+        ('Skyline Infra', 'GSTMH5678B2X6', 'Mumbai, Maharashtra'),
+        ('GreenBuild Ltd', 'GSTKA9012C3Y7', 'Bangalore, Karnataka')
+    ]
+    for name, gst, address in vendors:
+        c.execute("INSERT OR IGNORE INTO vendors (name, gst_number, address) VALUES (?, ?, ?)", (name, gst, address))
 
-    # Dummy Vendor
-    c.execute("SELECT * FROM vendors WHERE name='ABC Supplies'")
-    if not c.fetchone():
-        c.execute("INSERT INTO vendors (name, gst_number, address) VALUES (?, ?, ?)",
-                  ('ABC Supplies', '27ABCDE1234F2Z5', 'Chennai'))
+    # Insert dummy employees
+    employees = [
+        ('John Doe', 'john.doe@example.com', 'password123'),
+        ('Priya Sharma', 'priya.sharma@example.com', 'securepass'),
+        ('Arun Kumar', 'arun.kumar@example.com', 'adminpass')
+    ]
+    for name, email, password in employees:
+        c.execute("INSERT OR IGNORE INTO employees (name, email, password) VALUES (?, ?, ?)", (name, email, password))
 
-        vendor_id = c.lastrowid
+    # Optional: Insert a dummy project to test dropdowns/project_id pattern
+    c.execute("INSERT OR IGNORE INTO projects (project_id, client_name, vendor_name, quotation_ro, start_date, end_date, location, source_drawing, gst_number, address, project_incharge, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+        ("VE/TN/2526/E001", "ABC Constructions", "ABC Constructions", "RO1234", "2025-07-05", "2025-07-31", "Chennai Site", "", "GSTTN1234A1Z5", "Chennai, Tamil Nadu", "John Doe", "Test notes", "Preparation"))
 
-        # Dummy Contact
-        c.execute("INSERT INTO vendor_contacts (vendor_id, name, email, phone) VALUES (?, ?, ?, ?)",
-                  (vendor_id, 'Kumar', 'kumar@abc.com', '9876543210'))
-
-    # Dummy Project
-    c.execute("SELECT * FROM projects WHERE enquiry_id = 'ENQ-001'")
-    if not c.fetchone():
-        c.execute("""INSERT INTO projects (
-            enquiry_id, vendor_id, gst_number, address, quotation_ro,
-            start_date, end_date, location, incharge, notes, file, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
-            'ENQ-001', 1, '27ABCDE1234F2Z5', 'Chennai', 'QRO-001',
-            '2025-07-01', '2025-07-31', 'Bangalore', 'John', 'Initial Project', '', 'Design Process'
-        ))
-
-    # Dummy Measurement Sheet
-    c.execute("SELECT * FROM measurement_sheet WHERE client_name='Client A'")
-    if not c.fetchone():
-        c.execute("""INSERT INTO measurement_sheet (
-            project_id, client_name, company_name, project_location, engineer_name, phone
-        ) VALUES (?, ?, ?, ?, ?, ?)""", (
-            1, 'Client A', 'Company A', 'Bangalore Site', 'Er. Kumar', '9999999999'
-        ))
-
-    # Dummy Duct Entry
-    c.execute("SELECT * FROM measurement_entries WHERE duct_no='D1'")
-    if not c.fetchone():
-        c.execute("""INSERT INTO measurement_entries (
-            project_id, duct_no, duct_type, duct_size, quantity, remarks
-        ) VALUES (?, ?, ?, ?, ?, ?)""", (
-            1, 'D1', 'Rectangular', '500x300', 4, 'Main supply duct'
-        ))
-
-    # Dummy Production
-    c.execute("SELECT * FROM production WHERE project_id = 1")
-    if not c.fetchone():
-        c.execute("""INSERT INTO production (
-            project_id, phase, done, total, percentage, date
-        ) VALUES (?, ?, ?, ?, ?, ?)""", (
-            1, 'Sheet Cutting', 0, 250, 0, datetime.now().strftime('%Y-%m-%d')
-        ))
 
     conn.commit()
     conn.close()
