@@ -99,13 +99,14 @@ def init_db():
         )
     ''')
 
+
     c.execute("""
     SELECT 
         p.id AS project_id,
-        pj.enquiry_id,
+        p.enquiry_id,
         pj.location,
-        pr.client_name,
-        pr.company_name,
+        pj.client_name,
+        pj.company_name,
         m.area_sqm,
         s.sheet_cutting_progress,
         s.plasma_fab_progress,
@@ -113,12 +114,10 @@ def init_db():
         s.quality_check_progress,
         s.dispatch_progress
     FROM projects p
-    JOIN project_enquiry pj ON pj.project_id = p.id
-    JOIN project_registration pr ON pr.project_id = p.id
+    JOIN project_enquiry pj ON pj.enquiry_id = p.enquiry_id
     JOIN measurement_sheet m ON m.project_id = p.id
     JOIN production_status s ON s.project_id = p.id
 """)
-
     # Production Tracking
     c.execute('''
         CREATE TABLE IF NOT EXISTS production (
