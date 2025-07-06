@@ -39,6 +39,16 @@ def init_db():
     )
 ''')
 
+    c.execute('''
+CREATE TABLE IF NOT EXISTS project_registration (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    client_name TEXT,
+    company_name TEXT,
+    FOREIGN KEY(project_id) REFERENCES projects(id)
+)
+''')
+
     # Vendor Contacts
     c.execute('''
         CREATE TABLE IF NOT EXISTS vendor_contacts (
