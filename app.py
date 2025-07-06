@@ -159,7 +159,16 @@ def init_db():
 init_db()
 
 # ---------- INSERT DUMMY DATA ----------
+def seed_dummy_data():
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
 
+    # Seed employee with dummy login
+    c.execute("INSERT OR IGNORE INTO employees (name, email, password) VALUES (?, ?, ?)", 
+              ('John Doe', 'john.doe@example.com', 'password123'))
+
+    conn.commit()
+    conn.close()
 
 
 # ---------- LOGIN ----------
