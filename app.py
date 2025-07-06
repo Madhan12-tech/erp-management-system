@@ -856,4 +856,4 @@ def export_summary_pdf():
 if __name__ == '__main__':
     init_db()
     seed_dummy_data()
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
