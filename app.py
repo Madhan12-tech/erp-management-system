@@ -321,18 +321,22 @@ def add_project():
     data = request.form
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("""INSERT INTO projects (
-        enquiry_id, vendor_id, gst_number, address, quotation_ro,
-        start_date, end_date, location, incharge, notes, file_path, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
-        data['enquiry_id'], data['vendor_id'], data['gst_number'], data['address'],
-        data['quotation_ro'], data['start_date'], data['end_date'], data['location'],
-        data['incharge'], data['notes'], "", "Design Process"
+    c.execute("""
+        INSERT INTO projects (
+            enquiry_id, vendor_id, gst, address, quotation_ro,
+            quotation_date, quotation_amount, order_date, order_amount,
+            incharge, notes, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data['enquiry_id'], data['vendor_id'], data['gst'], data['address'],
+        data['quotation_ro'], data['quotation_date'], data['quotation_amount'],
+        data['order_date'], data['order_amount'],
+        data['incharge'], data['notes'], "Design Process"
     ))
     conn.commit()
     conn.close()
-    flash("Project added successfully", "success")
-    return redirect(url_for('dashboard'))
+    flash("Project added successfully!", "success")
+    return redirect(url_for('projects_page'))
 
 
 # ---------- ADD MEASUREMENT SHEET ----------
