@@ -159,33 +159,8 @@ def init_db():
 init_db()
 
 # ---------- INSERT DUMMY DATA ----------
-def insert_dummy_data():
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
 
-    # Dummy Employee
-    hashed_password = generate_password_hash('admin123')
-    c.execute("SELECT * FROM employees WHERE email='admin@ducting.com'")
-    if not c.fetchone():
-        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                  ('Admin User', 'admin@ducting.com', hashed_password, 'Admin'))
 
-    # Dummy Vendor
-    c.execute("INSERT INTO vendors (name, gst, address) VALUES (?, ?, ?)",
-          ('ABC Fabricators', '29ABCDE1234F2Z5', 'Bangalore, Karnataka'))
-    # Dummy Contacts
-    vendor_id = c.execute("SELECT id FROM vendors WHERE name='ABC Fabricators'").fetchone()[0]
-    c.execute("SELECT * FROM vendor_contacts WHERE vendor_id=?", (vendor_id,))
-    if not c.fetchone():
-        c.execute("INSERT INTO vendor_contacts (vendor_id, name, email, phone) VALUES (?, ?, ?, ?)",
-                  (vendor_id, 'John Doe', 'john@abc.com', '9876543210'))
-
-    conn.commit()
-    conn.close()
-
-# ---------- INITIALIZE DATABASE ----------
-init_db()
-insert_dummy_data()
 
 # ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
