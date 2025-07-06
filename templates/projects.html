@@ -1,414 +1,337 @@
+<!-- projects.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Projects | Ducting ERP</title>
+  <meta charset="UTF-8">
+  <title>Projects | ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f7f9fb;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      background: #f4f6f9;
     }
-
-    h2 {
-      color: #2c3e50;
-    }
-
-    .btn {
-      background-color: #2563eb;
+    .header {
+      background: #2c3e50;
       color: white;
-      padding: 10px 18px;
-      border: none;
-      border-radius: 5px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      background-color: #1d4ed8;
-    }
-
-    .card {
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .popup {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background-color: rgba(0,0,0,0.4);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .popup-content {
-      background-color: white;
-      padding: 25px;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    .popup-header {
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
     }
-
-    .popup-header h3 {
+    .header h2 {
       margin: 0;
     }
-
-    .close-btn {
-      background: none;
-      font-size: 18px;
+    .btn {
+      padding: 8px 15px;
+      background: #2980b9;
+      color: white;
       border: none;
+      border-radius: 6px;
       cursor: pointer;
+      transition: 0.3s;
     }
-
-    .design-process {
+    .btn:hover {
+      background: #3498db;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 60%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .flex-row {
       display: flex;
-      gap: 15px;
-      margin-top: 20px;
+      gap: 20px;
     }
-
-    .design-step {
-      flex: 1;
-      padding: 15px;
-      background-color: #f1f5f9;
-      text-align: center;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .design-step.active {
-      border: 2px solid #2563eb;
-      background-color: #e0e7ff;
-    }
-
     .hidden {
       display: none;
+    }
+    .section-heading {
+      margin: 20px;
+      font-size: 20px;
+      color: #2c3e50;
     }
   </style>
 </head>
 <body>
+  <div class="header">
+    <h2>Projects Module</h2>
+    <button class="btn" onclick="openProjectModal()">+ Add Project</button>
+  </div>
 
-  <h2>Projects</h2>
-  <button class="btn" onclick="openPopup('projectPopup')">+ Add Project</button>
+  <!-- Add Project Modal -->
+  <div id="projectModal" class="modal">
+    <div class="modal-content">
+      <h3>Add New Project</h3>
+      <form id="projectForm" method="POST" action="/add_project" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Client Name</label>
+          <select name="client_name" required>
+            <option value="">Select</option>
+            {% for v in vendors %}
+              <option value="{{ v.name }}">{{ v.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-  <!-- Add Project Popup -->
-  <div id="projectPopup" class="popup">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h3>Add New Project</h3>
-        <button class="close-btn" onclick="closePopup('projectPopup')">×</button>
-      </div>
+        <div class="form-group">
+          <label>Project ID (Auto-generated)</label>
+          <input type="text" name="enquiry_id" value="{{ enquiry_id }}" readonly>
+        </div>
 
-      <div class="form-group">
-        <label>Enquiry ID *</label>
-        <input type="text" placeholder="EQ.XXXXXX">
-      </div>
+        <div class="form-group">
+          <label>Quotation RO</label>
+          <input type="text" name="quotation_ro" required>
+        </div>
 
-      <div class="form-group">
-        <label>Vendor Name</label>
-        <input type="text">
-      </div>
+        <div class="flex-row">
+          <div class="form-group" style="flex:1">
+            <label>Start Date</label>
+            <input type="date" name="start_date" min="{{ today }}" required>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>End Date</label>
+            <input type="date" name="end_date" required>
+          </div>
+        </div>
 
-      <div class="form-group">
-        <label>Start Date</label>
-        <input type="date">
-      </div>
+        <div class="form-group">
+          <label>Project Location</label>
+          <input type="text" name="location" required>
+        </div>
 
-      <div class="form-group">
-        <label>End Date</label>
-        <input type="date">
-      </div>
+        <div class="form-group">
+          <label>Drawing Upload (Optional)</label>
+          <input type="file" name="file">
+        </div>
 
-      <div class="form-group">
-        <label>Location</label>
-        <input type="text">
-      </div>
+        <div class="flex-row">
+          <div class="form-group" style="flex:1">
+            <label>Vendor GST</label>
+            <input type="text" name="gst_number" id="gst_number" readonly>
+          </div>
+          <div class="form-group" style="flex:2">
+            <label>Vendor Address</label>
+            <textarea name="address" id="address" readonly></textarea>
+          </div>
+        </div>
 
-      <div class="form-group">
-        <label>GST Number</label>
-        <input type="text">
-      </div>
+        <div class="form-group">
+          <label>Project Incharge</label>
+          <select name="incharge" required>
+            <option value="">Select</option>
+            {% for e in employees %}
+              <option value="{{ e.name }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>Address</label>
-        <input type="text">
-      </div>
+        <div class="form-group">
+          <label>Notes (Optional)</label>
+          <textarea name="notes"></textarea>
+        </div>
 
-      <div class="form-group">
-        <label>Project Incharge</label>
-        <input type="text">
-      </div>
-
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea placeholder="Optional notes..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>File Upload</label>
-        <input type="file" />
-        <small>Optional: Design drawings (PDF/image)</small>
-      </div>
-
-      <button class="btn" onclick="saveProject()">Save</button>
+        <div style="display: flex; justify-content: end; gap: 10px;">
+          <button type="button" class="btn" onclick="closeProjectModal()">Cancel</button>
+          <button type="submit" class="btn" onclick="showDesignProcess()">Save & Continue</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- Design Process Cards -->
-  <div id="designSection" class="hidden">
-    <h3>Design Process</h3>
-    <div class="design-process">
-      <div class="design-step active" onclick="openPopup('measurePopup')">
-        <strong>Preparation</strong><br>
-        <button class="btn" style="margin-top: 5px;">Add Measurement Sheet</button>
-      </div>
-      <div class="design-step">
-        <strong>Completes</strong><br>
-        Marked
-      </div>
-      <div class="design-step">
-        <strong>Submit for Approval</strong><br>
-        Under Review
-      </div>
-    </div>
+  <!-- Design Process Section -->
+  <div id="designProcessSection" class="hidden">
+    <h3 class="section-heading">Design Process</h3>
+    <!-- This will be continued in next part -->
   </div>
 
-  <!-- Measurement Sheet Popup -->
-  <div id="measurePopup" class="popup">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h3>Add Measurement Sheet</h3>
-        <button class="close-btn" onclick="closePopup('measurePopup')">×</button>
-      </div>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script>
+    function openProjectModal() {
+      document.getElementById('projectModal').style.display = 'block';
+    }
+    function closeProjectModal() {
+      document.getElementById('projectModal').style.display = 'none';
+    }
+    function showDesignProcess() {
+      Toastify({
+        text: "Project added! Design Process now available.",
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#27ae60"
+      }).showToast();
+      document.getElementById('designProcessSection').classList.remove('hidden');
+      closeProjectModal();
+    }
+  </script>
+
+  <!-- Preparation Phase Popup -->
+<div id="preparationModal" class="modal">
+  <div class="modal-content">
+    <h3>Preparation - Project Details</h3>
+    <form method="POST" action="/start_preparation">
+      <input type="hidden" name="project_id" value="{{ latest_project_id }}">
 
       <div class="form-group">
         <label>Client Name</label>
-        <input type="text">
+        <input type="text" name="client_name" value="{{ latest_client_name }}" readonly>
       </div>
 
       <div class="form-group">
-        <label>Company Name</label>
-        <input type="text">
-      </div>
-
-      <div class="form-group">
-        <label>Location</label>
-        <input type="text">
+        <label>Project Location</label>
+        <input type="text" name="location" value="{{ latest_location }}" readonly>
       </div>
 
       <div class="form-group">
         <label>Site Engineer Name</label>
-        <input type="text">
+        <input type="text" name="site_engineer" required>
       </div>
 
       <div class="form-group">
-        <label>Phone Number</label>
-        <input type="text">
+        <label>Mobile Number</label>
+        <input type="text" name="mobile" required pattern="[0-9]{10}" maxlength="10">
       </div>
 
-      <button class="btn">Save Measurement</button>
-    </div>
+      <div style="display: flex; justify-content: end; gap: 10px;">
+        <button type="button" class="btn" onclick="closePreparationModal()">Cancel</button>
+        <button type="submit" class="btn">Save & Continue</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Preparation Start Button -->
+<div style="margin: 20px;">
+  <button class="btn" onclick="openPreparationModal()">Start Phase 1 - Preparation</button>
+</div>
+
+  <!-- Design Process Header -->
+<h2 style="margin-top: 30px; color: #2c3e50;">Design Process</h2>
+<div style="display: flex; gap: 20px; flex-wrap: wrap;">
+
+  <!-- Phase 1: Preparation -->
+  <div>
+    <button class="btn" onclick="openPreparationPopup()">1️⃣ Preparation</button>
   </div>
 
+  <!-- Phase 2: Completion -->
+  <form method="POST" action="/mark_completion/{{ project.id }}">
+    <button type="submit" class="btn btn-secondary" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>
+      2️⃣ Completion ✅
+    </button>
+  </form>
+
+  <!-- Phase 3: Submit for Approval -->
+  <form method="POST" action="/submit_for_approval/{{ project.id }}">
+    <button type="submit" class="btn btn-warning" {% if project.status != 'Completion Done' %}disabled{% endif %}>
+      3️⃣ Submit for Approval 📤
+    </button>
+  </form>
+
+  <!-- Phase 4: Under Review -->
+<form method="POST" action="/under_review/{{ project.id }}">
+  <button type="submit" class="btn btn-info" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>
+    4️⃣ Under Review 🔍
+  </button>
+</form>
+
+<!-- Phase 5: Approve or Reject -->
+<form method="POST" action="/approve_project/{{ project.id }}" style="display: inline-block;">
+  <button type="submit" class="btn btn-success" {% if project.status != 'Under Review' %}disabled{% endif %}>
+    5️⃣ Approve ✅
+  </button>
+</form>
+
+<form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display: inline-block;">
+  <button type="submit" class="btn btn-danger" {% if project.status != 'Under Review' %}disabled{% endif %}>
+    🔁 Send Back to Preparation
+  </button>
+</form>
+
+</div>
+  <style>
+  .btn {
+    padding: 10px 18px;
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .btn:hover {
+    background-color: #2980b9;
+  }
+
+  .btn-secondary {
+    background-color: #7f8c8d;
+  }
+
+  .btn-warning {
+    background-color: #f39c12;
+  }
+
+  .btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+  }
+    .btn-success { background-color: #2ecc71; }
+.btn-info { background-color: #3498db; }
+.btn-danger { background-color: #e74c3c; }
+.btn-warning { background-color: #f39c12; }
+.btn-secondary { background-color: #7f8c8d; }
+  </style>
+
   <script>
-    function openPopup(id) {
-      document.getElementById(id).style.display = 'flex';
-    }
-
-    function closePopup(id) {
-      document.getElementById(id).style.display = 'none';
-    }
-
-    function saveProject() {
-      closePopup('projectPopup');
-      document.getElementById('designSection').classList.remove('hidden');
-    }
+  function openPreparationModal() {
+    document.getElementById('preparationModal').style.display = 'block';
+  }
+  function closePreparationModal() {
+    document.getElementById('preparationModal').style.display = 'none';
+  }
   </script>
-  <!-- Duct Entry Form and Table -->
-  <div class="card" style="margin-top: 30px;">
-    <h3>Duct Entry</h3>
-    <div class="form-group">
-      <label>Type</label>
-      <input type="text" id="ductType">
-    </div>
-
-    <div class="form-group">
-      <label>Length (mm)</label>
-      <input type="number" id="ductLength">
-    </div>
-
-    <div class="form-group">
-      <label>Breadth (mm)</label>
-      <input type="number" id="ductBreadth">
-    </div>
-
-    <div class="form-group">
-      <label>Height (mm)</label>
-      <input type="number" id="ductHeight">
-    </div>
-
-    <div class="form-group">
-      <label>Quantity</label>
-      <input type="number" id="ductQty">
-    </div>
-
-    <button class="btn" onclick="addDuct()">+ Add</button>
-
-    <!-- Duct Table -->
-    <table border="1" width="100%" style="margin-top: 20px; border-collapse: collapse;">
-      <thead style="background-color: #cbd5e1;">
-        <tr>
-          <th>Type</th>
-          <th>Length</th>
-          <th>Breadth</th>
-          <th>Height</th>
-          <th>Qty</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="ductTableBody">
-        <!-- JS Filled -->
-      </tbody>
-    </table>
-
-    <div style="margin-top: 15px;">
-      <button class="btn" onclick="submitDucts()">Submit</button>
-      <button class="btn" onclick="printPage()">🖨️ Print</button>
-      <button class="btn" onclick="exportTable()">📤 Export Excel</button>
-    </div>
-  </div>
-
-  <script>
-    const tableBody = document.getElementById('ductTableBody');
-    let ductData = [];
-
-    function addDuct() {
-      const type = document.getElementById('ductType').value;
-      const length = document.getElementById('ductLength').value;
-      const breadth = document.getElementById('ductBreadth').value;
-      const height = document.getElementById('ductHeight').value;
-      const qty = document.getElementById('ductQty').value;
-
-      if (!type || !length || !breadth || !height || !qty) {
-        alert("Fill all fields.");
-        return;
-      }
-
-      const newRow = {
-        type, length, breadth, height, qty
-      };
-
-      ductData.push(newRow);
-      renderTable();
-    }
-
-    function renderTable() {
-      tableBody.innerHTML = '';
-      ductData.forEach((item, index) => {
-        tableBody.innerHTML += `
-          <tr>
-            <td>${item.type}</td>
-            <td>${item.length}</td>
-            <td>${item.breadth}</td>
-            <td>${item.height}</td>
-            <td>${item.qty}</td>
-            <td>
-              <button onclick="editRow(${index})">Edit</button>
-              <button onclick="deleteRow(${index})">Delete</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function deleteRow(i) {
-      ductData.splice(i, 1);
-      renderTable();
-    }
-
-    function editRow(i) {
-      const d = ductData[i];
-      document.getElementById('ductType').value = d.type;
-      document.getElementById('ductLength').value = d.length;
-      document.getElementById('ductBreadth').value = d.breadth;
-      document.getElementById('ductHeight').value = d.height;
-      document.getElementById('ductQty').value = d.qty;
-      deleteRow(i);
-    }
-
-    function submitDucts() {
-      alert("Submitted duct entries!");
-      console.log("Submitting:", ductData);
-    }
-
-    function printPage() {
-      window.print();
-    }
-
-    function exportTable() {
-      let csv = "Type,Length,Breadth,Height,Qty\n";
-      ductData.forEach(d => {
-        csv += `${d.type},${d.length},${d.breadth},${d.height},${d.qty}\n`;
-      });
-
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = "duct_data.csv";
-      a.click();
-    }
-  </script>
-  <!-- Toast Notifications -->
   {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-        {% for category, message in messages %}
-          <div style="padding: 10px 20px; margin-top: 5px; border-radius: 6px; color: white;
-                      background-color: {% if category == 'success' %}#38a169{% elif category == 'error' %}#e53e3e{% else %}#4a5568{% endif %};">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
-  <script>
-    // Auto-hide flash messages
-    setTimeout(() => {
-      const alerts = document.querySelectorAll('[style*="position: fixed"] > div');
-      alerts.forEach(alert => alert.style.display = 'none');
-    }, 3000);
-  </script>
-
+  {% if messages %}
+    <script>
+      {% for category, message in messages %}
+        alert("{{ message }}");
+      {% endfor %}
+    </script>
+  {% endif %}
+{% endwith %}
+  
 </body>
 </html>
