@@ -584,67 +584,65 @@ def seed_dummy_data():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Dummy employee
-    c.execute("SELECT * FROM employees WHERE email = 'admin@ducting.com'")
+    # Dummy Employee
+    hashed_password = generate_password_hash('admin123')
+    c.execute("SELECT * FROM employees WHERE email='admin@ducting.com'")
     if not c.fetchone():
-        hashed_pw = generate_password_hash("admin123")
         c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                  ("Admin User", "admin@ducting.com", hashed_pw, "Admin"))
+                  ('Admin User', 'admin@ducting.com', hashed_password, 'Admin'))
 
-    # Dummy vendor
-    c.execute("SELECT * FROM vendors WHERE name = 'ABC Supplies'")
+    # Dummy Vendor
+    c.execute("SELECT * FROM vendors WHERE name='ABC Supplies'")
     if not c.fetchone():
         c.execute("INSERT INTO vendors (name, gst_number, address) VALUES (?, ?, ?)",
-                  ("ABC Supplies", "27ABCDE1234F2Z5", "Chennai"))
+                  ('ABC Supplies', '27ABCDE1234F2Z5', 'Chennai'))
 
-    # Get vendor ID
-    vendor_id = c.execute("SELECT id FROM vendors WHERE name = 'ABC Supplies'").fetchone()[0]
+        vendor_id = c.lastrowid
 
-    # Dummy project
+        # Dummy Contact
+        c.execute("INSERT INTO vendor_contacts (vendor_id, name, email, phone) VALUES (?, ?, ?, ?)",
+                  (vendor_id, 'Kumar', 'kumar@abc.com', '9876543210'))
+
+    # Dummy Project
     c.execute("SELECT * FROM projects WHERE enquiry_id = 'ENQ-001'")
     if not c.fetchone():
         c.execute("""INSERT INTO projects (
             enquiry_id, vendor_id, gst_number, address, quotation_ro,
             start_date, end_date, location, incharge, notes, file, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
-            "ENQ-001", vendor_id, "27ABCDE1234F2Z5", "Chennai", "Q123",
-            "2025-07-01", "2025-07-15", "Bangalore", "Er. Kumar", "Test project", "", "Design Process"
+            'ENQ-001', 1, '27ABCDE1234F2Z5', 'Chennai', 'QRO-001',
+            '2025-07-01', '2025-07-31', 'Bangalore', 'John', 'Initial Project', '', 'Design Process'
         ))
-        project_id = c.lastrowid
-    else:
-        project_id = c.execute("SELECT id FROM projects WHERE enquiry_id = 'ENQ-001'").fetchone()[0]
 
-    # Dummy measurement sheet
-    c.execute("SELECT * FROM measurement_sheet WHERE project_id = ?", (project_id,))
+    # Dummy Measurement Sheet
+    c.execute("SELECT * FROM measurement_sheet WHERE client_name='Client A'")
     if not c.fetchone():
         c.execute("""INSERT INTO measurement_sheet (
-            project_id, client_name, company_name, project_location,
-            engineer_name, phone
+            project_id, client_name, company_name, project_location, engineer_name, phone
         ) VALUES (?, ?, ?, ?, ?, ?)""", (
-            project_id, "Client A", "Company A", "Bangalore Site", "Er. Kumar", "9999999999"
+            1, 'Client A', 'Company A', 'Bangalore Site', 'Er. Kumar', '9999999999'
         ))
 
-    # Dummy duct entry
-    c.execute("SELECT * FROM measurement_entries WHERE project_id = ?", (project_id,))
+    # Dummy Duct Entry
+    c.execute("SELECT * FROM measurement_entries WHERE duct_no='D1'")
     if not c.fetchone():
         c.execute("""INSERT INTO measurement_entries (
             project_id, duct_no, duct_type, duct_size, quantity, remarks
         ) VALUES (?, ?, ?, ?, ?, ?)""", (
-            project_id, "D001", "Rectangular", "600x300", 10, "Test duct"
+            1, 'D1', 'Rectangular', '500x300', 4, 'Main supply duct'
         ))
 
-    # Dummy production entry
-    c.execute("SELECT * FROM production WHERE project_id = ?", (project_id,))
+    # Dummy Production
+    c.execute("SELECT * FROM production WHERE project_id = 1")
     if not c.fetchone():
         c.execute("""INSERT INTO production (
             project_id, phase, done, total, percentage, date
         ) VALUES (?, ?, ?, ?, ?, ?)""", (
-            project_id, "Sheet Cutting", 0, 250, 0, datetime.now().strftime('%Y-%m-%d')
+            1, 'Sheet Cutting', 0, 250, 0, datetime.now().strftime('%Y-%m-%d')
         ))
 
     conn.commit()
     conn.close()
-
 
 if __name__ == '__main__':
     init_db()
