@@ -203,15 +203,13 @@ def projects():
 @app.route("/projects_page")
 def projects_page():
     conn = sqlite3.connect('erp.db')
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('''
-        SELECT p.*, v.name 
-        FROM projects p 
-        LEFT JOIN vendors v ON p.vendor_id = v.id
-    ''')
+
+    c.execute("SELECT * FROM projects")
     projects = c.fetchall()
 
-    c.execute("SELECT id, name FROM vendors")  # <-- for dropdown
+    c.execute("SELECT id, name FROM vendors")  # for dropdown
     vendors = c.fetchall()
 
     conn.close()
