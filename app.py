@@ -584,34 +584,69 @@ def seed_dummy_data():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Dummy employees
-    c.execute("INSERT OR IGNORE INTO employees (name, email, password) VALUES (?, ?, ?)",
-              ("John Doe", "john@example.com", generate_password_hash("1234")))
-    
-    # Dummy vendors
-    c.execute("INSERT OR IGNORE INTO vendors (name, gst, address) VALUES (?, ?, ?)",
-              ("ABC Supplies", "27ABCDE1234F2Z5", "Chennai"))
+    # Dummy employee
+    c.execute("SELECT * FROM employees WHERE email = 'admin@ducting.com'")
+    if not c.fetchone():
+        hashed_pw = generate_password_hash("admin123")
+        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
+                  ("Admin User", "admin@ducting.com", hashed_pw, "Admin"))
+
+    # Dummy vendor
+    c.execute("SELECT * FROM vendors WHERE name = 'ABC Supplies'")
+    if not c.fetchone():
+        c.execute("INSERT INTO vendors (name, gst_number, address) VALUES (?, ?, ?)",
+                  ("ABC Supplies", "27ABCDE1234F2Z5", "Chennai"))
+
+    # Get vendor ID
+    vendor_id = c.execute("SELECT id FROM vendors WHERE name = 'ABC Supplies'").fetchone()[0]
 
     # Dummy project
-    c.execute("INSERT OR IGNORE INTO projects (id, enquiry_id, vendor_id, location) VALUES (?, ?, ?, ?)",
-              ("proj001", "ENQ-001", 1, "Bangalore"))
+    c.execute("SELECT * FROM projects WHERE enquiry_id = 'ENQ-001'")
+    if not c.fetchone():
+        c.execute("""INSERT INTO projects (
+            enquiry_id, vendor_id, gst_number, address, quotation_ro,
+            start_date, end_date, location, incharge, notes, file, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+            "ENQ-001", vendor_id, "27ABCDE1234F2Z5", "Chennai", "Q123",
+            "2025-07-01", "2025-07-15", "Bangalore", "Er. Kumar", "Test project", "", "Design Process"
+        ))
+        project_id = c.lastrowid
+    else:
+        project_id = c.execute("SELECT id FROM projects WHERE enquiry_id = 'ENQ-001'").fetchone()[0]
 
     # Dummy measurement sheet
-    c.execute("INSERT OR IGNORE INTO measurement_sheet (project_id, client_name, company_name, engineer_name, phone, project_location) VALUES (?, ?, ?, ?, ?, ?)",
-              ("proj001", "Client A", "Company A", "Er. Kumar", "9999999999", "Bangalore Site"))
+    c.execute("SELECT * FROM measurement_sheet WHERE project_id = ?", (project_id,))
+    if not c.fetchone():
+        c.execute("""INSERT INTO measurement_sheet (
+            project_id, client_name, company_name, project_location,
+            engineer_name, phone
+        ) VALUES (?, ?, ?, ?, ?, ?)""", (
+            project_id, "Client A", "Company A", "Bangalore Site", "Er. Kumar", "9999999999"
+        ))
+
+    # Dummy duct entry
+    c.execute("SELECT * FROM measurement_entries WHERE project_id = ?", (project_id,))
+    if not c.fetchone():
+        c.execute("""INSERT INTO measurement_entries (
+            project_id, duct_no, duct_type, duct_size, quantity, remarks
+        ) VALUES (?, ?, ?, ?, ?, ?)""", (
+            project_id, "D001", "Rectangular", "600x300", 10, "Test duct"
+        ))
+
     # Dummy production entry
-    c.execute("INSERT OR IGNORE INTO production (project_id, area_sqm, sheet_cutting, plasma_fabrication, boxing_assembly, quality_checking, dispatch, overall_progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-              ("proj001", 250, 0, 0, 0, 0, 0, 0))
+    c.execute("SELECT * FROM production WHERE project_id = ?", (project_id,))
+    if not c.fetchone():
+        c.execute("""INSERT INTO production (
+            project_id, phase, done, total, percentage, date
+        ) VALUES (?, ?, ?, ?, ?, ?)""", (
+            project_id, "Sheet Cutting", 0, 250, 0, datetime.now().strftime('%Y-%m-%d')
+        ))
 
     conn.commit()
     conn.close()
-# ---------- APP STARTUP ----------
+
+
 if __name__ == '__main__':
-    # Ensure database exists
-    if not os.path.exists('erp.db'):
-        init_db()
-        seed_dummy_data()
-    else:
-        # Optional reseed each time
-        seed_dummy_data()
+    init_db()
+    seed_dummy_data()
     app.run(debug=True)
