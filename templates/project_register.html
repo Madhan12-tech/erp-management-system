@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2>Project Registration</h2>
+    <form method="POST" action="/project_register">
+      <div class="mb-3">
+        <label class="form-label">Select Vendor:</label>
+        <select id="vendorSelect" name="vendor_id" class="form-select" required>
+          <option value="">-- Select Vendor --</option>
+          {% for vendor in vendors %}
+            <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">GST Number:</label>
+        <input type="text" id="gst" name="gst" class="form-control" readonly>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Address:</label>
+        <input type="text" id="address" name="address" class="form-control" readonly>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Project Name:</label>
+        <input type="text" name="project_name" class="form-control" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register Project</button>
+    </form>
+  </div>
+
+  <script>
+    const vendorData = {{ vendor_json | safe }};
+
+    document.getElementById('vendorSelect').addEventListener('change', function () {
+      const selectedId = this.value;
+      const vendor = vendorData.find(v => v.id == selectedId);
+
+      if (vendor) {
+        document.getElementById('gst').value = vendor.gst;
+        document.getElementById('address').value = vendor.address;
+      } else {
+        document.getElementById('gst').value = '';
+        document.getElementById('address').value = '';
+      }
+    });
+  </script>
+</body>
+</html>
