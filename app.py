@@ -485,7 +485,7 @@ def mark_completion(project_id):
     flash("✅ Phase 2: Design marked as completed.", "success")
     return redirect(url_for('projects_page'))
 
-@app.route('/submit_for_approval/<int:project_id>', methods=['POST'])
+@app.route('/submit_for_approval_final/<int:project_id>', methods=['POST'])
 def submit_for_approval(project_id):
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
