@@ -163,9 +163,9 @@ def seed_dummy_data():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Seed employee with dummy login
-    c.execute("INSERT OR IGNORE INTO employees (name, email, password) VALUES (?, ?, ?)", 
-              ('John Doe', 'john.doe@example.com', 'password123'))
+    hashed_password = generate_password_hash('password123')
+    c.execute("INSERT OR IGNORE INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)", 
+              ('John Doe', 'john.doe@example.com', hashed_password, 'admin'))
 
     conn.commit()
     conn.close()
