@@ -618,15 +618,7 @@ def upload_drawing(project_id):
 
 
 # ---------- APPROVE PROJECT ----------
-@app.route('/approve_project/<int:project_id>')
-def approve_project(project_id):
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
-    c.execute("UPDATE projects SET status = 'Approved' WHERE id = ?", (project_id,))
-    conn.commit()
-    conn.close()
-    flash("Project approved and moved to production", "success")
-    return redirect(url_for('dashboard'))
+
 
 # ---------- EXPORT PROJECT SUMMARY PDF ----------
 @app.route("/export_pdf/<int:project_id>")
