@@ -160,13 +160,11 @@ init_db()
 
 # ---------- INSERT DUMMY DATA ----------
 
-from werkzeug.security import generate_password_hash
-
 def seed_dummy_data():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Insert dummy vendors (optional but useful for testing)
+    # Insert dummy vendors
     vendors = [
         ('ABC Constructions', 'GSTTN1234A1Z5', 'Chennai, Tamil Nadu'),
         ('Skyline Infra', 'GSTMH5678B2X6', 'Mumbai, Maharashtra'),
@@ -175,17 +173,21 @@ def seed_dummy_data():
     for name, gst, address in vendors:
         c.execute("INSERT OR IGNORE INTO vendors (name, gst, address) VALUES (?, ?, ?)", (name, gst, address))
 
-    # Insert dummy employees with hashed passwords
+    # Static pre-hashed passwords
     employees = [
-        ('John Doe', 'john.doe@example.com', generate_password_hash('password123'), 'admin'),
-        ('Priya Sharma', 'priya.sharma@example.com', generate_password_hash('securepass'), 'admin'),
-        ('Arun Kumar', 'arun.kumar@example.com', generate_password_hash('adminpass'), 'admin')
+        # password: password123
+        ('John Doe', 'john.doe@example.com', 'scrypt:32768:8:1$n7poivAyM3OXyaAT$d48866d156e1b6c7103f76c44e679df8d422fc94785292f0f195dbef0f570726ff946c9abb121973d640d7e54badf6d34a34504cd46a454f9d5b004fbd023244', 'admin'),
+        # password: securepass
+        ('Priya Sharma', 'priya.sharma@example.com', 'scrypt:32768:8:1$HbfOTgAP9WbeEED0$93363aecf1f7def22c0a841303dcb495663a6104066f950e27f53fead79adc924c854a80e34580f3ba77c809a80f59ad3c986efe6bcfe82f4ec7b966da8a5dd0', 'admin'),
+        # password: adminpass
+        ('Arun Kumar', 'arun.kumar@example.com', 'scrypt:32768:8:1$TL5UKNK934ynl7uN$39809b96d5dda2632b47e461f3daea416ba8e6633551086a429d7943d736b6b8d1c13ab8616ea7d98b228ca86ef36f4b6cc095b977acf5f94553143f6a7fbc8f', 'admin')
     ]
     for name, email, password_hash, role in employees:
         c.execute("INSERT OR IGNORE INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)", (name, email, password_hash, role))
 
     conn.commit()
     conn.close()
+
 # ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
