@@ -310,10 +310,11 @@ def vendor_register():
 def get_vendors():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT id, name, gst_number, address FROM vendors")
+    c.execute("SELECT id, name, gst, address FROM vendors")  # ✅ fixed gst column name
     data = c.fetchall()
     conn.close()
     return {'vendors': data}
+
 
 # ---------- ADD PROJECT ----------
 @app.route('/add_project', methods=['POST'])
