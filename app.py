@@ -859,9 +859,10 @@ def export_summary_pdf():
     return send_file(output, download_name="Production_Summary.pdf", as_attachment=True)
 
 # ---------- DATABASE INITIALIZATION WITH DUMMY DATA ----------
-
 if __name__ == '__main__':
     if not os.path.exists('erp.db'):
         init_db()
-        seed_dummy_data()
+
+    seed_dummy_data()  # ✅ Always call it (safe due to INSERT OR IGNORE)
+
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
