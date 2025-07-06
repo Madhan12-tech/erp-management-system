@@ -1,165 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Production Progress | ERP</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-    }
-    h2 {
-      color: #2c3e50;
-      margin-bottom: 20px;
-    }
-    .project-summary {
-      display: flex;
-      gap: 40px;
-    }
-    .left-overall {
-      width: 250px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .left-overall h3 {
-      margin: 10px 0;
-    }
-    .progress-circle {
-      font-size: 36px;
-      font-weight: bold;
-      color: #27ae60;
-      cursor: pointer;
-    }
-    .right-table {
-      flex: 1;
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-    input[type="number"] {
-      width: 80px;
-      padding: 5px;
-    }
-    .btn {
-      padding: 6px 12px;
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .export-btns {
-      margin-top: 20px;
-    }
-    .export-btns a {
-      margin-right: 10px;
-      background: #2ecc71;
-      padding: 8px 14px;
-      border-radius: 6px;
-      color: white;
-      text-decoration: none;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Production Module | Ducting ERP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #dcdcdc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 5px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-update {
+            background-color: #28a745;
+        }
+
+        .btn-export {
+            background-color: #17a2b8;
+        }
+
+        .toast {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .error {
+            background-color: #dc3545 !important;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Production Progress</h2>
-    <div class="project-summary">
-      <div class="left-overall">
-        <h3>Overall Progress</h3>
-        <div class="progress-circle" onclick="showBreakdown()">
-          {{ overall_percent }}%
-        </div>
-        <div class="export-btns">
-          <a href="/export_pdf/{{ project_id }}">Export PDF</a>
-          <a href="/export_excel/{{ project_id }}">Export Excel</a>
-        </div>
-      </div>
+    <div class="container">
+        <h2>Production Progress</h2>
 
-      <div class="right-table">
-        <form method="POST" action="/update_production/{{ project_id }}">
-          <table>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast {{ 'error' if category == 'error' else '' }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <table>
             <thead>
-              <tr>
-                <th>Phase</th>
-                <th>Total Area (sqm)</th>
-                <th>Completed</th>
-                <th>Progress (%)</th>
-              </tr>
+                <tr>
+                    <th>Project ID</th>
+                    <th>Client</th>
+                    <th>Area (sqm)</th>
+                    <th>Sheet Cutting (%)</th>
+                    <th>Plasma & Fabrication (%)</th>
+                    <th>Boxing & Assembly (%)</th>
+                    <th>Quality Checking (%)</th>
+                    <th>Dispatch (%)</th>
+                    <th>Update</th>
+                    <th>Export PDF</th>
+                </tr>
             </thead>
             <tbody>
-              {% for row in production_data %}
-              <tr>
-                <td>{{ row.phase }}</td>
-                <td>{% if row.phase_num < 4 %}{{ row.total_area }}{% else %}-{% endif %}</td>
-                <td>
-                  {% if row.phase_num < 4 %}
-                    <input type="number" name="done_{{ row.phase_num }}" value="{{ row.done_area }}" min="0" max="{{ row.total_area }}">
-                  {% else %}
-                    <input type="number" name="done_{{ row.phase_num }}" value="{{ row.done_percent }}" min="0" max="100">
-                  {% endif %}
-                </td>
-                <td>{{ row.percent }}%</td>
-              </tr>
-              {% endfor %}
+                {% for row in data %}
+                <tr>
+                    <form action="/update_production/{{ row[0] }}" method="POST">
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td><input type="number" name="sheet_cutting" value="{{ row[3] }}" min="0" max="100"></td>
+                        <td><input type="number" name="plasma_fabrication" value="{{ row[4] }}" min="0" max="100"></td>
+                        <td><input type="number" name="boxing_assembly" value="{{ row[5] }}" min="0" max="100"></td>
+                        <td><input type="number" name="quality_checking" value="{{ row[6] }}" min="0" max="100"></td>
+                        <td><input type="number" name="dispatch" value="{{ row[7] }}" min="0" max="100"></td>
+                        <td><button type="submit" class="btn btn-update">Update</button></td>
+                        <td><a href="/export_pdf/{{ row[0] }}" class="btn btn-export" target="_blank">Export</a></td>
+                    </form>
+                </tr>
+                {% endfor %}
             </tbody>
-          </table>
-          <button class="btn" type="submit">Update Progress</button>
-        </form>
-      </div>
+        </table>
     </div>
-
-    <div id="breakdownSection" class="hidden">
-      <h3>Detailed Progress Breakdown</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Phase</th>
-            <th>Progress</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for detail in breakdown %}
-          <tr>
-            <td>{{ detail.type }}</td>
-            <td>{{ detail.phase }}</td>
-            <td>{{ detail.progress }}%</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <script>
-    function showBreakdown() {
-      const bd = document.getElementById("breakdownSection");
-      bd.classList.toggle("hidden");
-    }
-  </script>
 </body>
 </html>
