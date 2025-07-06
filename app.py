@@ -6,14 +6,13 @@ import pandas as pd
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 app = Flask(__name__)
-app.secret_key = 'secretkey'
+app.secret_key = 'supersecretkey'
 
-# ---------- DATABASE INITIALIZATION ----------
+# -------------------- DATABASE SETUP --------------------
 def init_db():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
@@ -31,23 +30,13 @@ def init_db():
 
     # Vendors
     c.execute('''
-    CREATE TABLE IF NOT EXISTS vendors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        gst TEXT,
-        address TEXT
-    )
-''')
-
-    c.execute('''
-CREATE TABLE IF NOT EXISTS project_registration (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER,
-    client_name TEXT,
-    company_name TEXT,
-    FOREIGN KEY(project_id) REFERENCES projects(id)
-)
-''')
+        CREATE TABLE IF NOT EXISTS vendors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            gst TEXT,
+            address TEXT
+        )
+    ''')
 
     # Vendor Contacts
     c.execute('''
@@ -81,8 +70,34 @@ CREATE TABLE IF NOT EXISTS project_registration (
         )
     ''')
 
+    # 🆕 Project Enquiry
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS project_enquiry (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            enquiry_id TEXT,
+            client_name TEXT,
+            company_name TEXT,
+            site_engineer TEXT,
+            mobile_number TEXT,
+            location TEXT,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # Project Registration
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS project_registration (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            client_name TEXT,
+            company_name TEXT,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        )
+    ''')
+
     # Measurement Sheet
-    c.execute("""
+    c.execute('''
         CREATE TABLE IF NOT EXISTS measurement_sheet (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER,
@@ -93,9 +108,9 @@ CREATE TABLE IF NOT EXISTS project_registration (
             location TEXT,
             area_sqm REAL DEFAULT 0
         )
-    """)
+    ''')
 
-    # Duct Entries
+    # Measurement Entries
     c.execute('''
         CREATE TABLE IF NOT EXISTS measurement_entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,7 +123,6 @@ CREATE TABLE IF NOT EXISTS project_registration (
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )
     ''')
-
 
     # Production Status
     c.execute('''
@@ -140,6 +154,9 @@ CREATE TABLE IF NOT EXISTS project_registration (
 
     conn.commit()
     conn.close()
+
+# Run DB initializer on startup
+init_db()
 
 # ---------- INSERT DUMMY DATA ----------
 def insert_dummy_data():
