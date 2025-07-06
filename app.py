@@ -256,17 +256,26 @@ def register():
         email = request.form['email']
         password = request.form['password']
         role = request.form['role']
+        name = first_name + " " + last_name
 
-        name = first_name + " " + last_name  # 👈 Combine names
+        try:
+            with sqlite3.connect("erp.db", timeout=10) as conn:
+                c = conn.cursor()
+                c.execute("""
+                    INSERT INTO employees (name, email, password, role)
+                    VALUES (?, ?, ?, ?)
+                """, (name, email, generate_password_hash(password), role))
+                conn.commit()
 
-        conn = sqlite3.connect("erp.db")
-        c = conn.cursor()
-        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                  (name, email, generate_password_hash(password), role))
-        conn.commit()
-        conn.close()
-        flash("Employee registered successfully!", "success")
-        return redirect(url_for("login"))
+            flash("Employee registered successfully!", "success")
+            return redirect(url_for("login"))
+
+        except sqlite3.IntegrityError:
+            flash("Email already exists. Please use a different one.", "error")
+
+        except Exception as e:
+            flash(f"Registration failed: {str(e)}", "error")
+
     return render_template("employee_register.html")
 
 # ---------- LOGOUT ----------
