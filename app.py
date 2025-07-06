@@ -850,35 +850,7 @@ def export_summary_pdf():
     return send_file(output, download_name="Production_Summary.pdf", as_attachment=True)
 
 # ---------- DATABASE INITIALIZATION WITH DUMMY DATA ----------
-def seed_dummy_data():
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
 
-    # Insert dummy vendors
-    vendors = [
-        ('ABC Constructions', 'GSTTN1234A1Z5', 'Chennai, Tamil Nadu'),
-        ('Skyline Infra', 'GSTMH5678B2X6', 'Mumbai, Maharashtra'),
-        ('GreenBuild Ltd', 'GSTKA9012C3Y7', 'Bangalore, Karnataka')
-    ]
-    for name, gst, address in vendors:
-        c.execute("INSERT OR IGNORE INTO vendors (name, gst_number, address) VALUES (?, ?, ?)", (name, gst, address))
-
-    # Insert dummy employees
-    employees = [
-        ('John Doe', 'john.doe@example.com', 'password123'),
-        ('Priya Sharma', 'priya.sharma@example.com', 'securepass'),
-        ('Arun Kumar', 'arun.kumar@example.com', 'adminpass')
-    ]
-    for name, email, password in employees:
-        c.execute("INSERT OR IGNORE INTO employees (name, email, password) VALUES (?, ?, ?)", (name, email, password))
-
-    # Optional: Insert a dummy project to test dropdowns/project_id pattern
-    c.execute("INSERT OR IGNORE INTO projects (project_id, client_name, vendor_name, quotation_ro, start_date, end_date, location, source_drawing, gst_number, address, project_incharge, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-        ("VE/TN/2526/E001", "ABC Constructions", "ABC Constructions", "RO1234", "2025-07-05", "2025-07-31", "Chennai Site", "", "GSTTN1234A1Z5", "Chennai, Tamil Nadu", "John Doe", "Test notes", "Preparation"))
-
-
-    conn.commit()
-    conn.close()
 
 if __name__ == '__main__':
     init_db()
