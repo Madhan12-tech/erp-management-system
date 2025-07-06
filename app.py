@@ -182,6 +182,10 @@ def home():
 def favicon():
     return '', 204  # Return empty 204 No Content to skip errors
 
+@app.route('/projects')
+def projects():
+    return redirect(url_for('dashboard'))  # or render_template(...) if it's a real page
+
 # ---------- REGISTER EMPLOYEE ----------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
