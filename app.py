@@ -598,10 +598,11 @@ def production_summary():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
+    # Corrected query: removed pr.enquiry_id and used valid columns
     c.execute("""
         SELECT 
             p.id AS project_id,
-            pr.enquiry_id,
+            pr.project_id,
             pr.location,
             pr.client_name,
             pr.company_name,
@@ -612,7 +613,7 @@ def production_summary():
             s.quality_check_progress,
             s.dispatch_progress
         FROM projects p
-        JOIN project_registration pr ON pr.project_id = p.id
+        JOIN project_enquiry pr ON pr.project_id = p.id
         JOIN measurement_sheet m ON m.project_id = p.id
         JOIN production_status s ON s.project_id = p.id
     """)
@@ -624,7 +625,7 @@ def production_summary():
     for row in rows:
         project = {
             'project_id': row[0],
-            'enquiry_id': row[1],
+            'enquiry_id': row[1],  # this now holds pr.project_id
             'location': row[2],
             'client_name': row[3],
             'company_name': row[4],
