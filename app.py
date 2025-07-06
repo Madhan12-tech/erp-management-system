@@ -31,13 +31,13 @@ def init_db():
 
     # Vendors
     c.execute('''
-        CREATE TABLE IF NOT EXISTS vendors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            gst_number TEXT,
-            address TEXT
-        )
-    ''')
+    CREATE TABLE IF NOT EXISTS vendors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        gst TEXT,
+        address TEXT
+    )
+''')
 
     # Vendor Contacts
     c.execute('''
