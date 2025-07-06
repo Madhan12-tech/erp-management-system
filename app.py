@@ -129,11 +129,8 @@ def insert_dummy_data():
                   ('Admin User', 'admin@ducting.com', hashed_password, 'Admin'))
 
     # Dummy Vendor
-    c.execute("SELECT * FROM vendors WHERE name='ABC Fabricators'")
-    if not c.fetchone():
-        c.execute("INSERT INTO vendors (name, gst_number, address) VALUES (?, ?, ?)",
-                  ('ABC Fabricators', '29ABCDE1234F2Z5', 'Bangalore, Karnataka'))
-
+    c.execute("INSERT INTO vendors (name, gst, address) VALUES (?, ?, ?)",
+          ('ABC Fabricators', '29ABCDE1234F2Z5', 'Bangalore, Karnataka'))
     # Dummy Contacts
     vendor_id = c.execute("SELECT id FROM vendors WHERE name='ABC Fabricators'").fetchone()[0]
     c.execute("SELECT * FROM vendor_contacts WHERE vendor_id=?", (vendor_id,))
