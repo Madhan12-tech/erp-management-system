@@ -135,23 +135,6 @@ def projects():
     projects = cur.fetchall()
     return render_template('projects.html', projects=projects)
 
-@app.route('/add_measurement', methods=['POST'])
-def add_measurement():
-    project_id = request.form['project_id']
-    client_name = request.form['client_name']
-    site_location = request.form['site_location']
-    engineer_name = request.form['engineer_name']
-    mobile = request.form['mobile']
-
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute('''
-        UPDATE projects SET
-        client_name = ?, site_location = ?, engineer_name = ?, mobile = ?, status = ?
-        WHERE id = ?
-    ''', (client_name, site_location, engineer_name, mobile, 'preparation', project_id))
-    conn.commit()
-    return '', 200
 
 @app.route('/add_duct', methods=['POST'])
 def add_duct():
@@ -168,6 +151,24 @@ def add_duct():
         INSERT INTO ducts (project_id, type, length, width, height, quantity)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (project_id, type_, length, width, height, quantity))
+    conn.commit()
+    return '', 200
+
+@app.route('/add_measurement', methods=['POST'])
+def add_measurement():
+    project_id = request.form['project_id']
+    client_name = request.form['client_name']
+    site_location = request.form['site_location']
+    engineer_name = request.form['engineer_name']
+    mobile = request.form['mobile']
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''
+        UPDATE projects SET
+        client_name = ?, site_location = ?, engineer_name = ?, mobile = ?, status = ?
+        WHERE id = ?
+    ''', (client_name, site_location, engineer_name, mobile, 'preparation', project_id))
     conn.commit()
     return '', 200
 
