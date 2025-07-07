@@ -9,8 +9,6 @@ from reportlab.lib.pagesizes import A4
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
-import random
-import string
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -47,6 +45,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             vendor_id INTEGER,
             name TEXT,
+            email TEXT,
             phone TEXT,
             FOREIGN KEY (vendor_id) REFERENCES vendors(id)
         )
@@ -71,85 +70,25 @@ def init_db():
             FOREIGN KEY (vendor_id) REFERENCES vendors(id)
         )
     ''')
-
-    # Project Enquiry
+    # Vendor Bank Details
     c.execute('''
-        CREATE TABLE IF NOT EXISTS project_enquiry (
+        CREATE TABLE IF NOT EXISTS vendor_banks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            enquiry_id TEXT,
-            client_name TEXT,
-            company_name TEXT,
-            site_engineer TEXT,
-            mobile_number TEXT,
-            location TEXT,
-            FOREIGN KEY(project_id) REFERENCES projects(id)
+            vendor_id INTEGER,
+            bank_name TEXT,
+            account_no TEXT,
+            ifsc_code TEXT,
+            FOREIGN KEY (vendor_id) REFERENCES vendors(id)
         )
     ''')
 
-    # Project Registration
+    # Design Preparation Phase (Phase 1)
     c.execute('''
-        CREATE TABLE IF NOT EXISTS project_registration (
+        CREATE TABLE IF NOT EXISTS preparation (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER,
-            client_name TEXT,
-            company_name TEXT,
-            FOREIGN KEY(project_id) REFERENCES projects(id)
-        )
-    ''')
-
-    # Measurement Sheet
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS measurement_sheet (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            client_name TEXT,
-            company_name TEXT,
             site_engineer TEXT,
             mobile TEXT,
-            location TEXT,
-            area_sqm REAL DEFAULT 0
-        )
-    ''')
-
-    # Measurement Entries
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS measurement_entries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            duct_no TEXT,
-            duct_type TEXT,
-            duct_size TEXT,
-            quantity INTEGER,
-            remarks TEXT,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-
-    # Production Status
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS production_status (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id TEXT,
-            sheet_cutting_progress REAL,
-            plasma_fab_progress REAL,
-            boxing_assembly_progress REAL,
-            quality_check_progress REAL,
-            dispatch_progress REAL,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-
-    # Production Tracking
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS production (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            phase TEXT,
-            done REAL DEFAULT 0,
-            total REAL DEFAULT 0,
-            percentage REAL DEFAULT 0,
-            date TEXT,
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )
     ''')
@@ -157,319 +96,360 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Run DB initializer on startup
+# Initialize DB on startup
 init_db()
 
-# -------------------- SEED DUMMY DATA --------------------
-def seed_dummy_data():
+# Dummy admin if not exists
+def create_dummy_admin():
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-
-    # Dummy Vendors
-    vendors = [
-        ('ABC Constructions', 'GSTTN1234A1Z5', 'Chennai, Tamil Nadu'),
-        ('Skyline Infra', 'GSTMH5678B2X6', 'Mumbai, Maharashtra'),
-        ('GreenBuild Ltd', 'GSTKA9012C3Y7', 'Bangalore, Karnataka')
-    ]
-    for name, gst, address in vendors:
-        c.execute("INSERT OR IGNORE INTO vendors (name, gst, address) VALUES (?, ?, ?)", (name, gst, address))
-
-    # Dummy Employees with hashed passwords
-    employees = [
-        # password: password123
-        ('John Doe', 'john.doe@example.com', generate_password_hash('password123'), 'admin'),
-        # password: securepass
-        ('Priya Sharma', 'priya.sharma@example.com', generate_password_hash('securepass'), 'admin'),
-        # password: adminpass
-        ('Arun Kumar', 'arun.kumar@example.com', generate_password_hash('adminpass'), 'admin')
-    ]
-    for name, email, password_hash, role in employees:
-        c.execute("INSERT OR IGNORE INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                  (name, email, password_hash, role))
-
-    conn.commit()
+    c.execute("SELECT * FROM employees WHERE email = ?", ('admin@erp.com',))
+    if not c.fetchone():
+        hashed_password = generate_password_hash('admin123')
+        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
+                  ('Admin', 'admin@erp.com', hashed_password, 'admin'))
+        conn.commit()
     conn.close()
 
-# Optional: Uncomment to run once
-# seed_dummy_data()
+create_dummy_admin()
 
-# -------------------- LOGIN --------------------
+# ---------- AUTH ROUTES ----------
+
+@app.route('/')
+def home():
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email'].strip()
+        email = request.form['email']
         password = request.form['password']
+        conn = sqlite3.connect('erp.db')
+        c = conn.cursor()
+        c.execute("SELECT id, name, password FROM employees WHERE email = ?", (email,))
+        user = c.fetchone()
+        conn.close()
 
-        with sqlite3.connect('erp.db') as conn:
-            c = conn.cursor()
-            c.execute("SELECT id, name, email, password, role FROM employees WHERE email = ?", (email,))
-            user = c.fetchone()
-
-        if user and check_password_hash(user[3], password):
+        if user and check_password_hash(user[2], password):
             session['user_id'] = user[0]
-            session['name'] = user[1]
-            session['email'] = user[2]
-            session['role'] = user[4]
-            flash("Login successful!", "success")
+            session['user_name'] = user[1]
+            flash("Login successful", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid credentials. Please try again.", "error")
+            flash("Invalid credentials", "error")
             return redirect(url_for('login'))
+    return render_template("login.html")
 
-    return render_template('login.html')
-
-# -------------------- LOGOUT --------------------
 @app.route('/logout')
 def logout():
     session.clear()
-    flash("You have been logged out.", "success")
+    flash("Logged out successfully", "success")
     return redirect(url_for('login'))
 
-# -------------------- EMPLOYEE REGISTRATION --------------------
-@app.route("/register", methods=["GET", "POST"])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == "POST":
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
+    if request.method == 'POST':
+        name = request.form['name']
         email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']
+        password = generate_password_hash(request.form['password'])
 
-        name = first_name + " " + last_name
-        conn = sqlite3.connect("erp.db")
+        conn = sqlite3.connect('erp.db')
         c = conn.cursor()
-        c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
-                  (name, email, generate_password_hash(password), role))
-        conn.commit()
-        conn.close()
-        flash("Employee registered successfully!", "success")
-        return redirect(url_for("login"))
-    return render_template("employee_register.html")
+        try:
+            c.execute("INSERT INTO employees (name, email, password, role) VALUES (?, ?, ?, ?)",
+                      (name, email, password, 'employee'))
+            conn.commit()
+            flash("Registration successful. Please login.", "success")
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash("Email already registered", "error")
+            return redirect(url_for('register'))
+        finally:
+            conn.close()
+    return render_template("register.html")
 
-# -------------------- VENDOR REGISTRATION --------------------
+# ---------- DASHBOARD ----------
+
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template("dashboard.html")
+
+
+# ---------- VENDOR REGISTRATION ----------
+
 @app.route('/vendor_register', methods=['GET', 'POST'])
 def vendor_register():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         name = request.form['vendor_name']
         gst = request.form['gst']
         address = request.form['address']
         contacts = request.form.getlist('contact_person[]')
         phones = request.form.getlist('contact_phone[]')
-
-        bank = request.form.get('bank')
+        bank_name = request.form.get('bank')
         account_no = request.form.get('account_no')
         ifsc = request.form.get('ifsc')
 
         conn = sqlite3.connect('erp.db')
         c = conn.cursor()
+
+        # Insert vendor
         c.execute("INSERT INTO vendors (name, gst, address) VALUES (?, ?, ?)", (name, gst, address))
         vendor_id = c.lastrowid
 
-        for contact, phone in zip(contacts, phones):
+        # Insert contacts
+        for person, phone in zip(contacts, phones):
             c.execute("INSERT INTO vendor_contacts (vendor_id, name, phone) VALUES (?, ?, ?)",
-                      (vendor_id, contact, phone))
+                      (vendor_id, person, phone))
 
-        c.execute('''CREATE TABLE IF NOT EXISTS vendor_banks (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        vendor_id INTEGER,
-                        bank_name TEXT,
-                        account_no TEXT,
-                        ifsc_code TEXT,
-                        FOREIGN KEY (vendor_id) REFERENCES vendors(id)
-                    )''')
-        c.execute("INSERT INTO vendor_banks (vendor_id, bank_name, account_no, ifsc_code) VALUES (?, ?, ?, ?)",
-                  (vendor_id, bank, account_no, ifsc))
+        # Insert bank
+        if bank_name and account_no and ifsc:
+            c.execute('''CREATE TABLE IF NOT EXISTS vendor_banks (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            vendor_id INTEGER,
+                            bank_name TEXT,
+                            account_no TEXT,
+                            ifsc_code TEXT,
+                            FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+                        )''')
+            c.execute("INSERT INTO vendor_banks (vendor_id, bank_name, account_no, ifsc_code) VALUES (?, ?, ?, ?)",
+                      (vendor_id, bank_name, account_no, ifsc))
 
         conn.commit()
         conn.close()
-        flash("Vendor registered successfully!", "success")
+        flash("Vendor registered successfully", "success")
         return redirect(url_for('vendor_register'))
 
     return render_template("vendor_register.html")
 
-# -------------------- DASHBOARD --------------------
-@app.route("/dashboard")
-def dashboard():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    return render_template("dashboard.html")
 
-@app.route('/')
-def home():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))  # or redirect to dashboard if needed
+# ---------- API: Get Vendor Details (AJAX Support) ----------
+
+@app.route('/get_vendor_details', methods=['POST'])
+def get_vendor_details():
+    vendor_name = request.form['vendor_name']
+    conn = sqlite3.connect('erp.db')
+    c = conn.cursor()
+    c.execute("SELECT gst, address FROM vendors WHERE name = ?", (vendor_name,))
+    result = c.fetchone()
+    conn.close()
+    if result:
+        return jsonify({'gst': result[0], 'address': result[1]})
     else:
-        return redirect(url_for('login'))
+        return jsonify({'gst': '', 'address': ''})
 
-# -------------------- PROJECT REGISTER (MODAL DATA) --------------------
+from datetime import datetime
+
+# ---------- PROJECTS PAGE + REGISTRATION ----------
+
 @app.route('/projects_page')
 def projects_page():
     if 'user_id' not in session:
-        flash("Please log in to access this page", "error")
         return redirect(url_for('login'))
 
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    c.execute("SELECT id, name FROM employees")
-    employees = [{'id': row[0], 'name': row[1]} for row in c.fetchall()]
-
-    c.execute("SELECT * FROM projects")
-    projects = c.fetchall()
-
+    # Fetch vendors
     c.execute("SELECT id, name, gst, address FROM vendors")
     vendors = [{'id': row[0], 'name': row[1], 'gst': row[2], 'address': row[3]} for row in c.fetchall()]
+
+    # Fetch employees
+    c.execute("SELECT name FROM employees")
+    employees = [{'name': row[0]} for row in c.fetchall()]
+
+    # Fetch projects
+    c.execute("SELECT * FROM projects")
+    project_rows = c.fetchall()
+    projects = [{'id': row[0], 'client_name': row[1], 'location': row[5], 'status': row[9]} for row in project_rows]
+
+    # Generate Enquiry ID
+    enquiry_id = f"ENQ-{uuid.uuid4().hex[:6].upper()}"
+
     conn.close()
 
-    from datetime import date
-    today = date.today().isoformat()
-
-    # Auto-generate enquiry/project ID
-    enquiry_id = "PRJ-" + datetime.now().strftime("%Y%m%d%H%M%S")
-
-    return render_template("projects.html",
-                           employees=employees,
-                           projects=projects,
+    return render_template('projects.html',
                            vendors=vendors,
-                           vendor_json=json.dumps(vendors),
+                           employees=employees,
                            enquiry_id=enquiry_id,
-                           today=today)
+                           today=datetime.today().strftime('%Y-%m-%d'),
+                           projects=projects)
 
 
-
-# -------------------- ADD PROJECT --------------------
 @app.route('/add_project', methods=['POST'])
 def add_project():
-    enquiry_id = request.form['enquiry_id']
-    client_name = request.form['client_name']
-    quotation_ro = request.form['quotation_ro']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-    location = request.form['location']
-    gst_number = request.form['gst_number']
-    address = request.form['address']
-    incharge = request.form['incharge']
-    notes = request.form['notes']
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    data = request.form
     file = request.files.get('file')
+    filename = file.filename if file else None
 
-    filename = None
-    if file and file.filename != '':
-        filename = f"{uuid.uuid4().hex}_{file.filename}"
-        upload_path = os.path.join('static/uploads', filename)
-        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
-        file.save(upload_path)
+    enquiry_id = data['enquiry_id']
+    client_name = data['client_name']
+    quotation_ro = data['quotation_ro']
+    start_date = data['start_date']
+    end_date = data['end_date']
+    location = data['location']
+    gst_number = data.get('gst_number', '')
+    address = data.get('address', '')
+    incharge = data['incharge']
+    notes = data.get('notes', '')
 
-    # Get vendor_id from name
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("SELECT id FROM vendors WHERE name = ?", (client_name,))
-    vendor_row = c.fetchone()
-    vendor_id = vendor_row[0] if vendor_row else None
 
-    # Insert into projects
-    c.execute('''INSERT INTO projects 
-        (enquiry_id, vendor_id, gst_number, address, quotation_ro, start_date, end_date, location, incharge, notes, file) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (enquiry_id, vendor_id, gst_number, address, quotation_ro, start_date, end_date, location, incharge, notes, filename))
+    c.execute('''CREATE TABLE IF NOT EXISTS projects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    enquiry_id TEXT,
+                    client_name TEXT,
+                    quotation_ro TEXT,
+                    start_date TEXT,
+                    location TEXT,
+                    end_date TEXT,
+                    drawing TEXT,
+                    incharge TEXT,
+                    status TEXT,
+                    notes TEXT,
+                    gst TEXT,
+                    address TEXT
+                )''')
+
+    c.execute('''INSERT INTO projects (
+                    enquiry_id, client_name, quotation_ro, start_date, location, end_date,
+                    drawing, incharge, status, notes, gst, address
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+              (enquiry_id, client_name, quotation_ro, start_date, location, end_date,
+               filename, incharge, 'Preparation Started', notes, gst_number, address))
 
     conn.commit()
     conn.close()
-    flash("Project added successfully!", "success")
+
+    if file:
+        file.save(f"uploads/{filename}")
+
+    flash("Project registered successfully", "success")
     return redirect(url_for('projects_page'))
 
-# -------------------- START PREPARATION --------------------
+# ---------- DESIGN PROCESS PHASES ----------
+
 @app.route('/start_preparation', methods=['POST'])
 def start_preparation():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     project_id = request.form.get('project_id')
     site_engineer = request.form.get('site_engineer')
     mobile = request.form.get('mobile')
-    location = request.form.get('location')
-    client_name = request.form.get('client_name')
 
     if not project_id:
-        flash("Project ID missing!", "error")
+        flash("Project ID missing in preparation form", "error")
         return redirect(url_for('projects_page'))
 
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute('''INSERT INTO project_enquiry (project_id, enquiry_id, client_name, company_name, site_engineer, mobile_number, location)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)''',
-              (project_id, f"ENQ-{random.randint(1000,9999)}", client_name, client_name, site_engineer, mobile, location))
+
+    # Create table if not exists
+    c.execute('''CREATE TABLE IF NOT EXISTS preparation_details (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_id INTEGER,
+                    site_engineer TEXT,
+                    mobile TEXT,
+                    FOREIGN KEY(project_id) REFERENCES projects(id)
+                )''')
+
+    c.execute("INSERT INTO preparation_details (project_id, site_engineer, mobile) VALUES (?, ?, ?)",
+              (project_id, site_engineer, mobile))
 
     c.execute("UPDATE projects SET status = 'Preparation Completed' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
 
-    flash("Preparation phase completed!", "success")
+    flash("Preparation completed", "success")
     return redirect(url_for('projects_page'))
 
-# -------------------- API: GET GST & ADDRESS --------------------
-@app.route('/get_vendor_details/<vendor_name>')
-def get_vendor_details(vendor_name):
-    conn = sqlite3.connect('erp.db')
-    c = conn.cursor()
-    c.execute("SELECT gst, address FROM vendors WHERE name = ?", (vendor_name,))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return {'gst': row[0], 'address': row[1]}
-    return {'gst': '', 'address': ''}
 
-# -------------------- MARK PHASE COMPLETION --------------------
 @app.route('/mark_completion/<int:project_id>', methods=['POST'])
 def mark_completion(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
     c.execute("UPDATE projects SET status = 'Completion Completed' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
-    flash("Phase 2: Completion marked as done.", "success")
+
+    flash("Project marked as completed", "success")
     return redirect(url_for('projects_page'))
 
-# -------------------- SUBMIT FOR APPROVAL --------------------
+
 @app.route('/submit_for_approval/<int:project_id>', methods=['POST'])
 def submit_for_approval(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
     c.execute("UPDATE projects SET status = 'Submitted for Approval' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
-    flash("Project submitted for approval.", "success")
+
+    flash("Project submitted for approval", "success")
     return redirect(url_for('projects_page'))
 
-# -------------------- UNDER REVIEW --------------------
+
 @app.route('/under_review/<int:project_id>', methods=['POST'])
 def under_review(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
     c.execute("UPDATE projects SET status = 'Under Review' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
-    flash("Project is now under review.", "info")
+
+    flash("Project status updated to 'Under Review'", "success")
     return redirect(url_for('projects_page'))
 
-# -------------------- APPROVE PROJECT --------------------
+
 @app.route('/approve_project/<int:project_id>', methods=['POST'])
 def approve_project(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
     c.execute("UPDATE projects SET status = 'Approved' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
-    flash("Project approved ✅", "success")
+
+    flash("Project approved", "success")
     return redirect(url_for('projects_page'))
 
-# -------------------- REJECT BACK TO PREPARATION --------------------
+
 @app.route('/reject_to_preparation/<int:project_id>', methods=['POST'])
 def reject_to_preparation(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
-    c.execute("UPDATE projects SET status = 'Design Process' WHERE id = ?", (project_id,))
+    c.execute("UPDATE projects SET status = 'Preparation Started' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
-    flash("Project sent back to preparation phase.", "warning")
+
+    flash("Project sent back to preparation", "warning")
     return redirect(url_for('projects_page'))
 
-# -------------------- MAIN --------------------
-if __name__ == "__main__":
-    app.run(debug=True)
+---------- MAIN ----------
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True, host='0.0.0.0', port=10000)
