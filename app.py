@@ -15,6 +15,8 @@ def init_db():
     if not os.path.exists("database.db"):
         conn = get_db()
         cur = conn.cursor()
+
+        # Users Table
         cur.execute('''CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -26,29 +28,33 @@ def init_db():
         cur.execute("INSERT INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
                     ("Admin User", "Admin", "9999999999", "admin@ducting.com", "admin123"))
 
+        # Vendors Table
         cur.execute('''CREATE TABLE vendors (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    gst TEXT,
-    address TEXT,
-    bank_name TEXT,
-    account_number TEXT,
-    ifsc TEXT
-)''')
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            gst TEXT,
+            address TEXT,
+            bank_name TEXT,
+            account_number TEXT,
+            ifsc TEXT
+        )''')
 
+        # Vendor Contacts Table
         cur.execute('''CREATE TABLE vendor_contacts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    vendor_id INTEGER,
-    name TEXT,
-    phone TEXT,
-    email TEXT,
-    FOREIGN KEY(vendor_id) REFERENCES vendors(id)
-)''')
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vendor_id INTEGER,
+            name TEXT,
+            phone TEXT,
+            email TEXT,
+            FOREIGN KEY(vendor_id) REFERENCES vendors(id)
+        )''')
+
         conn.commit()
         conn.close()
 
 init_db()
 
+# --- Login Route ---
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -70,22 +76,31 @@ def login():
 
     return render_template('login.html')
 
+# --- Logout ---
 @app.route('/logout')
 def logout():
     session.clear()
     flash("You have been logged out.", "success")
     return redirect(url_for('login'))
 
+# --- Dashboard ---
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
+# --- Projects Placeholder ---
 @app.route('/projects')
 def projects():
     return "<h2>Project Management coming soon...</h2>"
 
+# --- Employee Registration Placeholder ---
+@app.route('/employee_registration')
+def employee_registration():
+    return "<h2>Employee Registration Coming Soon...</h2>"
+
+# --- Vendor Registration Form ---
 @app.route('/vendor_registration', methods=['GET', 'POST'])
 def vendor_registration():
     if request.method == 'POST':
@@ -123,7 +138,16 @@ def vendor_registration():
 
     return render_template('vendor_registration.html')
 
+# --- Production Placeholder ---
+@app.route('/production')
+def production():
+    return "<h2>Production Module Coming Soon...</h2>"
 
+# --- Summary Placeholder ---
+@app.route('/summary')
+def summary():
+    return "<h2>Summary Coming Soon...</h2>"
 
+# --- Run the App ---
 if __name__ == '__main__':
     app.run(debug=True)
