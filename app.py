@@ -175,6 +175,13 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/')
+def home():
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
+
 
 # ---------- DASHBOARD ----------
 @app.route('/dashboard')
