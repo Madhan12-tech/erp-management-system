@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Vendor Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      padding: 40px;
+    }
+    .form-section {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .form-section h3 {
+      margin: 0;
+      cursor: pointer;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .contact-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .toggle-content {
+      display: none;
+      margin-top: 15px;
+    }
+    .add-btn, .remove-btn {
+      background: #3498db;
+      margin-top: 5px;
+      padding: 6px 10px;
+    }
+  </style>
+  <script>
+    function toggleSection(id) {
+      var section = document.getElementById(id);
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addContactRow() {
+      const container = document.getElementById('contactContainer');
+      const row = document.createElement('div');
+      row.classList.add('contact-row');
+      row.innerHTML = `
+        <input type="text" name="contact_name" placeholder="Contact Name" required>
+        <input type="text" name="contact_phone" placeholder="Phone" required>
+        <input type="email" name="contact_email" placeholder="Email" required>
+        <button type="button" class="remove-btn" onclick="this.parentNode.remove()">−</button>
+      `;
+      container.appendChild(row);
+    }
+  </script>
+</head>
+<body>
+  <h2>Vendor Registration</h2>
+  <form method="POST">
+
+    <!-- Vendor Details -->
+    <div class="form-section">
+      <h3 onclick="toggleSection('vendorDetails')">Vendor Details ▾</h3>
+      <div id="vendorDetails" class="toggle-content">
+        <div class="form-group">
+          <label>Vendor Name</label>
+          <input type="text" name="vendor_name" required>
+        </div>
+        <div class="form-group">
+          <label>GST Number</label>
+          <input type="text" name="gst" required>
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" name="address" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bank Details -->
+    <div class="form-section">
+      <h3 onclick="toggleSection('bankDetails')">Bank Details ▾</h3>
+      <div id="bankDetails" class="toggle-content">
+        <div class="form-group">
+          <label>Bank Name</label>
+          <input type="text" name="bank_name" required>
+        </div>
+        <div class="form-group">
+          <label>Account Number</label>
+          <input type="text" name="account_number" required>
+        </div>
+        <div class="form-group">
+          <label>IFSC Code</label>
+          <input type="text" name="ifsc" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Details -->
+    <div class="form-section">
+      <h3 onclick="toggleSection('contactDetails')">Contact Details ▾</h3>
+      <div id="contactDetails" class="toggle-content">
+        <div id="contactContainer"></div>
+        <button type="button" class="add-btn" onclick="addContactRow()">+ Add Contact</button>
+      </div>
+    </div>
+
+    <button type="submit">Save Vendor</button>
+  </form>
+</body>
+</html>
