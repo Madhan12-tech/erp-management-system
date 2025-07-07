@@ -178,6 +178,12 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template("dashboard.html")
 
+@app.route('/production')
+def production():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('production.html')  # Create this file if it doesn't exist
+
 
 # ---------- VENDOR REGISTRATION ----------
 
@@ -244,7 +250,7 @@ def get_vendor_details():
     else:
         return jsonify({'gst': '', 'address': ''})
 
-from datetime import datetime
+
 
 # ---------- PROJECTS PAGE + REGISTRATION ----------
 
