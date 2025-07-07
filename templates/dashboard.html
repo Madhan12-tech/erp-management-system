@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | Ducting ERP</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+    }
+
+    header {
+      background-color: #2c3e50;
+      padding: 20px;
+      color: white;
+      text-align: center;
+    }
+
+    .welcome {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card a {
+      text-decoration: none;
+      color: #2c3e50;
+      font-size: 18px;
+      display: block;
+      margin-top: 10px;
+    }
+
+    .logout {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: #e74c3c;
+      color: white;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logout:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button onclick="window.location.href='{{ url_for('logout') }}'" class="logout">Logout</button>
+    <h1 class="welcome">Welcome, {{ user }} 👋</h1>
+    <p>Ducting ERP Dashboard</p>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects"/>
+      <a href="{{ url_for('projects') }}">Project Management</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees"/>
+      <a href="{{ url_for('employee_registration') }}">Employee Registration</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors"/>
+      <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production"/>
+      <a href="{{ url_for('production') }}">Production</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary"/>
+      <a href="{{ url_for('summary') }}">Summary</a>
+    </div>
+  </div>
+
+</body>
+</html>
