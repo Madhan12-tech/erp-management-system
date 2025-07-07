@@ -301,34 +301,36 @@ def home():
 # -------------------- PROJECT REGISTER (MODAL DATA) --------------------
 @app.route('/projects_page')
 def projects_page():
+    if 'user_id' not in session:
+        flash("Please log in to access this page", "error")
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('erp.db')
     c = conn.cursor()
 
-    # Fetch vendors
+    c.execute("SELECT id, name FROM employees")
+    employees = [{'id': row[0], 'name': row[1]} for row in c.fetchall()]
+
+    c.execute("SELECT * FROM projects")
+    projects = c.fetchall()
+
     c.execute("SELECT id, name, gst, address FROM vendors")
     vendors = [{'id': row[0], 'name': row[1], 'gst': row[2], 'address': row[3]} for row in c.fetchall()]
-
-    # Fetch employees for incharge dropdown
-    c.execute("SELECT name FROM employees")
-    employees = [{'name': row[0]} for row in c.fetchall()]
-
-    # Fetch project list
-    c.execute("SELECT * FROM projects")
-    project_rows = c.fetchall()
-    projects = [{
-        'id': row[0],
-        'enquiry_id': row[1],
-        'status': row[13],
-    } for row in project_rows]
-
     conn.close()
 
-    # Generate new enquiry_id
-    enquiry_id = "ENQ-" + datetime.now().strftime("%Y%m%d%H%M%S")
-    today = datetime.today().strftime('%Y-%m-%d')
+    from datetime import date
+    today = date.today().isoformat()
 
-    return render_template("projects.html", vendors=vendors, employees=employees,
-                           enquiry_id=enquiry_id, today=today, projects=projects)
+    # Auto-generate enquiry/project ID
+    enquiry_id = "PRJ-" + datetime.now().strftime("%Y%m%d%H%M%S")
+
+    return render_template("projects.html",
+                           employees=employees,
+                           projects=projects,
+                           vendors=vendors,
+                           vendor_json=json.dumps(vendors),
+                           enquiry_id=enquiry_id,
+                           today=today)
 
 
 
