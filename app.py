@@ -15,41 +15,41 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-        # Users Table
-        cur.execute('''CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            role TEXT,
-            contact TEXT,
-            email TEXT UNIQUE,
-            password TEXT
-        )''')
-        cur.execute("INSERT INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
-                    ("Admin User", "Admin", "9999999999", "admin@ducting.com", "admin123"))
+    # Users Table
+    cur.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        role TEXT,
+        contact TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+    )''')
+    cur.execute("INSERT OR IGNORE INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
+                ("Admin User", "Admin", "9999999999", "admin@ducting.com", "admin123"))
 
-        # Vendors Table
-        cur.execute('''CREATE TABLE vendors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            gst TEXT,
-            address TEXT,
-            bank_name TEXT,
-            account_number TEXT,
-            ifsc TEXT
-        )''')
+    # Vendors Table
+    cur.execute('''CREATE TABLE IF NOT EXISTS vendors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        gst TEXT,
+        address TEXT,
+        bank_name TEXT,
+        account_number TEXT,
+        ifsc TEXT
+    )''')
 
-        # Vendor Contacts Table
-        cur.execute('''CREATE TABLE vendor_contacts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            vendor_id INTEGER,
-            name TEXT,
-            phone TEXT,
-            email TEXT,
-            FOREIGN KEY(vendor_id) REFERENCES vendors(id)
-        )''')
+    # Vendor Contacts Table
+    cur.execute('''CREATE TABLE IF NOT EXISTS vendor_contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vendor_id INTEGER,
+        name TEXT,
+        phone TEXT,
+        email TEXT,
+        FOREIGN KEY(vendor_id) REFERENCES vendors(id)
+    )''')
 
-        conn.commit()
-        conn.close()
+    conn.commit()
+    conn.close()
 
 # --- Create Project & Duct Tables ---
 def create_project_tables():
