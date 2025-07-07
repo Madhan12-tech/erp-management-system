@@ -60,35 +60,6 @@
       font-weight: normal;
       font-size: 16px;
     }
-    table {
-      width: 95%;
-      margin: 30px auto;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px 16px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th {
-      background-color: #2c3e50;
-      color: white;
-    }
-    .btn {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      color: white;
-      cursor: pointer;
-    }
-    .btn-primary {
-      background-color: #3498db;
-    }
-    .btn-success {
-      background-color: #2ecc71;
-    }
   </style>
 </head>
 <body>
@@ -101,30 +72,28 @@
     </form>
   </header>
 
-  <<div class="container">
-  <div class="card">
-    <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects">
-    <a href="{{ url_for('projects') }}">Project Management</a>
+  <div class="container">
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects">
+      <a href="{{ url_for('projects') }}">Project Management</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production">
+      <a href="{{ url_for('production_overview') }}">Production Module</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees">
+      <a href="{{ url_for('employee_list') }}">Employee Registration</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
+      <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
+      <a href="{{ url_for('summary') }}">Summary</a>
+    </div>
   </div>
-  <div class="card">
-    <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production">
-    <a href="{{ url_for('production_overview') }}">Production Module</a>
-  </div>
-  <div class="card">
-    <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees">
-    <a href="{{ url_for('employee_registration') }}">Employee Registration</a>
-  </div>
-  <div class="card">
-    <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
-    <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
-  </div>
-  <div class="card">
-    <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
-    <a href="{{ url_for('summary') }}">Summary</a>
-  </div>
-  </div>
-  <!-- 📌 Project-Wise Actions Table -->
-
 
 </body>
 </html>
