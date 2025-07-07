@@ -296,7 +296,10 @@ def dashboard():
 
 @app.route('/')
 def home():
-    return redirect(url_for('projects_page'))
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))  # or redirect to dashboard if needed
+    else:
+        return redirect(url_for('login'))
 
 # -------------------- PROJECT REGISTER (MODAL DATA) --------------------
 @app.route('/projects_page')
