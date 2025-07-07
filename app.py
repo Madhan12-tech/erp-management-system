@@ -5,15 +5,18 @@ import uuid
 app = Flask(__name__)
 app.secret_key = 'secretkey'
 
-# --- DB Connection ---
+# --- ✅ DB Connection ---
+def get_db():
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
-
-# --- Initialize DB with admin user ---
+# --- ✅ Initialize DB with tables and admin user ---
 def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # Users Table
+    # ✅ Users Table
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -25,11 +28,8 @@ def init_db():
     cur.execute("INSERT OR IGNORE INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
                 ("Admin User", "Admin", "9999999999", "admin@ducting.com", "admin123"))
 
-
-
-
-    # Add column if not exists
-    c.execute('''
+    # ✅ Production Progress Table
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS production_progress (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER UNIQUE,
@@ -39,14 +39,13 @@ def init_db():
         )
     ''')
 
-    # Add total_sqm field to projects table (if not already)
-    try:
-        c.execute('ALTER TABLE projects ADD COLUMN total_sqm REAL DEFAULT 0')
-    except:
-        pass  # Ignore if column already exists
-        
+    # ✅ Add total_sqm column to projects if not exists
+    cur.execute("PRAGMA table_info(projects)")
+    columns = [col[1] for col in cur.fetchall()]
+    if "total_sqm" not in columns:
+        cur.execute("ALTER TABLE projects ADD COLUMN total_sqm REAL DEFAULT 0")
 
-    # Vendors Table
+    # ✅ Vendors Table
     cur.execute('''CREATE TABLE IF NOT EXISTS vendors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -57,7 +56,7 @@ def init_db():
         ifsc TEXT
     )''')
 
-    # Vendor Contacts Table
+    # ✅ Vendor Contacts Table
     cur.execute('''CREATE TABLE IF NOT EXISTS vendor_contacts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vendor_id INTEGER,
@@ -70,7 +69,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# --- Create Project & Duct Tables ---
+# --- ✅ Create Project & Duct Tables ---
 def create_project_tables():
     conn = get_db()
     cur = conn.cursor()
@@ -115,6 +114,7 @@ def create_project_tables():
 # ✅ Call table creation and DB initialization at startup
 create_project_tables()
 init_db()
+
 # --- Login Route ---
 @app.route('/', methods=['GET', 'POST'])
 def login():
