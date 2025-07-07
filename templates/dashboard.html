@@ -9,7 +9,6 @@
       background: #f4f6f8;
       margin: 0;
     }
-
     header {
       background-color: #2c3e50;
       padding: 20px;
@@ -17,7 +16,6 @@
       text-align: center;
       position: relative;
     }
-
     .logout {
       position: absolute;
       right: 20px;
@@ -29,14 +27,12 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     .container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
       padding: 30px;
     }
-
     .card {
       background: white;
       padding: 30px;
@@ -45,11 +41,9 @@
       text-align: center;
       transition: 0.2s ease-in-out;
     }
-
     .card:hover {
       transform: scale(1.03);
     }
-
     .card a {
       text-decoration: none;
       color: #2c3e50;
@@ -57,16 +51,43 @@
       display: block;
       margin-top: 10px;
     }
-
     h1 {
       margin: 0;
       font-size: 24px;
     }
-
     h2 {
       margin-top: 10px;
       font-weight: normal;
       font-size: 16px;
+    }
+    table {
+      width: 95%;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #2c3e50;
+      color: white;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background-color: #3498db;
+    }
+    .btn-success {
+      background-color: #2ecc71;
     }
   </style>
 </head>
@@ -80,6 +101,7 @@
     </form>
   </header>
 
+  <!-- 📌 Module Cards -->
   <div class="container">
     <div class="card">
       <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects">
@@ -93,17 +115,40 @@
       <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
       <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
     </div>
-    {% for p in projects %}
-  <!-- other columns -->
-  <td>
-    <a href="{{ url_for('production', project_id=p.id) }}" class="btn btn-sm btn-primary">Production</a>
-  </td>
-{% endfor %}
     <div class="card">
       <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
       <a href="{{ url_for('summary') }}">Summary</a>
     </div>
   </div>
+
+  <!-- 📌 Project-Wise Actions Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Vendor</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Enquiry ID</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+      <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.vendor_name }}</td>
+        <td>{{ p.location }}</td>
+        <td>{{ p.status or 'New' }}</td>
+        <td>{{ p.enquiry_id }}</td>
+        <td>
+          <a href="{{ url_for('production', project_id=p.id) }}" class="btn btn-primary">Production</a>
+          <a href="{{ url_for('measurement', project_id=p.id) }}" class="btn btn-success">Measurement</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
 </body>
 </html>
