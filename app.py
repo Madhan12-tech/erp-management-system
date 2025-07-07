@@ -13,7 +13,7 @@ def get_db():
 # --- Initialize DB with admin user ---
 def init_db():
     conn = get_db()
-        cur = conn.cursor()
+    cur = conn.cursor()
 
         # Users Table
         cur.execute('''CREATE TABLE users (
