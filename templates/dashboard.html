@@ -93,10 +93,12 @@
       <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
       <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
     </div>
-    <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production">
-      <a href="{{ url_for('production') }}">Production</a>
-    </div>
+    {% for p in projects %}
+  <!-- other columns -->
+  <td>
+    <a href="{{ url_for('production', project_id=p.id) }}" class="btn btn-sm btn-primary">Production</a>
+  </td>
+{% endfor %}
     <div class="card">
       <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
       <a href="{{ url_for('summary') }}">Summary</a>
