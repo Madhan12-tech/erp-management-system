@@ -1,17 +1,15 @@
-<!-- projects.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Projects | ERP</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
       margin: 0;
       padding: 0;
-      background: #f4f6f9;
     }
     .header {
       background: #2c3e50;
@@ -21,91 +19,67 @@
       justify-content: space-between;
       align-items: center;
     }
-    .header h2 {
-      margin: 0;
-    }
     .btn {
-      padding: 8px 15px;
+      padding: 8px 16px;
       background: #2980b9;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: 0.3s;
     }
-    .btn:hover {
-      background: #3498db;
-    }
+    .btn:hover { background: #3498db; }
+
     .modal {
       display: none;
       position: fixed;
       z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.4);
     }
     .modal-content {
-      background-color: #fff;
-      margin: 5% auto;
+      background: white;
       padding: 20px;
-      border-radius: 12px;
+      margin: 5% auto;
       width: 60%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      border-radius: 10px;
     }
     .form-group {
       margin-bottom: 12px;
     }
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 5px;
-    }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
     input, select, textarea {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      width: 100%; padding: 8px;
+      border: 1px solid #ccc; border-radius: 5px;
     }
-    .flex-row {
-      display: flex;
-      gap: 20px;
-    }
-    .hidden {
-      display: none;
-    }
-    .section-heading {
-      margin: 20px;
-      font-size: 20px;
-      color: #2c3e50;
-    }
+    .flex-row { display: flex; gap: 20px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
+
   <div class="header">
-    <h2>Projects Module</h2>
-    <button class="btn" onclick="openProjectModal()">+ Add Project</button>
+    <h2>Projects</h2>
+    <button class="btn" onclick="openModal('projectModal')">+ Add Project</button>
   </div>
 
-  <!-- Add Project Modal -->
+  <!-- Project Modal -->
   <div id="projectModal" class="modal">
     <div class="modal-content">
-      <h3>Add New Project</h3>
+      <h3>New Project</h3>
       <form id="projectForm" method="POST" action="/add_project" enctype="multipart/form-data">
         <div class="form-group">
-          <label>Client Name</label>
-          <select name="client_name" required>
+          <label>Client (Vendor)</label>
+          <select name="client_name" id="vendorSelect" onchange="fillVendorDetails()" required>
             <option value="">Select</option>
             {% for v in vendors %}
-              <option value="{{ v.name }}">{{ v.name }}</option>
+              <option value="{{ v.name }}" data-gst="{{ v.gst }}" data-address="{{ v.address }}">{{ v.name }}</option>
             {% endfor %}
           </select>
         </div>
 
         <div class="form-group">
-          <label>Project ID (Auto-generated)</label>
+          <label>Project ID</label>
           <input type="text" name="enquiry_id" value="{{ enquiry_id }}" readonly>
         </div>
 
@@ -126,28 +100,28 @@
         </div>
 
         <div class="form-group">
-          <label>Project Location</label>
+          <label>Location</label>
           <input type="text" name="location" required>
         </div>
 
         <div class="form-group">
-          <label>Drawing Upload (Optional)</label>
+          <label>Upload Drawing</label>
           <input type="file" name="file">
         </div>
 
         <div class="flex-row">
           <div class="form-group" style="flex:1">
-            <label>Vendor GST</label>
-            <input type="text" name="gst_number" id="gst_number" readonly>
+            <label>GST</label>
+            <input type="text" id="gst_number" name="gst_number" readonly>
           </div>
           <div class="form-group" style="flex:2">
-            <label>Vendor Address</label>
-            <textarea name="address" id="address" readonly></textarea>
+            <label>Address</label>
+            <textarea id="address" name="address" readonly></textarea>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Project Incharge</label>
+          <label>Incharge</label>
           <select name="incharge" required>
             <option value="">Select</option>
             {% for e in employees %}
@@ -157,184 +131,114 @@
         </div>
 
         <div class="form-group">
-          <label>Notes (Optional)</label>
+          <label>Notes</label>
           <textarea name="notes"></textarea>
         </div>
 
-        <div style="display: flex; justify-content: end; gap: 10px;">
-          <button type="button" class="btn" onclick="closeProjectModal()">Cancel</button>
-          <button type="submit" class="btn" onclick="showDesignProcess()">Save & Continue</button>
+        <div style="text-align: right;">
+          <button type="button" class="btn" onclick="closeModal('projectModal')">Cancel</button>
+          <button type="submit" class="btn">Save & Continue</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Design Process Section -->
-  <div id="designProcessSection" class="hidden">
-    <h3 class="section-heading">Design Process</h3>
-    <!-- This will be continued in next part -->
+  <!-- Preparation Modal -->
+  <div id="preparationModal" class="modal">
+    <div class="modal-content">
+      <h3>Preparation Phase</h3>
+      <form method="POST" action="/start_preparation">
+        <input type="hidden" name="project_id" value="{{ latest_project_id }}">
+
+        <div class="form-group">
+          <label>Client Name</label>
+          <input type="text" name="client_name" value="{{ latest_client_name }}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Project Location</label>
+          <input type="text" name="location" value="{{ latest_location }}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Site Engineer</label>
+          <input type="text" name="site_engineer" required>
+        </div>
+
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="text" name="mobile" required pattern="[0-9]{10}">
+        </div>
+
+        <div style="text-align: right;">
+          <button type="button" class="btn" onclick="closeModal('preparationModal')">Cancel</button>
+          <button type="submit" class="btn">Save & Continue</button>
+        </div>
+      </form>
+    </div>
   </div>
 
+  <div style="margin: 20px;">
+    <button class="btn" onclick="openModal('preparationModal')">Start Phase 1 - Preparation</button>
+  </div>
+
+  <!-- Design Process Status -->
+  <h3 style="margin-left: 20px;">Design Process</h3>
+  {% for project in projects %}
+    <div style="margin: 20px;">
+      <strong>{{ project.client_name }}</strong> - {{ project.status }}<br><br>
+      <form method="POST" action="/mark_completion/{{ project.id }}" style="display:inline;">
+        <button class="btn" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>Phase 2 - Complete</button>
+      </form>
+      <form method="POST" action="/submit_for_approval/{{ project.id }}" style="display:inline;">
+        <button class="btn" {% if project.status != 'Completion Completed' %}disabled{% endif %}>Phase 3 - Submit</button>
+      </form>
+      <form method="POST" action="/under_review/{{ project.id }}" style="display:inline;">
+        <button class="btn" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>Phase 4 - Review</button>
+      </form>
+      <form method="POST" action="/approve_project/{{ project.id }}" style="display:inline;">
+        <button class="btn" {% if project.status != 'Under Review' %}disabled{% endif %}>✅ Approve</button>
+      </form>
+      <form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display:inline;">
+        <button class="btn" {% if project.status != 'Under Review' %}disabled{% endif %}>🔁 Back to Prep</button>
+      </form>
+    </div>
+  {% endfor %}
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script>
-    function openProjectModal() {
-      document.getElementById('projectModal').style.display = 'block';
+    const vendorSelect = document.getElementById("vendorSelect");
+    function fillVendorDetails() {
+      const selected = vendorSelect.options[vendorSelect.selectedIndex];
+      document.getElementById("gst_number").value = selected.getAttribute("data-gst") || '';
+      document.getElementById("address").value = selected.getAttribute("data-address") || '';
     }
-    function closeProjectModal() {
-      document.getElementById('projectModal').style.display = 'none';
+
+    function openModal(id) {
+      document.getElementById(id).style.display = 'block';
     }
-    function showDesignProcess() {
-      Toastify({
-        text: "Project added! Design Process now available.",
-        duration: 3000,
-        gravity: "top",
-        position: "right",
-        backgroundColor: "#27ae60"
-      }).showToast();
-      document.getElementById('designProcessSection').classList.remove('hidden');
-      closeProjectModal();
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
     }
   </script>
 
-  <!-- Preparation Phase Popup -->
-<div id="preparationModal" class="modal">
-  <div class="modal-content">
-    <h3>Preparation - Project Details</h3>
-    <form method="POST" action="/start_preparation">
-      <input type="hidden" name="project_id" value="{{ latest_project_id }}">
-
-      <div class="form-group">
-        <label>Client Name</label>
-        <input type="text" name="client_name" value="{{ latest_client_name }}" readonly>
-      </div>
-
-      <div class="form-group">
-        <label>Project Location</label>
-        <input type="text" name="location" value="{{ latest_location }}" readonly>
-      </div>
-
-      <div class="form-group">
-        <label>Site Engineer Name</label>
-        <input type="text" name="site_engineer" required>
-      </div>
-
-      <div class="form-group">
-        <label>Mobile Number</label>
-        <input type="text" name="mobile" required pattern="[0-9]{10}" maxlength="10">
-      </div>
-
-      <div style="display: flex; justify-content: end; gap: 10px;">
-        <button type="button" class="btn" onclick="closePreparationModal()">Cancel</button>
-        <button type="submit" class="btn">Save & Continue</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Preparation Start Button -->
-<div style="margin: 20px;">
-  <button class="btn" onclick="openPreparationModal()">Start Phase 1 - Preparation</button>
-</div>
-
-  <!-- Design Process Header -->
-<h2 style="margin-top: 30px; color: #2c3e50;">Design Process</h2>
-<div style="display: flex; gap: 20px; flex-wrap: wrap;">
-
-  <!-- Phase 1: Preparation -->
-  <div>
-    <button class="btn" onclick="openPreparationPopup()">1️⃣ Preparation</button>
-  </div>
-{% for project in projects %}
-  <div class="phase-buttons">
-    <!-- Phase 2 -->
-    <form method="POST" action="/mark_completion/{{ project.id }}">
-      <button type="submit" class="btn btn-secondary" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>
-        2️⃣ Completion ✅
-      </button>
-    </form>
-
-    <!-- Phase 3 -->
-    <form method="POST" action="/submit_for_approval/{{ project.id }}">
-      <button type="submit" class="btn btn-warning" {% if project.status != 'Completion Completed' %}disabled{% endif %}>
-        3️⃣ Submit for Approval 📤
-      </button>
-    </form>
-
-    <!-- Phase 4 -->
-    <form method="POST" action="/under_review/{{ project.id }}">
-      <button type="submit" class="btn btn-info" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>
-        4️⃣ Under Review 🔍
-      </button>
-    </form>
-
-    <!-- Phase 5 Approve -->
-    <form method="POST" action="/approve_project/{{ project.id }}" style="display: inline-block;">
-      <button type="submit" class="btn btn-success" {% if project.status != 'Under Review' %}disabled{% endif %}>
-        5️⃣ Approve ✅
-      </button>
-    </form>
-
-    <!-- Phase 5 Reject -->
-    <form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display: inline-block;">
-      <button type="submit" class="btn btn-danger" {% if project.status != 'Under Review' %}disabled{% endif %}>
-        🔁 Send Back to Preparation
-      </button>
-    </form>
-  </div>
-{% endfor %}
-</div>
-  <style>
-  .btn {
-    padding: 10px 18px;
-    background-color: #3498db;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-
-  .btn:hover {
-    background-color: #2980b9;
-  }
-
-  .btn-secondary {
-    background-color: #7f8c8d;
-  }
-
-  .btn-warning {
-    background-color: #f39c12;
-  }
-
-  .btn:disabled {
-    background-color: #bdc3c7;
-    cursor: not-allowed;
-  }
-    .btn-success { background-color: #2ecc71; }
-.btn-info { background-color: #3498db; }
-.btn-danger { background-color: #e74c3c; }
-.btn-warning { background-color: #f39c12; }
-.btn-secondary { background-color: #7f8c8d; }
-  </style>
-
-  <script>
-  function openPreparationModal() {
-    document.getElementById('preparationModal').style.display = 'block';
-  }
-  function closePreparationModal() {
-    document.getElementById('preparationModal').style.display = 'none';
-  }
-  </script>
   {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <script>
-      {% for category, message in messages %}
-        alert("{{ message }}");
-      {% endfor %}
-    </script>
-  {% endif %}
-{% endwith %}
-  
+    {% if messages %}
+      <script>
+        {% for category, message in messages %}
+          Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "{{ 'green' if category == 'success' else 'red' }}"
+          }).showToast();
+        {% endfor %}
+      </script>
+    {% endif %}
+  {% endwith %}
+
 </body>
 </html>
