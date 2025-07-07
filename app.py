@@ -49,9 +49,10 @@ def init_db():
             FOREIGN KEY(vendor_id) REFERENCES vendors(id)
         )''')
 
-        # --------- Project + Duct Tables ----------
+        conn.commit()
+        conn.close()
 
-    # --- Create Project & Duct Tables ---
+# --- Create Project & Duct Tables ---
 def create_project_tables():
     conn = get_db()
     cur = conn.cursor()
@@ -96,7 +97,6 @@ def create_project_tables():
 # ✅ Call table creation and DB initialization at startup
 create_project_tables()
 init_db()
-
 # --- Login Route ---
 @app.route('/', methods=['GET', 'POST'])
 def login():
