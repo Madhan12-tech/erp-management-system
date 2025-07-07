@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>{{ action }} Employee</title></head>
+<body>
+  <h2>{{ action }} Employee</h2>
+  <form method="POST">
+    <label>Name:</label><br>
+    <input type="text" name="name" value="{{ employee.name if employee else '' }}" required><br>
+
+    <label>Contact:</label><br>
+    <input type="text" name="contact" value="{{ employee.contact if employee else '' }}" required><br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" value="{{ employee.email if employee else '' }}" required><br>
+
+    <label>Password:</label><br>
+    <input type="text" name="password" value="{{ employee.password if employee else '' }}" required><br>
+
+    <button type="submit">{{ action }}</button>
+  </form>
+</body>
+</html>
