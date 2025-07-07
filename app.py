@@ -133,16 +133,7 @@ def dashboard():
     return render_template('dashboard.html', user=session['user'])
 
 # --- Projects Placeholder ---
-@app.route('/projects')
-def projects():
-    if 'user' not in session:
-        return redirect(url_for('login'))
 
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM projects ORDER BY id DESC")
-    projects = cur.fetchall()
-    return render_template('projects.html', projects=projects)
 
 
 @app.route('/add_duct', methods=['POST'])
@@ -300,6 +291,68 @@ def add_project():
     conn.commit()
     flash("Project added successfully!", "success")
     return redirect(url_for('projects'))
+
+@app.route('/create_project', methods=['POST'])
+def create_project():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    vendor_id = request.form['vendor_id']
+    quotation_ro = request.form['quotation_ro']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    location = request.form['location']
+    incharge = request.form['incharge']
+    notes = request.form['notes']
+    enquiry_id = request.form['enquiry_id']
+
+    file = request.files['file']
+    file_name = None
+
+    if file and file.filename != '':
+        uploads_dir = os.path.join('static', 'uploads')
+        os.makedirs(uploads_dir, exist_ok=True)
+        file_name = file.filename
+        file.save(os.path.join(uploads_dir, file_name))
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO projects (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes, file_name, enquiry_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes, file_name, enquiry_id))
+
+    conn.commit()
+    conn.close()
+    flash("✅ Project added successfully!", "success")
+    return redirect(url_for('projects'))
+
+
+@app.route('/api/vendor/<int:vendor_id>')
+def get_vendor_info(vendor_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT gst, address FROM vendors WHERE id = ?", (vendor_id,))
+    vendor = cur.fetchone()
+    if vendor:
+        return {'gst': vendor['gst'], 'address': vendor['address']}
+    else:
+        return {}, 404
+
+@app.route('/projects')
+def projects():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM projects ORDER BY id DESC")
+    projects = cur.fetchall()
+
+    cur.execute("SELECT * FROM vendors")
+    vendors = cur.fetchall()
+
+    return render_template('projects.html', projects=projects, vendors=vendors)
 
 
 @app.route('/export_excel/<int:project_id>')
