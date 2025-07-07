@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard | Ducting ERP</title>
+  <title>Ducting ERP | Dashboard</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #f4f6f8;
+      margin: 0;
     }
 
     header {
@@ -15,11 +15,19 @@
       padding: 20px;
       color: white;
       text-align: center;
+      position: relative;
     }
 
-    .welcome {
-      margin: 0;
-      font-size: 20px;
+    .logout {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .container {
@@ -35,11 +43,11 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       text-align: center;
-      transition: transform 0.2s ease;
+      transition: 0.2s ease-in-out;
     }
 
     .card:hover {
-      transform: translateY(-5px);
+      transform: scale(1.03);
     }
 
     .card a {
@@ -50,51 +58,47 @@
       margin-top: 10px;
     }
 
-    .logout {
-      position: absolute;
-      right: 20px;
-      top: 20px;
-      background: #e74c3c;
-      color: white;
-      padding: 10px 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
+    h1 {
+      margin: 0;
+      font-size: 24px;
     }
 
-    .logout:hover {
-      background: #c0392b;
+    h2 {
+      margin-top: 10px;
+      font-weight: normal;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <button onclick="window.location.href='{{ url_for('logout') }}'" class="logout">Logout</button>
-    <h1 class="welcome">Welcome, {{ user }} 👋</h1>
-    <p>Ducting ERP Dashboard</p>
+    <h1>Welcome, {{ user }}</h1>
+    <h2>Ducting ERP Dashboard</h2>
+    <form action="{{ url_for('logout') }}" method="get">
+      <button class="logout">Logout</button>
+    </form>
   </header>
 
   <div class="container">
     <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects"/>
+      <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects">
       <a href="{{ url_for('projects') }}">Project Management</a>
     </div>
     <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees"/>
+      <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees">
       <a href="{{ url_for('employee_registration') }}">Employee Registration</a>
     </div>
     <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors"/>
+      <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
       <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
     </div>
     <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production"/>
+      <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production">
       <a href="{{ url_for('production') }}">Production</a>
     </div>
     <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary"/>
+      <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
       <a href="{{ url_for('summary') }}">Summary</a>
     </div>
   </div>
