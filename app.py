@@ -294,6 +294,10 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template("dashboard.html")
 
+@app.route('/')
+def home():
+    return redirect(url_for('projects_page'))
+
 # -------------------- PROJECT REGISTER (MODAL DATA) --------------------
 @app.route('/projects_page')
 def projects_page():
