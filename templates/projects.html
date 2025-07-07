@@ -246,31 +246,41 @@
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody>
-      {% for p in projects %}
-      <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.vendor_name }}</td>
-        <td>{{ p.quotation_ro }}</td>
-        <td>{{ p.start_date }}</td>
-        <td>{{ p.end_date }}</td>
-        <td>{{ p.location }}</td>
-        <td>
-          {% if p.status == 'submitted' %}
-            <span class="badge bg-success">Submitted</span>
-          {% elif p.status == 'approved' %}
-            <span class="badge bg-primary">Approved</span>
-          {% else %}
-            <span class="badge bg-secondary">{{ p.status or 'New' }}</span>
-          {% endif %}
-        </td>
-        <td>{{ p.enquiry_id }}</td>
-        <td>
-          <button class="btn btn-sm btn-primary" onclick="openDesignProcess({{ p.id }})">Design</button>
-          <button class="btn btn-sm btn-success" onclick="exportExcel({{ p.id }})">Export</button>
-        </td>
-      </tr>
-      {% endfor %}
+    <<tbody>
+  {% for p in projects %}
+  <tr>
+    <td>{{ p.id }}</td>
+    <td>{{ p.vendor_name }}</td>
+    <td>{{ p.quotation_ro }}</td>
+    <td>{{ p.start_date }}</td>
+    <td>{{ p.end_date }}</td>
+    <td>{{ p.location }}</td>
+    <td>
+      <span class="badge bg-secondary">{{ p.status or 'New' }}</span>
+    </td>
+    <td>{{ p.enquiry_id }}</td>
+    <td>
+      <!-- ✅ Status-Based Buttons -->
+      {% if p.status == 'new' %}
+        <form method="POST" action="/submit_for_review/{{ p.id }}" style="display:inline;">
+          <button class="btn btn-primary btn-sm">Submit for Review</button>
+        </form>
+      {% elif p.status == 'under review' %}
+        <a href="/measurement/{{ p.id }}" class="btn btn-warning btn-sm">Enter Measurement</a>
+      {% elif p.status == 'submitted for approval' %}
+        <form method="POST" action="/approve_project/{{ p.id }}" style="display:inline;">
+          <button class="btn btn-success btn-sm">Approve</button>
+        </form>
+      {% elif p.status == 'approved' %}
+        <span class="badge bg-success">Approved</span>
+      {% endif %}
+
+      <!-- ✅ Existing Buttons -->
+      <button class="btn btn-sm btn-primary mt-1" onclick="openDesignProcess({{ p.id }})">Design</button>
+      <button class="btn btn-sm btn-success mt-1" onclick="exportExcel({{ p.id }})">Export</button>
+    </td>
+  </tr>
+  {% endfor %}
     </tbody>
   </table>
   </div>
