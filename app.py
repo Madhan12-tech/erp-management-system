@@ -280,6 +280,39 @@ def production():
 def summary():
     return "<h2>Summary Coming Soon...</h2>"
 
+
+@app.route('/add_project', methods=['POST'])
+def add_project():
+    vendor_id = request.form['vendor_id']
+    quotation_ro = request.form['quotation_ro']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    location = request.form['location']
+    incharge = request.form['incharge']
+    notes = request.form['notes']
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO projects (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes))
+    conn.commit()
+    flash("Project added successfully!", "success")
+    return redirect(url_for('projects'))
+
+
+@app.route('/export_excel/<int:project_id>')
+def export_excel(project_id):
+    import pandas as pd
+    conn = get_db()
+    df = pd.read_sql_query("SELECT * FROM ducts WHERE project_id = ?", conn, params=(project_id,))
+    output_path = f"duct_project_{project_id}.xlsx"
+    df.to_excel(output_path, index=False)
+
+    from flask import send_file
+    return send_file(output_path, as_attachment=True)
+
 # --- Run the App ---
 if __name__ == '__main__':
     app.run(debug=True)
