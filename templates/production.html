@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Production Module</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .readonly-input {
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <h3>Production Progress</h3>
+  <hr>
+
+  <!-- ✅ Project Info -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Project: {{ project.vendor_name }} | Location: {{ project.location }}</h5>
+      <p>
+        Enquiry ID: <strong>{{ project.enquiry_id }}</strong> <br>
+        Total Area (sqm): <strong>{{ project.total_sqm }}</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- ✅ Production Entry Table -->
+  <form method="POST" action="/update_production/{{ project.id }}">
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Phase</th>
+          <th>Sq.m Completed</th>
+          <th>% Completed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set total = project.total_sqm or 0 %}
+        <tr>
+          <td>Sheet Cutting</td>
+          <td><input type="number" name="sheet_cutting" step="0.01" value="{{ progress.sheet_cutting_sqm }}" class="form-control"></td>
+          <td>
+            {% if total > 0 %}
+              {{ "%.2f"|format((progress.sheet_cutting_sqm / total) * 100) }}%
+            {% else %} 0%
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Plasma Fabrication</td>
+          <td><input type="number" name="plasma_fabrication" step="0.01" value="{{ progress.plasma_fabrication_sqm }}" class="form-control"></td>
+          <td>
+            {% if total > 0 %}
+              {{ "%.2f"|format((progress.plasma_fabrication_sqm / total) * 100) }}%
+            {% else %} 0%
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Boxing & Assembly</td>
+          <td><input type="number" name="boxing_assembly" step="0.01" value="{{ progress.boxing_assembly_sqm }}" class="form-control"></td>
+          <td>
+            {% if total > 0 %}
+              {{ "%.2f"|format((progress.boxing_assembly_sqm / total) * 100) }}%
+            {% else %} 0%
+            {% endif %}
+          </td>
+        </tr>
+        <!-- ✅ Overall Phase Summary -->
+        <tr class="table-info">
+          <td colspan="2"><strong>Overall Progress</strong></td>
+          <td>
+            {% if total > 0 %}
+              {{ "%.2f"|format(((progress.sheet_cutting_sqm + progress.plasma_fabrication_sqm + progress.boxing_assembly_sqm) / total) * 100) }}%
+              <button type="button" class="btn btn-sm btn-secondary ms-2" data-bs-toggle="modal" data-bs-target="#detailsModal">
+                View Details
+              </button>
+            {% else %} 0% {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="text-end">
+      <button type="submit" class="btn btn-success">Update Production</button>
+    </div>
+  </form>
+</div>
+
+<!-- ✅ Modal: Detailed % -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailsModalLabel">Production Phase Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li class="list-group-item">Sheet Cutting: 
+            {{ "%.2f"|format((progress.sheet_cutting_sqm / total) * 100 if total > 0 else 0) }}%
+          </li>
+          <li class="list-group-item">Plasma Fabrication: 
+            {{ "%.2f"|format((progress.plasma_fabrication_sqm / total) * 100 if total > 0 else 0) }}%
+          </li>
+          <li class="list-group-item">Boxing & Assembly: 
+            {{ "%.2f"|format((progress.boxing_assembly_sqm / total) * 100 if total > 0 else 0) }}%
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
