@@ -115,6 +115,14 @@ def init_db():
         FOREIGN KEY (project_id) REFERENCES projects(id)
     )''')
 
+    # Vendors table
+    c.execute('''CREATE TABLE IF NOT EXISTS vendors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        gst_number TEXT,
+        address TEXT
+    )''')
+
     conn.commit()
     conn.close()
 
