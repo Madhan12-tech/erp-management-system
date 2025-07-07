@@ -362,6 +362,51 @@ def export_excel(project_id):
     return send_file(output_path, as_attachment=True)
 
 
+# ---------- Submit for Review ----------
+@app.route('/submit_for_review/<int:project_id>', methods=['POST'])
+def submit_for_review(project_id):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE projects SET status = 'under review' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('projects'))
+
+
+# ---------- Open Measurement Entry Page ----------
+@app.route('/measurement/<int:project_id>')
+def measurement_entry(project_id):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+    project = cursor.fetchone()
+    conn.close()
+    return render_template('measurement.html', project=project)
+
+
+# ---------- Submit Measurement Sheet (Submit for Approval) ----------
+@app.route('/submit_measurement/<int:project_id>', methods=['POST'])
+def submit_measurement(project_id):
+    # Save measurement data if needed (future enhancement)
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE projects SET status = 'submitted for approval' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('projects'))
+
+
+# ---------- Approve Project (Admin) ----------
+@app.route('/approve_project/<int:project_id>', methods=['POST'])
+def approve_project(project_id):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE projects SET status = 'approved' WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('projects'))
+
+
 def get_all_projects():
     conn = get_db()
     cur = conn.cursor()
