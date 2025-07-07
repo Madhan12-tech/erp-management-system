@@ -82,6 +82,10 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
+@app.route('/projects')
+def projects():
+    return "<h2>Project Management coming soon...</h2>"
+
 @app.route('/vendor_registration', methods=['GET', 'POST'])
 def vendor_registration():
     if request.method == 'POST':
