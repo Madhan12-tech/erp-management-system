@@ -305,6 +305,14 @@ def production(project_id):
 
     return render_template("production.html", project=project, progress=progress)
 
+@app.route("/production_overview")
+def production_overview():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM projects")
+    projects = cur.fetchall()
+    return render_template("production_overview.html", projects=projects)
+
 @app.route("/update_production/<int:project_id>", methods=["POST"])
 def update_production(project_id):
     sheet_cutting = float(request.form.get("sheet_cutting") or 0)
