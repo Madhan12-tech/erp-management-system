@@ -346,14 +346,14 @@ def projects():
 
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM projects ORDER BY id DESC")
+    cur.execute("""
+        SELECT p.*, v.name AS vendor_name 
+        FROM projects p 
+        LEFT JOIN vendors v ON p.vendor_id = v.id 
+        ORDER BY p.id DESC
+    """)
     projects = cur.fetchall()
-
-    cur.execute("SELECT * FROM vendors")
-    vendors = cur.fetchall()
-
-    return render_template('projects.html', projects=projects, vendors=vendors)
-
+    return render_template('projects.html', projects=projects)
 
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
