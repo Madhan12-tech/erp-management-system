@@ -56,6 +56,15 @@
       padding: 6px 10px;
     }
   </style>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+  
   <script>
     function toggleSection(id) {
       var section = document.getElementById(id);
@@ -117,6 +126,21 @@
         </div>
       </div>
     </div>
+
+    .flash.success {
+  background: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+.flash.error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
 
     <!-- Contact Details -->
     <div class="form-section">
