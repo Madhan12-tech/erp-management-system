@@ -361,6 +361,28 @@ def export_excel(project_id):
     from flask import send_file
     return send_file(output_path, as_attachment=True)
 
+
+def get_all_projects():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT p.*, v.name as vendor_name
+        FROM projects p
+        LEFT JOIN vendors v ON p.vendor_id = v.id
+        ORDER BY p.id DESC
+    ''')
+    projects = [dict(row) for row in cur.fetchall()]
+    conn.close()
+    return projects
+
+def get_all_vendors():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM vendors ORDER BY name')
+    vendors = [dict(row) for row in cur.fetchall()]
+    conn.close()
+    return vendors
+
 # --- Run the App ---
 if __name__ == '__main__':
     app.run(debug=True)
