@@ -28,6 +28,27 @@ def init_db():
     cur.execute("INSERT OR IGNORE INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
                 ("Admin User", "Admin", "9999999999", "admin@ducting.com", "admin123"))
 
+
+
+
+    # Add column if not exists
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS production_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER UNIQUE,
+            sheet_cutting_sqm REAL DEFAULT 0,
+            plasma_fabrication_sqm REAL DEFAULT 0,
+            boxing_assembly_sqm REAL DEFAULT 0
+        )
+    ''')
+
+    # Add total_sqm field to projects table (if not already)
+    try:
+        c.execute('ALTER TABLE projects ADD COLUMN total_sqm REAL DEFAULT 0')
+    except:
+        pass  # Ignore if column already exists
+        
+
     # Vendors Table
     cur.execute('''CREATE TABLE IF NOT EXISTS vendors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -255,9 +276,56 @@ def vendor_registration():
     return render_template('vendor_registration.html')
 
 # --- Production Placeholder ---
-@app.route('/production')
-def production():
-    return "<h2>Production Module Coming Soon...</h2>"
+@app.route("/production/<int:project_id>")
+def production(project_id):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    # Get project
+    c.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+    project = c.fetchone()
+
+    # Get total sqm from measurement table (assume it's stored in table `measurement`)
+    c.execute("SELECT SUM(length * width * quantity) FROM measurement WHERE project_id = ?", (project_id,))
+    total_sqm = c.fetchone()[0] or 0
+
+    # Update project.total_sqm for reuse
+    c.execute("UPDATE projects SET total_sqm = ? WHERE id = ?", (total_sqm, project_id))
+
+    # Get production progress row (create if missing)
+    c.execute("SELECT * FROM production_progress WHERE project_id = ?", (project_id,))
+    progress = c.fetchone()
+
+    if not progress:
+        c.execute("INSERT INTO production_progress (project_id) VALUES (?)", (project_id,))
+        conn.commit()
+        c.execute("SELECT * FROM production_progress WHERE project_id = ?", (project_id,))
+        progress = c.fetchone()
+
+    conn.commit()
+    conn.close()
+
+    return render_template("production.html", project=project, progress=progress)
+
+@app.route("/update_production/<int:project_id>", methods=["POST"])
+def update_production(project_id):
+    sheet_cutting = float(request.form.get("sheet_cutting") or 0)
+    plasma_fabrication = float(request.form.get("plasma_fabrication") or 0)
+    boxing_assembly = float(request.form.get("boxing_assembly") or 0)
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("""
+        UPDATE production_progress
+        SET sheet_cutting_sqm = ?, plasma_fabrication_sqm = ?, boxing_assembly_sqm = ?
+        WHERE project_id = ?
+    """, (sheet_cutting, plasma_fabrication, boxing_assembly, project_id))
+
+    conn.commit()
+    conn.close()
+    return redirect(url_for('production', project_id=project_id))
 
 # --- Summary Placeholder ---
 @app.route('/summary')
