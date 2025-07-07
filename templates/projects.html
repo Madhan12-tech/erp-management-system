@@ -334,40 +334,88 @@
 {% endwith %} 
 
   <!-- === Add Project Popup === -->
-<div id="addProjectPopup" style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
-  background:#fff; padding:20px; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.2); z-index:9999; width:450px;">
+<!-- ===== POPUP: Add New Project ===== -->
+<div id="addProjectPopup" style="
+  display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
+  background:#fff; padding:25px; border-radius:12px; width:450px;
+  box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:10000;">
+  
+  <h3 style="margin-top:0; color:#2c3e50;">Add New Project</h3>
+  <form id="addProjectForm" method="POST" action="/create_project" enctype="multipart/form-data">
 
-  <h3>Add New Project</h3>
-  <form action="/add_project" method="POST">
-    <label>Vendor ID:</label>
-    <input type="number" name="vendor_id" required style="width:100%; padding:6px;"><br><br>
+    <!-- Vendor Dropdown -->
+    <label>Vendor:</label>
+    <select name="vendor_id" id="vendorDropdown" onchange="loadVendorInfo()" required style="width:100%; padding:8px;">
+      <option value="">-- Select Vendor --</option>
+      {% for vendor in vendors %}
+        <option value="{{ vendor['id'] }}">{{ vendor['name'] }}</option>
+      {% endfor %}
+    </select><br><br>
 
-    <label>Quotation/RO:</label>
-    <input type="text" name="quotation_ro" required style="width:100%; padding:6px;"><br><br>
+    <label>GST:</label>
+    <input type="text" id="vendor_gst" readonly style="width:100%; padding:8px;"><br><br>
+
+    <label>Address:</label>
+    <textarea id="vendor_address" readonly style="width:100%; padding:8px;"></textarea><br><br>
+
+    <label>Quotation / RO Number:</label>
+    <input type="text" name="quotation_ro" required style="width:100%; padding:8px;"><br><br>
 
     <label>Start Date:</label>
-    <input type="date" name="start_date" required style="width:100%; padding:6px;"><br><br>
+    <input type="date" name="start_date" required style="width:100%; padding:8px;"><br><br>
 
     <label>End Date:</label>
-    <input type="date" name="end_date" required style="width:100%; padding:6px;"><br><br>
+    <input type="date" name="end_date" required style="width:100%; padding:8px;"><br><br>
 
     <label>Location:</label>
-    <input type="text" name="location" required style="width:100%; padding:6px;"><br><br>
+    <input type="text" name="location" required style="width:100%; padding:8px;"><br><br>
 
-    <label>Incharge Name:</label>
-    <input type="text" name="incharge" style="width:100%; padding:6px;"><br><br>
+    <label>Incharge:</label>
+    <input type="text" name="incharge" required style="width:100%; padding:8px;"><br><br>
 
     <label>Notes:</label>
-    <textarea name="notes" style="width:100%; padding:6px;" rows="3"></textarea><br><br>
+    <textarea name="notes" style="width:100%; padding:8px;"></textarea><br><br>
+
+    <label>Attachment:</label>
+    <input type="file" name="file" style="width:100%; padding:8px;"><br><br>
+
+    <label>Enquiry ID:</label>
+    <input type="text" name="enquiry_id" style="width:100%; padding:8px;"><br><br>
 
     <div style="display:flex; justify-content:space-between;">
-      <button type="submit" style="background:#2ecc71; color:white; padding:8px 14px; border:none; border-radius:6px;">Add Project</button>
-      <button type="button" onclick="closeAddProjectPopup()" style="background:#e74c3c; color:white; padding:8px 14px; border:none; border-radius:6px;">Cancel</button>
+      <button type="submit" style="background:#2ecc71; color:white; padding:10px 20px; border:none; border-radius:6px;">Add</button>
+      <button type="button" onclick="closeAddProject()" style="background:#e74c3c; color:white; padding:10px 20px; border:none; border-radius:6px;">Cancel</button>
     </div>
   </form>
 </div>
 
+  
+
 <script>
+
+  function openAddProject() {
+  document.getElementById("addProjectPopup").style.display = "block";
+}
+
+function closeAddProject() {
+  document.getElementById("addProjectPopup").style.display = "none";
+}
+
+function loadVendorInfo() {
+  const vendorId = document.getElementById("vendorDropdown").value;
+  if (!vendorId) {
+    document.getElementById("vendor_gst").value = "";
+    document.getElementById("vendor_address").value = "";
+    return;
+  }
+
+  fetch(`/api/vendor/${vendorId}`)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("vendor_gst").value = data.gst || "";
+      document.getElementById("vendor_address").value = data.address || "";
+    });
+}
   function openAddProject() {
     document.getElementById("addProjectPopup").style.display = "block";
   }
