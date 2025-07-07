@@ -28,6 +28,17 @@ def init_db():
     cur.execute("INSERT OR IGNORE INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
                 ("Admin User", "Admin", "9999999999", "admin@ducting.com", "admin123"))
 
+    cur.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    role TEXT,
+    contact TEXT,
+    email TEXT UNIQUE,
+    password TEXT
+)
+''')
+
     # ✅ Production Progress Table
     cur.execute('''
         CREATE TABLE IF NOT EXISTS production_progress (
@@ -233,6 +244,63 @@ def set_status(project_id, status):
 @app.route('/employee_registration')
 def employee_registration():
     return "<h2>Employee Registration Coming Soon...</h2>"
+
+@app.route('/employees')
+def employee_list():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE role = 'Employee'")
+    employees = cur.fetchall()
+    return render_template("employee_list.html", employees=employees)
+
+@app.route('/employees/add', methods=['GET', 'POST'])
+def add_employee():
+    if request.method == 'POST':
+        name = request.form['name']
+        contact = request.form['contact']
+        email = request.form['email']
+        password = request.form['password']
+        role = 'Employee'
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO users (name, role, contact, email, password) VALUES (?, ?, ?, ?, ?)", 
+                    (name, role, contact, email, password))
+        conn.commit()
+        return redirect(url_for('employee_list'))
+
+    return render_template("employee_form.html", action="Add")
+
+@app.route('/employees/edit/<int:id>', methods=['GET', 'POST'])
+def edit_employee(id):
+    conn = get_db()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        contact = request.form['contact']
+        email = request.form['email']
+        password = request.form['password']
+        cur.execute("UPDATE users SET name=?, contact=?, email=?, password=? WHERE id=?", 
+                    (name, contact, email, password, id))
+        conn.commit()
+        return redirect(url_for('employee_list'))
+
+    cur.execute("SELECT * FROM users WHERE id=?", (id,))
+    emp = cur.fetchone()
+    return render_template("employee_form.html", employee=emp, action="Edit")
+
+@app.route('/employees/delete/<int:id>', methods=['POST'])
+def delete_employee(id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id=?", (id,))
+    conn.commit()
+    return redirect(url_for('employee_list'))
+
+
 
 # --- Vendor Registration Form ---
 @app.route('/vendor_registration', methods=['GET', 'POST'])
