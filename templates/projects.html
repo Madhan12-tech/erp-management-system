@@ -1,15 +1,17 @@
+<!-- Part 1: Setup, Styles, Modal Layout Start -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Projects | ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f6f9;
       margin: 0;
       padding: 0;
+      background: #f4f6f9;
     }
     .header {
       background: #2c3e50;
@@ -19,67 +21,93 @@
       justify-content: space-between;
       align-items: center;
     }
+    .header h2 {
+      margin: 0;
+    }
     .btn {
-      padding: 8px 16px;
+      padding: 8px 15px;
       background: #2980b9;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
+      transition: 0.3s;
     }
-    .btn:hover { background: #3498db; }
-
+    .btn:hover {
+      background: #3498db;
+    }
     .modal {
       display: none;
       position: fixed;
       z-index: 1000;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
       background: rgba(0,0,0,0.4);
     }
     .modal-content {
-      background: white;
-      padding: 20px;
+      background-color: #fff;
       margin: 5% auto;
+      padding: 20px;
+      border-radius: 12px;
       width: 60%;
-      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
     .form-group {
       margin-bottom: 12px;
     }
-    label { display: block; font-weight: bold; margin-bottom: 5px; }
-    input, select, textarea {
-      width: 100%; padding: 8px;
-      border: 1px solid #ccc; border-radius: 5px;
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
     }
-    .flex-row { display: flex; gap: 20px; }
-    .hidden { display: none; }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .flex-row {
+      display: flex;
+      gap: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .section-heading {
+      margin: 20px;
+      font-size: 20px;
+      color: #2c3e50;
+    }
   </style>
 </head>
 <body>
-
   <div class="header">
-    <h2>Projects</h2>
-    <button class="btn" onclick="openModal('projectModal')">+ Add Project</button>
+    <h2>Projects Module</h2>
+    <button class="btn" onclick="openProjectModal()">+ Add Project</button>
   </div>
 
-  <!-- Project Modal -->
+  <!-- Add Project Modal -->
   <div id="projectModal" class="modal">
     <div class="modal-content">
-      <h3>New Project</h3>
+      <h3>Add New Project</h3>
       <form id="projectForm" method="POST" action="/add_project" enctype="multipart/form-data">
+
+
         <div class="form-group">
-          <label>Client (Vendor)</label>
-          <select name="client_name" id="vendorSelect" onchange="fillVendorDetails()" required>
+          <label>Client Name</label>
+          <select name="client_name" id="client_name" required onchange="fillVendorDetails(this.value)">
             <option value="">Select</option>
             {% for v in vendors %}
-              <option value="{{ v.name }}" data-gst="{{ v.gst }}" data-address="{{ v.address }}">{{ v.name }}</option>
+              <option value="{{ v.id }}">{{ v.name }}</option>
             {% endfor %}
           </select>
         </div>
 
         <div class="form-group">
-          <label>Project ID</label>
+          <label>Project ID (Auto-generated)</label>
           <input type="text" name="enquiry_id" value="{{ enquiry_id }}" readonly>
         </div>
 
@@ -100,28 +128,27 @@
         </div>
 
         <div class="form-group">
-          <label>Location</label>
+          <label>Project Location</label>
           <input type="text" name="location" required>
         </div>
 
         <div class="form-group">
-          <label>Upload Drawing</label>
+          <label>Drawing Upload (Optional)</label>
           <input type="file" name="file">
         </div>
 
         <div class="flex-row">
           <div class="form-group" style="flex:1">
-            <label>GST</label>
-            <input type="text" id="gst_number" name="gst_number" readonly>
+            <label>Vendor GST</label>
+            <input type="text" name="gst_number" id="gst_number" readonly>
           </div>
           <div class="form-group" style="flex:2">
-            <label>Address</label>
-            <textarea id="address" name="address" readonly></textarea>
+            <label>Vendor Address</label>
+            <textarea name="address" id="address" readonly></textarea>
           </div>
         </div>
-
-        <div class="form-group">
-          <label>Incharge</label>
+<div class="form-group">
+          <label>Project Incharge</label>
           <select name="incharge" required>
             <option value="">Select</option>
             {% for e in employees %}
@@ -131,22 +158,22 @@
         </div>
 
         <div class="form-group">
-          <label>Notes</label>
+          <label>Notes (Optional)</label>
           <textarea name="notes"></textarea>
         </div>
 
-        <div style="text-align: right;">
-          <button type="button" class="btn" onclick="closeModal('projectModal')">Cancel</button>
+        <div style="display: flex; justify-content: end; gap: 10px;">
+          <button type="button" class="btn" onclick="closeProjectModal()">Cancel</button>
           <button type="submit" class="btn">Save & Continue</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Preparation Modal -->
+  <!-- Preparation Phase Popup -->
   <div id="preparationModal" class="modal">
     <div class="modal-content">
-      <h3>Preparation Phase</h3>
+      <h3>Preparation - Project Details</h3>
       <form method="POST" action="/start_preparation">
         <input type="hidden" name="project_id" value="{{ latest_project_id }}">
 
@@ -161,66 +188,111 @@
         </div>
 
         <div class="form-group">
-          <label>Site Engineer</label>
+          <label>Site Engineer Name</label>
           <input type="text" name="site_engineer" required>
         </div>
 
         <div class="form-group">
           <label>Mobile Number</label>
-          <input type="text" name="mobile" required pattern="[0-9]{10}">
+          <input type="text" name="mobile" required pattern="[0-9]{10}" maxlength="10">
         </div>
 
-        <div style="text-align: right;">
-          <button type="button" class="btn" onclick="closeModal('preparationModal')">Cancel</button>
+        <div style="display: flex; justify-content: end; gap: 10px;">
+          <button type="button" class="btn" onclick="closePreparationModal()">Cancel</button>
           <button type="submit" class="btn">Save & Continue</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Preparation Start Button -->
   <div style="margin: 20px;">
-    <button class="btn" onclick="openModal('preparationModal')">Start Phase 1 - Preparation</button>
+    <button class="btn" onclick="openPreparationModal()">Start Phase 1 - Preparation</button>
+  </div>
+ <!-- Design Phase Section -->
+  <h2 style="margin-top: 30px; color: #2c3e50;">Design Process</h2>
+  <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+    {% for project in projects %}
+      <div class="phase-buttons">
+        <!-- Phase 1: Preparation -->
+        <form method="POST" action="/start_preparation">
+          <input type="hidden" name="project_id" value="{{ project.id }}">
+          <button type="submit" class="btn btn-primary">
+            1️⃣ Preparation
+          </button>
+        </form>
+
+        <!-- Phase 2 -->
+        <form method="POST" action="/mark_completion/{{ project.id }}">
+          <button type="submit" class="btn btn-secondary" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>
+            2️⃣ Completion ✅
+          </button>
+        </form>
+
+        <!-- Phase 3 -->
+        <form method="POST" action="/submit_for_approval/{{ project.id }}">
+          <button type="submit" class="btn btn-warning" {% if project.status != 'Completion Completed' %}disabled{% endif %}>
+            3️⃣ Submit for Approval 📤
+          </button>
+        </form>
+
+        <!-- Phase 4 -->
+        <form method="POST" action="/under_review/{{ project.id }}">
+          <button type="submit" class="btn btn-info" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>
+            4️⃣ Under Review 🔍
+          </button>
+        </form>
+
+        <!-- Phase 5 Approve -->
+        <form method="POST" action="/approve_project/{{ project.id }}" style="display: inline-block;">
+          <button type="submit" class="btn btn-success" {% if project.status != 'Under Review' %}disabled{% endif %}>
+            5️⃣ Approve ✅
+          </button>
+        </form>
+
+        <!-- Phase 5 Reject -->
+        <form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display: inline-block;">
+          <button type="submit" class="btn btn-danger" {% if project.status != 'Under Review' %}disabled{% endif %}>
+            🔁 Send Back to Preparation
+          </button>
+        </form>
+      </div>
+    {% endfor %}
   </div>
 
-  <!-- Design Process Status -->
-  <h3 style="margin-left: 20px;">Design Process</h3>
-  {% for project in projects %}
-    <div style="margin: 20px;">
-      <strong>{{ project.client_name }}</strong> - {{ project.status }}<br><br>
-      <form method="POST" action="/mark_completion/{{ project.id }}" style="display:inline;">
-        <button class="btn" {% if project.status != 'Preparation Completed' %}disabled{% endif %}>Phase 2 - Complete</button>
-      </form>
-      <form method="POST" action="/submit_for_approval/{{ project.id }}" style="display:inline;">
-        <button class="btn" {% if project.status != 'Completion Completed' %}disabled{% endif %}>Phase 3 - Submit</button>
-      </form>
-      <form method="POST" action="/under_review/{{ project.id }}" style="display:inline;">
-        <button class="btn" {% if project.status != 'Submitted for Approval' %}disabled{% endif %}>Phase 4 - Review</button>
-      </form>
-      <form method="POST" action="/approve_project/{{ project.id }}" style="display:inline;">
-        <button class="btn" {% if project.status != 'Under Review' %}disabled{% endif %}>✅ Approve</button>
-      </form>
-      <form method="POST" action="/reject_to_preparation/{{ project.id }}" style="display:inline;">
-        <button class="btn" {% if project.status != 'Under Review' %}disabled{% endif %}>🔁 Back to Prep</button>
-      </form>
-    </div>
-  {% endfor %}
-
-  <!-- Scripts -->
+  <!-- JavaScript Section -->
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script>
-    const vendorSelect = document.getElementById("vendorSelect");
-    function fillVendorDetails() {
-      const selected = vendorSelect.options[vendorSelect.selectedIndex];
-      document.getElementById("gst_number").value = selected.getAttribute("data-gst") || '';
-      document.getElementById("address").value = selected.getAttribute("data-address") || '';
+    const vendorData = {{ vendor_json | safe }};
+    const clientSelect = document.querySelector('select[name="client_name"]');
+    const gstField = document.getElementById('gst_number');
+    const addressField = document.getElementById('address');
+
+    if (clientSelect) {
+      clientSelect.addEventListener('change', () => {
+        const selected = clientSelect.value;
+        const vendor = vendorData.find(v => v.name === selected);
+        if (vendor) {
+          gstField.value = vendor.gst;
+          addressField.value = vendor.address;
+        } else {
+          gstField.value = '';
+          addressField.value = '';
+        }
+      });
     }
 
-    function openModal(id) {
-      document.getElementById(id).style.display = 'block';
+    function openProjectModal() {
+      document.getElementById('projectModal').style.display = 'block';
     }
-
-    function closeModal(id) {
-      document.getElementById(id).style.display = 'none';
+    function closeProjectModal() {
+      document.getElementById('projectModal').style.display = 'none';
+    }
+    function openPreparationModal() {
+      document.getElementById('preparationModal').style.display = 'block';
+    }
+    function closePreparationModal() {
+      document.getElementById('preparationModal').style.display = 'none';
     }
   </script>
 
@@ -239,6 +311,6 @@
       </script>
     {% endif %}
   {% endwith %}
-
 </body>
-</html>
+</html> 
+        
