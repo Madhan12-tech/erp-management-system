@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3, os
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'secretkey'
@@ -338,22 +339,16 @@ def get_vendor_info(vendor_id):
         return {'gst': vendor['gst'], 'address': vendor['address']}
     else:
         return {}, 404
-
 @app.route('/projects')
 def projects():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    # Generate a unique enquiry ID for the Add Project popup
+    enquiry_id = str(uuid.uuid4())[:8].upper()  # e.g. "A1B2C3D4"
 
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT p.*, v.name AS vendor_name 
-        FROM projects p 
-        LEFT JOIN vendors v ON p.vendor_id = v.id 
-        ORDER BY p.id DESC
-    """)
-    projects = cur.fetchall()
-    return render_template('projects.html', projects=projects)
+    # existing code to fetch projects and vendors
+    projects = get_all_projects()  
+    vendors = get_all_vendors()    
+
+    return render_template('projects.html', projects=projects, vendors=vendors, enquiry_id=enquiry_id)
 
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
