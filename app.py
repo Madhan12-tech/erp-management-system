@@ -12,8 +12,7 @@ def get_db():
 
 # --- Initialize DB with admin user ---
 def init_db():
-    if not os.path.exists("database.db"):
-        conn = get_db()
+    conn = get_db()
         cur = conn.cursor()
 
         # Users Table
