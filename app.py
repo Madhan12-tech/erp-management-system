@@ -51,40 +51,50 @@ def init_db():
 
         # --------- Project + Duct Tables ----------
 
-    # Projects Table
-    cur.execute('''CREATE TABLE IF NOT EXISTS projects (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        enquiry_id TEXT,
-        vendor_name TEXT,
-        location TEXT,
-        status TEXT,
-        client_name TEXT,
-        site_location TEXT,
-        engineer_name TEXT,
-        mobile TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )''')
+    # --- Create Project & Duct Tables ---
+def create_project_tables():
+    conn = get_db()
+    cur = conn.cursor()
 
-    # Duct Table
-    cur.execute('''CREATE TABLE IF NOT EXISTS ducts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        type TEXT,
-        length REAL,
-        width REAL,
-        height REAL,
-        quantity INTEGER,
-        FOREIGN KEY(project_id) REFERENCES projects(id)
-    )''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vendor_id INTEGER,
+            quotation_ro TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            location TEXT,
+            incharge TEXT,
+            notes TEXT,
+            file_name TEXT,
+            enquiry_id TEXT,
+            client_name TEXT,
+            site_location TEXT,
+            engineer_name TEXT,
+            mobile TEXT,
+            status TEXT DEFAULT 'new',
+            FOREIGN KEY(vendor_id) REFERENCES vendors(id)
+        )
+    ''')
 
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS ducts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            type TEXT,
+            length REAL,
+            width REAL,
+            height REAL,
+            quantity INTEGER,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        )
+    ''')
 
+    conn.commit()
+    conn.close()
 
-# Call this once on app start
+# ✅ Call table creation and DB initialization at startup
 create_project_tables()
-
-        conn.commit()
-        conn.close()
-
 init_db()
 
 # --- Login Route ---
