@@ -101,54 +101,30 @@
     </form>
   </header>
 
-  <!-- 📌 Module Cards -->
-  <div class="container">
-    <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects">
-      <a href="{{ url_for('projects') }}">Project Management</a>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees">
-      <a href="{{ url_for('employee_registration') }}">Employee Registration</a>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
-      <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
-      <a href="{{ url_for('summary') }}">Summary</a>
-    </div>
+  <<div class="container">
+  <div class="card">
+    <img src="https://img.icons8.com/ios-filled/50/projects.png" alt="Projects">
+    <a href="{{ url_for('projects') }}">Project Management</a>
   </div>
-
+  <div class="card">
+    <img src="https://img.icons8.com/ios-filled/50/factory.png" alt="Production">
+    <a href="{{ url_for('production_overview') }}">Production Module</a>
+  </div>
+  <div class="card">
+    <img src="https://img.icons8.com/ios-filled/50/worker-male.png" alt="Employees">
+    <a href="{{ url_for('employee_registration') }}">Employee Registration</a>
+  </div>
+  <div class="card">
+    <img src="https://img.icons8.com/ios-filled/50/supplier.png" alt="Vendors">
+    <a href="{{ url_for('vendor_registration') }}">Vendor Registration</a>
+  </div>
+  <div class="card">
+    <img src="https://img.icons8.com/ios-filled/50/combo-chart.png" alt="Summary">
+    <a href="{{ url_for('summary') }}">Summary</a>
+  </div>
+  </div>
   <!-- 📌 Project-Wise Actions Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Vendor</th>
-        <th>Location</th>
-        <th>Status</th>
-        <th>Enquiry ID</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in projects %}
-      <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.vendor_name }}</td>
-        <td>{{ p.location }}</td>
-        <td>{{ p.status or 'New' }}</td>
-        <td>{{ p.enquiry_id }}</td>
-        <td>
-          <a href="{{ url_for('production', project_id=p.id) }}" class="btn btn-primary">Production</a>
-          <a href="{{ url_for('measurement', project_id=p.id) }}" class="btn btn-success">Measurement</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
 
 </body>
 </html>
