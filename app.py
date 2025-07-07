@@ -209,14 +209,6 @@ def set_status(project_id, status):
     conn.commit()
     return '', 200
 
-@app.route('/approve_project/<int:project_id>', methods=['POST'])
-def approve_project(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE projects SET status = 'approved' WHERE id = ?", (project_id,))
-    conn.commit()
-    return '', 200
-
 
 
 # --- Employee Registration Placeholder ---
