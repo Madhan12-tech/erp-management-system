@@ -449,7 +449,7 @@ def reject_to_preparation(project_id):
     flash("Project sent back to preparation", "warning")
     return redirect(url_for('projects_page'))
 
----------- MAIN ----------
+#---------- MAIN ----------
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host='0.0.0.0', port=10000)
