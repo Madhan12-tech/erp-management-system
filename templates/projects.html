@@ -255,15 +255,15 @@
   });
 </script>
 {% endif %}
-
+{% if project.status == 'preparation' %}
 <script>
-  $('#saveAndOpenModal').click(function () {
-    const projectId = $(this).data('project');
-    $.post(`/submit_measurement/${projectId}`, function () {
-      location.reload();  // ✅ Reload triggers the `{% if status == 'preparation' %}` block
-    });
+  document.addEventListener("DOMContentLoaded", function () {
+    var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
+    modal.show();
   });
 </script>
+<!-- You probably forgot this line -->
+{% endif %}
 
 <!-- ✅ SCRIPTS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
