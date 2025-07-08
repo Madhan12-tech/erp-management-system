@@ -1,267 +1,415 @@
-<!-- templates/projects.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Projects | Ducting ERP</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: #f1f4f9;
+      font-family: 'Segoe UI', sans-serif;
     }
-    .card-header {
-      background-color: #0d6efd;
+    .table th, .table td {
+      vertical-align: middle !important;
+    }
+    .modal-header {
+      background-color: #007bff;
       color: white;
     }
-    .section-title {
-      font-size: 1.3rem;
-      font-weight: bold;
-      margin-top: 1.5rem;
-      margin-bottom: 1rem;
+    .modal-footer button {
+      min-width: 100px;
+    }
+    .design-process-box {
+      background: #fff;
+      padding: 20px;
+      margin-top: 20px;
+      border: 2px dashed #ddd;
+      border-radius: 10px;
+    }
+    .design-stage {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      background-color: #f8f9fa;
+      border-left: 5px solid #007bff;
     }
   </style>
 </head>
 <body>
 <div class="container mt-4">
-  <h2 class="text-center mb-4">Project Management</h2>
-  <!-- 🔘 Add Project Button -->
-  <div class="mb-3 text-end">
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">➕ Add Project</button>
+  <h3 class="mb-4">📁 Projects Overview</h3>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="text-end mb-3">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">+ Add Project</button>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle text-center bg-white">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Vendor</th>
+          <th>Project Name</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Status</th>
+          <th>Drawing</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project in projects %}
+          <tr>
+            <td>{{ project.id }}</td>
+            <td>{{ project.vendor_name }}</td>
+            <td>{{ project.quotation_ro }}</td>
+            <td>{{ project.start_date }}</td>
+            <td>{{ project.end_date }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ project.status | capitalize }}</span>
+            </td>
+            <td>
+              {% if project.file_name %}
+                <a href="/static/uploads/{{ project.file_name }}" target="_blank">View</a>
+              {% else %}
+                <span class="text-muted">No file</span>
+              {% endif %}
+            </td>
+            <td>
+              <!-- Measurement Sheet -->
+              <button class="btn btn-sm btn-info mb-1" data-bs-toggle="modal"
+                      data-bs-target="#measurementModal{{ project.id }}">📐 Measurement</button>
+              <!-- Submit for Review -->
+              <form method="POST" action="/submit_for_review/{{ project.id }}" class="d-inline">
+                <button class="btn btn-sm btn-warning mb-1" type="submit">Submit</button>
+              </form>
+              <!-- Approve -->
+              <form method="POST" action="/approve_project/{{ project.id }}" class="d-inline">
+                <button class="btn btn-sm btn-success mb-1" type="submit">Approve</button>
+              </form>
+              <!-- Delete -->
+              <form method="POST" action="/project/{{ project.id }}/delete" class="d-inline">
+                <button class="btn btn-sm btn-danger mb-1" type="submit">Delete</button>
+              </form>
+              <!-- Export Excel -->
+              <a href="/export_excel/{{ project.id }}" class="btn btn-sm btn-outline-secondary mb-1">Export</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
-  <!-- 🪟 Add Project Modal -->
-  <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <form action="/create_project" method="POST" enctype="multipart/form-data">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <!-- 📦 Add New Project Modal -->
+<div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="/create_project" enctype="multipart/form-data">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
+          <button type="button" class="btn-close bg-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body row g-3 px-3">
+          <div class="col-md-6">
+            <label class="form-label">Select Vendor</label>
+            <select class="form-select" name="vendor_id" required>
+              <option value="">-- Choose Vendor --</option>
+              {% for vendor in vendors %}
+                <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+              {% endfor %}
+            </select>
           </div>
-          <div class="modal-body">
-            <!-- 🔽 Vendor -->
-            <div class="mb-3">
-              <label for="vendor_id" class="form-label">Select Vendor</label>
-              <select class="form-select" name="vendor_id" id="vendor_id" required onchange="fetchVendorDetails(this.value)">
-                <option value="">-- Choose Vendor --</option>
-                {% for vendor in vendors %}
-                  <option value="{{ vendor.id }}">{{ vendor.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <!-- 🧾 Quotation RO -->
-            <div class="mb-3">
-              <label for="quotation_ro" class="form-label">Quotation / RO No.</label>
-              <input type="text" class="form-control" name="quotation_ro" id="quotation_ro" required>
-            </div>
-
-            <!-- 🗓 Dates -->
-            <div class="row">
-              <div class="col">
-                <label for="start_date" class="form-label">Start Date</label>
-                <input type="date" class="form-control" name="start_date" id="start_date" required>
-              </div>
-              <div class="col">
-                <label for="end_date" class="form-label">End Date</label>
-                <input type="date" class="form-control" name="end_date" id="end_date" required>
-              </div>
-            </div>
-
-            <!-- 📍 Location, Incharge, Notes -->
-            <div class="row mt-3">
-              <div class="col">
-                <label for="location" class="form-label">Location</label>
-                <input type="text" class="form-control" name="location" id="location" required>
-              </div>
-              <div class="col">
-                <label for="incharge" class="form-label">Project Incharge</label>
-                <input type="text" class="form-control" name="incharge" id="incharge" required>
-              </div>
-            </div>
-
-            <div class="mb-3 mt-3">
-              <label for="notes" class="form-label">Notes / Description</label>
-              <textarea class="form-control" name="notes" id="notes" rows="3"></textarea>
-            </div>
-
-            <!-- 📁 Upload File -->
-            <div class="mb-3">
-              <label for="file" class="form-label">Upload File (Optional)</label>
-              <input class="form-control" type="file" id="file" name="file">
-            </div>
-
-            <!-- 🆔 Enquiry ID (readonly) -->
-            <div class="mb-3">
-              <label for="enquiry_id" class="form-label">Enquiry ID</label>
-              <input type="text" class="form-control" name="enquiry_id" id="enquiry_id" value="{{ enquiry_id }}" readonly>
-            </div>
+          <div class="col-md-6">
+            <label class="form-label">Quotation / RO No.</label>
+            <input type="text" class="form-control" name="quotation_ro" required>
           </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">💾 Save Project</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+          <div class="col-md-6">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control" name="start_date" required>
           </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  
-<!-- 📋 Project Table -->
-<div class="table-responsive">
-  <table class="table table-bordered table-hover">
-    <thead class="table-dark text-center">
-      <tr>
-        <th>Enquiry ID</th>
-        <th>Vendor</th>
-        <th>Quotation</th>
-        <th>Location</th>
-        <th>Status</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Incharge</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for project in projects %}
-      <tr>
-        <td>{{ project.enquiry_id }}</td>
-        <td>{{ project.vendor_name }}</td>
-        <td>{{ project.quotation_ro }}</td>
-        <td>{{ project.location }}</td>
-        <td>
-          <span class="badge bg-info text-dark">{{ project.status|capitalize }}</span>
-        </td>
-        <td>{{ project.start_date }}</td>
-        <td>{{ project.end_date }}</td>
-        <td>{{ project.incharge }}</td>
-        <td class="text-center">
-          <!-- 📌 Design Process Dropdown -->
-          <div class="dropdown">
-            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              Design Process
-            </button>
-            <ul class="dropdown-menu dropdown-menu-dark">
-              <li>
-                <button class="dropdown-item" data-bs-toggle="modal"
-                  data-bs-target="#measurementModal{{ project.id }}">
-                  ✏️ Measurement Sheet
-                </button>
-              </li>
-              <li>
-                <form method="POST" action="/submit_measurement/{{ project.id }}">
-                  <button type="submit" class="dropdown-item">📤 Submit for Approval</button>
-                </form>
-              </li>
-              <li>
-                <form method="POST" action="/submit_for_review/{{ project.id }}">
-                  <button type="submit" class="dropdown-item">📨 Under Review</button>
-                </form>
-              </li>
-              <li>
-                <form method="POST" action="/approve_project/{{ project.id }}">
-                  <button type="submit" class="dropdown-item">✅ Approve</button>
-                </form>
-              </li>
-            </ul>
+          <div class="col-md-6">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-control" name="end_date" required>
           </div>
-
-          <!-- 📁 Export -->
-          <a href="/export_excel/{{ project.id }}" class="btn btn-outline-success btn-sm mt-1">⬇️ Export</a>
-
-          <!-- ❌ Delete -->
-          <form action="/project/{{ project.id }}/delete" method="POST" style="display:inline;">
-            <button class="btn btn-outline-danger btn-sm mt-1" onclick="return confirm('Are you sure?')">🗑️</button>
-          </form>
-        </td>
-      </tr>
-
-      <!-- 🪟 Measurement Sheet Modal -->
-      <div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-          <div class="modal-content">
-            <form method="POST" action="/add_measurement">
-              <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">Measurement Sheet - {{ project.enquiry_id }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
-                <input type="hidden" name="project_id" value="{{ project.id }}">
-                <div class="row mb-3">
-                  <div class="col">
-                    <label>Client Name</label>
-                    <input type="text" name="client_name" class="form-control" required>
-                  </div>
-                  <div class="col">
-                    <label>Site Location</label>
-                    <input type="text" name="site_location" class="form-control" required>
-                  </div>
-                </div>
-                <div class="row mb-3">
-                  <div class="col">
-                    <label>Engineer Name</label>
-                    <input type="text" name="engineer_name" class="form-control" required>
-                  </div>
-                  <div class="col">
-                    <label>Mobile</label>
-                    <input type="text" name="mobile" class="form-control" required>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-success" type="submit">💾 Save Measurement</button>
-                <button class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
-              </div>
-            </form>
+          <div class="col-md-6">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control" name="location" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Project Incharge</label>
+            <input type="text" class="form-control" name="incharge" required>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Notes / Description</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Upload File (Optional)</label>
+            <input type="file" class="form-control" name="file">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Enquiry ID</label>
+            <input type="text" class="form-control" name="enquiry_id" value="{{ enquiry_id }}" readonly>
           </div>
         </div>
-      </div>
-
-      {% endfor %}
-    </tbody>
-  </table>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">💾 Save Project</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
-<!-- 📌 Vendor GST & Address Auto-fill Script -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const vendorSelect = document.getElementById("vendor_id");
-    const gstInput = document.getElementById("vendor_gst");
-    const addressInput = document.getElementById("vendor_address");
+  <!-- 🧾 Measurement Sheet Popup -->
+<div class="modal fade" id="measurementModal" tabindex="-1" aria-labelledby="measurementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="POST" action="/add_measurement" id="measurementForm">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title" id="measurementModalLabel">Measurement Sheet Entry</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-    if (vendorSelect) {
-      vendorSelect.addEventListener("change", function () {
-        const vendorId = this.value;
-        if (vendorId) {
-          fetch(`/api/vendor/${vendorId}`)
-            .then((response) => response.json())
-            .then((data) => {
-              gstInput.value = data.gst || "";
-              addressInput.value = data.address || "";
-            })
-            .catch((error) => {
-              gstInput.value = "";
-              addressInput.value = "";
-              console.error("Error fetching vendor data:", error);
-            });
-        }
-      });
+        <div class="modal-body row g-3 px-3">
+          <input type="hidden" name="project_id" id="measurementProjectId">
+
+          <div class="col-md-6">
+            <label class="form-label">Client Name</label>
+            <input type="text" class="form-control" name="client_name" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Site Location</label>
+            <input type="text" class="form-control" name="site_location" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Engineer Name</label>
+            <input type="text" class="form-control" name="engineer_name" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Mobile</label>
+            <input type="text" class="form-control" name="mobile" required>
+          </div>
+
+          <hr class="my-3">
+
+          <!-- 🧱 Duct Entry Form -->
+          <div class="col-12">
+            <h6>Duct Entry</h6>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="type" id="ductType">
+              <option value="Rectangular">Rectangular</option>
+              <option value="Elbow">Elbow</option>
+              <option value="Round">Round</option>
+              <option value="Transition">Transition</option>
+              <option value="Offset">Offset</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">W1</label>
+            <input type="number" class="form-control" id="w1" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">H1</label>
+            <input type="number" class="form-control" id="h1" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">W2</label>
+            <input type="number" class="form-control" id="w2" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">H2</label>
+            <input type="number" class="form-control" id="h2" step="0.01">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Length / Radius</label>
+            <input type="number" class="form-control" id="length_radius" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Qty</label>
+            <input type="number" class="form-control" id="quantity">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Gauge</label>
+            <input type="text" class="form-control" id="gauge">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Offset (°)</label>
+            <input type="text" class="form-control" id="offset_degree">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Area (sqm)</label>
+            <input type="text" class="form-control" id="area" readonly>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label d-block">&nbsp;</label>
+            <button type="button" class="btn btn-primary w-100" onclick="addDuctRow()">➕ Add</button>
+          </div>
+
+          <!-- 📋 Live Table -->
+          <div class="col-12 mt-4">
+            <h6>Live Duct Table</h6>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm" id="ductTable">
+                <thead class="table-light">
+                  <tr>
+                    <th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
+                    <th>Len/Radius</th><th>Qty</th><th>Gauge</th><th>Offset</th><th>Area</th><th>❌</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">💾 Save Measurement</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+  <script>
+  // 📐 Auto-calculate area based on selected type
+  function calculateArea() {
+    const type = document.getElementById("ductType").value;
+    const w1 = parseFloat(document.getElementById("w1").value) || 0;
+    const h1 = parseFloat(document.getElementById("h1").value) || 0;
+    const w2 = parseFloat(document.getElementById("w2").value) || 0;
+    const h2 = parseFloat(document.getElementById("h2").value) || 0;
+    const l = parseFloat(document.getElementById("length_radius").value) || 0;
+    const q = parseFloat(document.getElementById("quantity").value) || 0;
+
+    let area = 0;
+
+    if (type === "Rectangular") {
+      area = ((w1 + h1) * 2 * l * q) / 1000000;
+    } else if (type === "Elbow") {
+      area = ((w1 + h1) * 1.5 * l * q) / 1000000;
+    } else if (type === "Round") {
+      const pi = 3.1416;
+      area = (pi * w1 * l * q) / 1000000;
+    } else if (type === "Transition") {
+      area = (((w1 + w2) + (h1 + h2)) * l * q) / (2 * 1000000);
+    } else if (type === "Offset") {
+      area = ((w1 + h1) * l * q * 1.1) / 1000000;
     }
-  });
-</script>
 
-<!-- ✅ Bootstrap JS & Dependencies -->
+    document.getElementById("area").value = area.toFixed(3);
+  }
+
+  // 🧮 Auto-calc area when input changes
+  ["ductType", "w1", "h1", "w2", "h2", "length_radius", "quantity"].forEach(id => {
+    document.getElementById(id).addEventListener("input", calculateArea);
+  });
+
+  // ➕ Add row to table
+  function addDuctRow() {
+    const type = document.getElementById("ductType").value;
+    const w1 = document.getElementById("w1").value;
+    const h1 = document.getElementById("h1").value;
+    const w2 = document.getElementById("w2").value;
+    const h2 = document.getElementById("h2").value;
+    const length = document.getElementById("length_radius").value;
+    const qty = document.getElementById("quantity").value;
+    const gauge = document.getElementById("gauge").value;
+    const offset = document.getElementById("offset_degree").value;
+    const area = document.getElementById("area").value;
+
+    const tbody = document.querySelector("#ductTable tbody");
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${type}</td>
+      <td>${w1}</td>
+      <td>${h1}</td>
+      <td>${w2}</td>
+      <td>${h2}</td>
+      <td>${length}</td>
+      <td>${qty}</td>
+      <td>${gauge}</td>
+      <td>${offset}</td>
+      <td>${area}</td>
+      <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">❌</button></td>
+    `;
+
+    tbody.appendChild(row);
+
+    // Reset form inputs after add
+    ['w1', 'h1', 'w2', 'h2', 'length_radius', 'quantity', 'gauge', 'offset_degree', 'area'].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+  }
+  </script>
+  <!-- 🧭 DESIGN PROCESS STAGES -->
+<div class="mt-4">
+  <h5 class="text-primary">🧭 Design Process</h5>
+
+  <!-- Stage Buttons -->
+  <div class="d-flex flex-wrap gap-2">
+
+    {% if project.status == 'new' %}
+      <form method="POST" action="/submit_measurement/{{ project.id }}">
+        <button class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
+      </form>
+
+    {% elif project.status == 'preparation' %}
+      <form method="POST" action="/submit_for_review/{{ project.id }}">
+        <button class="btn btn-secondary">🚧 Submit for Review</button>
+      </form>
+
+    {% elif project.status == 'under_review' %}
+      <span class="badge bg-info text-dark p-2">⏳ Under Review</span>
+
+    {% elif project.status == 'submitted for approval' %}
+      <form method="POST" action="/approve_project/{{ project.id }}">
+        <button class="btn btn-success">✅ Approve Project</button>
+      </form>
+
+    {% elif project.status == 'approved' %}
+      <span class="badge bg-success p-2">🎯 Approved</span>
+
+    {% else %}
+      <span class="badge bg-secondary p-2">⚙️ {{ project.status }}</span>
+    {% endif %}
+
+  </div>
+</div>
+  </div> <!-- End of main container -->
+</div> <!-- End of content wrapper -->
+
+<!-- ✅ Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- ✅ Optional Toasts or Notifications -->
+<!-- ✅ Optional: Toast Auto Dismiss -->
 <script>
-  const toastElList = [].slice.call(document.querySelectorAll('.toast'))
-  const toastList = toastElList.map(function (toastEl) {
-    return new bootstrap.Toast(toastEl)
-  })
-  toastList.forEach(t => t.show())
+  setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => alert.remove());
+  }, 5000);
 </script>
 
 </body>
 </html>
   
+
   
