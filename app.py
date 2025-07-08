@@ -299,6 +299,17 @@ def approve_project(project_id):
     conn.close()
     return redirect(url_for('projects'))
 
+
+@app.route('/save_vendor_project', methods=['POST'])
+def save_vendor_project():
+    # Collect form data here and save to DB
+    vendor_id = request.form['vendor_id']
+    project_name = request.form['project_name']
+    # ... add more fields as needed
+    # Save logic
+    flash("Vendor project saved successfully!", "success")
+    return redirect(url_for('projects'))
+
 # ---------- ✅ API: Get Duct Entries for Project (Live Table) ----------
 @app.route('/api/ducts/<int:project_id>')
 def api_ducts(project_id):
