@@ -33,7 +33,7 @@
   </button>
 
   <!-- ✅ PROJECTS TABLE -->
-  <div class="table-responsive">
+  <div class="table-responsive mb-4">
     <table class="table table-bordered table-hover bg-white">
       <thead class="table-light">
         <tr>
@@ -64,189 +64,181 @@
     </table>
   </div>
 
-  <!-- ✅ DESIGN PROCESS SECTION -->
+  <!-- ✅ PROJECT HEADER + CONTROLS -->
   {% if project %}
-  <hr>
-  <h5 class="mt-4 text-primary">🧭 Design Process</h5>
-  <div class="d-flex flex-wrap gap-2">
+  <div class="row bg-light p-3 rounded mb-3 border">
+    <div class="col-md-3"><strong>📁 Project:</strong> {{ project.project_name }}</div>
+    <div class="col-md-3"><strong>🏷 Enquiry:</strong> {{ project.enquiry_no }}</div>
+    <div class="col-md-3"><strong>📅 Start:</strong> {{ project.start_date }}</div>
+    <div class="col-md-3"><strong>📅 End:</strong> {{ project.end_date }}</div>
+  </div>
 
+  <div class="d-flex gap-2 mb-3">
     {% if project.status == 'new' %}
-      <button class="btn btn-warning" id="saveAndOpenModal" data-project="{{ project.id }}">
-  📋 Save & Continue to Measurement Sheet
-      </button>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal"
-  {% if project.status != 'preparation' %} disabled {% endif %}>
-  📐 Measurement Sheet
-      </button>
-      <form method="POST" action="/submit_for_review/{{ project.id }}">
-        <button class="btn btn-secondary">🚧 Submit for Review</button>
+      <form method="POST" action="/continue_to_measurement/{{ project.id }}">
+        <button type="submit" class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
       </form>
-
-    {% elif project.status == 'under_review' %}
-      <span class="badge bg-info text-dark p-2">⏳ Under Review</span>
-
-    {% elif project.status == 'submitted for approval' %}
-      <form method="POST" action="/approve_project/{{ project.id }}">
-        <button class="btn btn-success">✅ Approve Project</button>
-      </form>
-
-    {% elif project.status == 'approved' %}
-      <span class="badge bg-success p-2">🎯 Approved</span>
-
-    {% else %}
-      <span class="badge bg-secondary p-2">⚙️ {{ project.status }}</span>
     {% endif %}
+    {% if project.status == 'preparation' %}
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal">📐 Measurement Sheet</button>
+    {% endif %}
+    <form method="POST" action="/submit_for_review/{{ project.id }}">
+      <button class="btn btn-secondary">🚧 Submit for Review</button>
+    </form>
   </div>
   {% endif %}
 
-  <!-- ✅ RIGHT-SIDE LIVE DUCT TABLE (if project exists) -->
+  <!-- ✅ LEFT/RIGHT: ENTRY FORM & LIVE TABLE -->
   {% if project %}
-  <div class="mt-4">
-    <h5>📊 Duct Entries</h5>
-    <div class="table-responsive">
-      <table class="table table-sm table-bordered bg-white">
-        <thead class="table-secondary">
-          <tr>
-            <th>Duct No</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
-            <th>Len/Rad</th><th>Qty</th><th>Deg/Off</th><th>Gauge</th><th>Area</th>
-            <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for entry in entries %}
-          <tr>
-            <td>{{ entry.duct_no }}</td>
-            <td>{{ entry.duct_type }}</td>
-            <td>{{ entry.width1 }}</td>
-            <td>{{ entry.height1 }}</td>
-            <td>{{ entry.width2 }}</td>
-            <td>{{ entry.height2 }}</td>
-            <td>{{ entry.length_or_radius }}</td>
-            <td>{{ entry.quantity }}</td>
-            <td>{{ entry.degree_or_offset }}</td>
-            <td>{{ entry.gauge }}</td>
-            <td>{{ entry.area }}</td>
-            <td>{{ entry.nuts_bolts }}</td>
-            <td>{{ entry.cleat }}</td>
-            <td>{{ entry.gasket }}</td>
-            <td>{{ entry.corner_pieces }}</td>
-            <td>
-              <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
-              <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger">🗑️</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="row">
+    <div class="col-md-5">
+      <form method="POST" action="/add_duct">
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-primary text-white">➕ Duct Entry</div>
+          <div class="card-body row g-2">
+            <div class="col-md-6"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
+            <div class="col-md-6"><label>Type</label><input name="duct_type" class="form-control" required></div>
+            <div class="col-md-6"><label>Factor</label><input name="factor" class="form-control"></div>
+            <div class="col-md-6"><label>Gauge</label><input name="gauge" class="form-control"></div>
+            <div class="col-md-4"><label>W1</label><input name="width1" class="form-control"></div>
+            <div class="col-md-4"><label>H1</label><input name="height1" class="form-control"></div>
+            <div class="col-md-4"><label>Qty</label><input name="quantity" class="form-control"></div>
+            <div class="col-md-4"><label>W2</label><input name="width2" class="form-control"></div>
+            <div class="col-md-4"><label>H2</label><input name="height2" class="form-control"></div>
+            <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" class="form-control"></div>
+            <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" class="form-control"></div>
+            <div class="col-md-4"><label>Area</label><input name="area" class="form-control"></div>
+            <div class="col-md-3"><label>Nuts</label><input name="nuts_bolts" class="form-control"></div>
+            <div class="col-md-3"><label>Cleat</label><input name="cleat" class="form-control"></div>
+            <div class="col-md-3"><label>Gasket</label><input name="gasket" class="form-control"></div>
+            <div class="col-md-3"><label>Corner</label><input name="corner_pieces" class="form-control"></div>
+          </div>
+          <div class="card-footer text-end">
+            <button class="btn btn-success">➕ Add Entry</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
+        <div class="card-body table-responsive p-0">
+          <table class="table table-sm table-striped m-0">
+            <thead class="table-light">
+              <tr>
+                <th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
+                <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th><th>Area</th>
+                <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>🛠</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for entry in entries %}
+              <tr>
+                <td>{{ entry.duct_no }}</td>
+                <td>{{ entry.duct_type }}</td>
+                <td>{{ entry.width1 }}</td>
+                <td>{{ entry.height1 }}</td>
+                <td>{{ entry.width2 }}</td>
+                <td>{{ entry.height2 }}</td>
+                <td>{{ entry.length_or_radius }}</td>
+                <td>{{ entry.quantity }}</td>
+                <td>{{ entry.degree_or_offset }}</td>
+                <td>{{ entry.gauge }}</td>
+                <td>{{ entry.area }}</td>
+                <td>{{ entry.nuts_bolts }}</td>
+                <td>{{ entry.cleat }}</td>
+                <td>{{ entry.gasket }}</td>
+                <td>{{ entry.corner_pieces }}</td>
+                <td>
+                  <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
+                  <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger">🗑️</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-3 d-flex flex-wrap gap-2">
+        <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
+        <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
+        <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print</button>
+        <form method="POST" action="/submit_all/{{ project.id }}">
+          <button class="btn btn-success">📨 Submit All</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ✅ MODAL: ADD PROJECT -->
+  <div class="modal fade" id="addProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form method="POST" action="/create_project" enctype="multipart/form-data">
+        <div class="modal-content">
+          <div class="modal-header"><h5 class="modal-title">➕ Add New Project</h5></div>
+          <div class="modal-body row g-3 px-4 py-2">
+            <div class="col-md-6">
+              <label>Vendor</label>
+              <select id="vendorSelect" name="vendor_id" class="form-select" required>
+                <option value="">Select Vendor</option>
+                {% for vendor in vendors %}
+                <option value="{{ vendor.id }}" data-address="{{ vendor.address }}" data-gst="{{ vendor.gst }}">{{ vendor.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6"><label>Project Name</label><input name="project_name" class="form-control" required></div>
+            <div class="col-md-6"><label>Enquiry ID</label><input name="enquiry_no" value="{{ enquiry_id }}" class="form-control" readonly></div>
+            <div class="col-md-6"><label>Start Date</label><input type="date" name="start_date" class="form-control" required></div>
+            <div class="col-md-6"><label>End Date</label><input type="date" name="end_date" class="form-control" required></div>
+            <div class="col-md-6"><label>Drawing Upload</label><input type="file" name="drawing_file" class="form-control"></div>
+            <div class="col-md-6"><label>Project Incharge</label><input name="incharge" class="form-control"></div>
+            <div class="col-md-6"><label>Notes</label><textarea name="notes" rows="2" class="form-control"></textarea></div>
+            <div class="col-md-6"><label>Vendor GST</label><input id="vendorGst" class="form-control" readonly></div>
+            <div class="col-md-6"><label>Vendor Address</label><textarea id="vendorAddress" class="form-control" rows="2" readonly></textarea></div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">✅ Save Project</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- ✅ EXPORT + SUBMIT ALL -->
-  <div class="mt-3 d-flex gap-2">
-    <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
-    <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
-    <form method="POST" action="/submit_all/{{ project.id }}">
-      <button class="btn btn-success">📨 Submit All</button>
-    </form>
-  </div>
-  {% endif %}
-
-</div>
-
-<!-- ✅ MODAL: ADD PROJECT -->
-<div class="modal fade" id="addProjectModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form method="POST" action="/create_project" enctype="multipart/form-data">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">➕ Add New Project</h5></div>
-        <div class="modal-body row g-3 px-4 py-2">
-          <div class="col-md-6">
-            <label>Vendor</label>
-            <select id="vendorSelect" name="vendor_id" class="form-select" required>
-              <option value="">Select Vendor</option>
-              {% for vendor in vendors %}
-              <option value="{{ vendor.id }}" data-address="{{ vendor.address }}" data-gst="{{ vendor.gst }}">{{ vendor.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label>Project Name</label>
-            <input name="project_name" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>Enquiry ID</label>
-            <input name="enquiry_no" value="{{ enquiry_id }}" class="form-control" readonly>
-          </div>
-          <div class="col-md-6">
-            <label>Start Date</label>
-            <input type="date" name="start_date" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>End Date</label>
-            <input type="date" name="end_date" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>Drawing Upload</label>
-            <input type="file" name="drawing_file" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label>Project Incharge</label>
-            <input name="incharge" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label>Notes</label>
-            <textarea name="notes" rows="2" class="form-control"></textarea>
-          </div>
-          <div class="col-md-6">
-            <label>Vendor GST</label>
-            <input id="vendorGst" class="form-control" readonly>
-          </div>
-          <div class="col-md-6">
-            <label>Vendor Address</label>
-            <textarea id="vendorAddress" class="form-control" rows="2" readonly></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">✅ Save Project</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ✅ MODAL: MEASUREMENT SHEET (used in preparation status) -->
-<div class="modal fade" id="measurementSheetModal" tabindex="-1">
-  <div class="modal-dialog modal-xl">
-    <form method="POST" action="/add_duct">
-      <input type="hidden" name="project_id" value="{{ project.id }}">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">📐 Measurement Sheet Entry</h5></div>
-        <div class="modal-body">
-          <!-- Duct Entry form fields go here (duct_no, type, dimensions...) -->
-          <div class="row g-3">
+  <!-- ✅ MODAL: MEASUREMENT SHEET -->
+  <div class="modal fade" id="measurementSheetModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <form method="POST" action="/add_duct">
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        <div class="modal-content">
+          <div class="modal-header"><h5 class="modal-title">📐 Measurement Sheet Entry</h5></div>
+          <div class="modal-body row g-3 p-3">
             <div class="col-md-4"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
             <div class="col-md-4"><label>Type</label><input name="duct_type" class="form-control" required></div>
             <div class="col-md-4"><label>Factor</label><input name="factor" class="form-control"></div>
-
-            <div class="col-md-2"><label>W1</label><input name="width1" class="form-control"></div>
-            <div class="col-md-2"><label>H1</label><input name="height1" class="form-control"></div>
-            <div class="col-md-2"><label>W2</label><input name="width2" class="form-control"></div>
-            <div class="col-md-2"><label>H2</label><input name="height2" class="form-control"></div>
-            <div class="col-md-2"><label>Length/Radius</label><input name="length_or_radius" class="form-control"></div>
-            <div class="col-md-2"><label>Qty</label><input name="quantity" class="form-control"></div>
-            <div class="col-md-2"><label>Degree/Offset</label><input name="degree_or_offset" class="form-control"></div>
+            <div class="col-md-3"><label>W1</label><input name="width1" class="form-control"></div>
+            <div class="col-md-3"><label>H1</label><input name="height1" class="form-control"></div>
+            <div class="col-md-3"><label>W2</label><input name="width2" class="form-control"></div>
+            <div class="col-md-3"><label>H2</label><input name="height2" class="form-control"></div>
+            <div class="col-md-3"><label>Length/Radius</label><input name="length_or_radius" class="form-control"></div>
+            <div class="col-md-3"><label>Qty</label><input name="quantity" class="form-control"></div>
+            <div class="col-md-3"><label>Degree/Offset</label><input name="degree_or_offset" class="form-control"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">➕ Add Entry</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Close</button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">➕ Add Entry</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
 
+<!-- ✅ AUTO SHOW MODAL IF STATUS IS PREPARATION -->
 {% if project and project.status == 'preparation' %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -256,7 +248,7 @@
 </script>
 {% endif %}
 
-<!-- ✅ SCRIPTS (NEEDED) -->
+<!-- ✅ SCRIPTS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -266,8 +258,6 @@
     $('#vendorAddress').val(opt.data('address') || '');
   });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
