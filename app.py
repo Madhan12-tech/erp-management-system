@@ -9,7 +9,7 @@ app.secret_key = 'secretkey'
 
 # ---------- ✅ Database Connection ----------
 def get_db():
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -153,7 +153,7 @@ def dashboard():
 
 @app.route('/projects')
 def projects():
-    conn = sqlite3.connect('data.db')
+    conn = get_db()
     c = conn.cursor()
     c.execute("SELECT * FROM projects ORDER BY id DESC")
     projects = c.fetchall()
