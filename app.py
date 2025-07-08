@@ -225,38 +225,41 @@ def create_project():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    vendor_id = request.form['vendor_id']
-    quotation_ro = request.form['quotation_ro']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-    location = request.form['location']
-    incharge = request.form['incharge']
-    notes = request.form['notes']
-    enquiry_id = request.form['enquiry_id']
+    try:
+        vendor_id = request.form['vendor_id']
+        quotation_ro = request.form['quotation_ro']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        location = request.form['location']
+        incharge = request.form['incharge']
+        notes = request.form['notes']
+        enquiry_id = request.form['enquiry_id']
 
-    file = request.files['file']
-    file_name = None
+        file = request.files.get('file')
+        file_name = None
 
-    if file and file.filename != '':
-        uploads_dir = os.path.join('static', 'uploads')
-        os.makedirs(uploads_dir, exist_ok=True)
-        file_name = file.filename
-        file.save(os.path.join(uploads_dir, file_name))
+        if file and file.filename != '':
+            uploads_dir = os.path.join('static', 'uploads')
+            os.makedirs(uploads_dir, exist_ok=True)
+            file_name = file.filename
+            file.save(os.path.join(uploads_dir, file_name))
 
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO projects (
-            vendor_id, quotation_ro, start_date, end_date,
-            location, incharge, notes, file_name, enquiry_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes, file_name, enquiry_id))
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT INTO projects (
+                vendor_id, quotation_ro, start_date, end_date,
+                location, incharge, notes, file_name, enquiry_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes, file_name, enquiry_id))
 
-    conn.commit()
-    conn.close()
-    flash("✅ Project added successfully!", "success")
-    return redirect(url_for('projects'))
+        conn.commit()
+        conn.close()
+        flash("✅ Project added successfully!", "success")
+        return redirect(url_for('projects'))
 
+    except Exception as e:
+        return f"❌ Error: {str(e)}", 500
 # ---------- ✅ Save Measurement Sheet Popup Data ----------
 @app.route('/add_measurement', methods=['POST'])
 def add_measurement():
