@@ -122,44 +122,34 @@
 </script>
 
   <!-- Second Popup: Measurement Sheet Info -->
-<div class="modal fade" id="measurementSheetModal" tabindex="-1" aria-labelledby="measurementSheetModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-md modal-dialog-scrollable">
-    <form method="post" action="{{ url_for('measurement_entry', project_id=project.id) }}">
-      <div class="modal-header">
-        <h5 class="modal-title" id="measurementSheetModalLabel">Measurement Sheet Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+{% for project in projects %}
+    <div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-labelledby="measurementModalLabel{{ project.id }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="post" action="{{ url_for('measurement_entry', project_id=project.id) }}">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Measurement Sheet - {{ project.project_name }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="client_name{{ project.id }}" class="form-label">Client Name</label>
+                <input type="text" class="form-control" name="client_name" required>
+              </div>
+              <div class="mb-3">
+                <label for="site_engineer{{ project.id }}" class="form-label">Site Engineer</label>
+                <input type="text" class="form-control" name="site_engineer" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-success">Save Measurement</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <div class="modal-body row g-2">
-        <input type="hidden" name="project_id" value="{{ project_id }}">
-        <div class="col-12">
-          <label class="form-label">Client Name</label>
-          <input type="text" name="client_name" class="form-control" required>
-        </div>
-
-        <div class="col-12">
-          <label class="form-label">Project Location</label>
-          <input type="text" name="ms_project_location" class="form-control" required>
-        </div>
-
-        <div class="col-12">
-          <label class="form-label">Site Engineer Name</label>
-          <input type="text" name="site_engineer" class="form-control" required>
-        </div>
-
-        <div class="col-12">
-          <label class="form-label">Site Engineer Contact</label>
-          <input type="text" name="engineer_mobile" class="form-control" required>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Save & Continue</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
+    </div>
+    {% endfor %}
 
   <!-- Duct Entry Section -->
 <div class="container-fluid mt-4" id="ductEntrySection" style="display: none;">
