@@ -360,40 +360,42 @@
     });
   }
   </script>
+  {% for project in projects %}
   <!-- 🧭 DESIGN PROCESS STAGES -->
-<div class="mt-4">
-  <h5 class="text-primary">🧭 Design Process</h5>
+  <div class="mt-4">
+    <h5 class="text-primary">🧭 Design Process</h5>
 
-  <!-- Stage Buttons -->
-  <div class="d-flex flex-wrap gap-2">
+    <!-- Stage Buttons -->
+    <div class="d-flex flex-wrap gap-2">
 
-    {% if project.status == 'new' %}
-      <form method="POST" action="/submit_measurement/{{ project.id }}">
-        <button class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
-      </form>
+      {% if project.status == 'new' %}
+        <form method="POST" action="/submit_measurement/{{ project.id }}">
+          <button class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
+        </form>
 
-    {% elif project.status == 'preparation' %}
-      <form method="POST" action="/submit_for_review/{{ project.id }}">
-        <button class="btn btn-secondary">🚧 Submit for Review</button>
-      </form>
+      {% elif project.status == 'preparation' %}
+        <form method="POST" action="/submit_for_review/{{ project.id }}">
+          <button class="btn btn-secondary">🚧 Submit for Review</button>
+        </form>
 
-    {% elif project.status == 'under_review' %}
-      <span class="badge bg-info text-dark p-2">⏳ Under Review</span>
+      {% elif project.status == 'under_review' %}
+        <span class="badge bg-info text-dark p-2">⏳ Under Review</span>
 
-    {% elif project.status == 'submitted for approval' %}
-      <form method="POST" action="/approve_project/{{ project.id }}">
-        <button class="btn btn-success">✅ Approve Project</button>
-      </form>
+      {% elif project.status == 'submitted for approval' %}
+        <form method="POST" action="/approve_project/{{ project.id }}">
+          <button class="btn btn-success">✅ Approve Project</button>
+        </form>
 
-    {% elif project.status == 'approved' %}
-      <span class="badge bg-success p-2">🎯 Approved</span>
+      {% elif project.status == 'approved' %}
+        <span class="badge bg-success p-2">🎯 Approved</span>
 
-    {% else %}
-      <span class="badge bg-secondary p-2">⚙️ {{ project.status }}</span>
-    {% endif %}
+      {% else %}
+        <span class="badge bg-secondary p-2">⚙️ {{ project.status }}</span>
+      {% endif %}
 
+    </div>
   </div>
-</div>
+{% endfor %}
   </div> <!-- End of main container -->
 </div> <!-- End of content wrapper -->
 
