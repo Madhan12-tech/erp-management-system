@@ -247,7 +247,7 @@
   </div>
 </div>
 
-  {% if project and project.status == 'preparation' %}
+{% if project and project.status == 'preparation' %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
@@ -255,21 +255,5 @@
   });
 </script>
 {% endif %}
-{% if project.status == 'preparation' %}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
-    modal.show();
-  });
-{% if project.status == 'preparation' %}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
-    modal.show();
-  });
-</script>
-<!-- You probably forgot this line -->
-{% endif %}
-
 </body>
 </html>
