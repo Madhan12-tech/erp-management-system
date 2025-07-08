@@ -235,15 +235,13 @@ def create_project():
 
     try:
         vendor_id = request.form['vendor_id']
-        quotation_ro = request.form['quotation_ro']
+        project_name = request.form['project_name']
+        enquiry_no = request.form['enquiry_no']
         start_date = request.form['start_date']
         end_date = request.form['end_date']
-        location = request.form['location']
         incharge = request.form['incharge']
         notes = request.form['notes']
-        enquiry_id = request.form['enquiry_id']
-
-        file = request.files.get('file')
+        file = request.files.get('drawing_file')
         file_name = None
 
         if file and file.filename != '':
@@ -257,9 +255,14 @@ def create_project():
         cur.execute('''
             INSERT INTO projects (
                 vendor_id, quotation_ro, start_date, end_date,
-                location, incharge, notes, file_name, enquiry_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (vendor_id, quotation_ro, start_date, end_date, location, incharge, notes, file_name, enquiry_id))
+                location, incharge, notes, file_name,
+                enquiry_id, client_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            vendor_id, '', start_date, end_date,
+            '', incharge, notes, file_name,
+            enquiry_no, project_name
+        ))
 
         conn.commit()
         conn.close()
@@ -267,7 +270,8 @@ def create_project():
         return redirect(url_for('projects'))
 
     except Exception as e:
-        return f"❌ Error: {str(e)}", 500
+        print("❌ Error while creating project:", e)
+        return "Bad Request", 400
 # ---------- ✅ Save Measurement Sheet Popup Data ----------
 @app.route('/add_measurement', methods=['POST'])
 def add_measurement():
