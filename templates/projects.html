@@ -1,487 +1,382 @@
+<!-- templates/projects.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Projects | Ducting ERP</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f6f9;
-    }
-    h2 {
-      margin-top: 20px;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    .modal-header {
-      background-color: #007bff;
-      color: white;
-    }
-    .form-label {
-      font-weight: 500;
-    }
-    .status-btn {
-      margin-right: 6px;
-    }
-    .design-process-heading {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-top: 30px;
-      color: #2c3e50;
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 5px;
-    }
+    body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
+    .modal-lg { max-width: 90% !important; }
+    .status-badge { font-size: 0.9em; padding: 4px 8px; border-radius: 5px; }
+    .status-new { background-color: #e3f2fd; color: #0d6efd; }
+    .status-preparation { background-color: #fff3cd; color: #856404; }
+    .status-under_review { background-color: #d1ecf1; color: #0c5460; }
+    .status-approved { background-color: #d4edda; color: #155724; }
   </style>
 </head>
 <body>
-
-<div class="container mt-4">
-  <h2>Project Management</h2>
-
-  <!-- 🔘 Add Project Button -->
-  <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProjectModal">+ Add New Project</button>
-
-  <!-- 🔍 Filter + Search -->
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <select id="statusFilter" class="form-select">
-        <option value="">🔽 Filter by Status</option>
-        <option value="preparation">Preparation</option>
-        <option value="submitted for approval">Submitted for Approval</option>
-        <option value="under_review">Under Review</option>
-        <option value="approved">Approved</option>
-      </select>
-    </div>
-    <div class="col-md-8">
-      <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search by Client, Vendor or Location">
-    </div>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center">
+    <h2>Projects</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">+ New Project</button>
   </div>
 
-  <!-- 🧾 Add Project Modal (First Popup) -->
-  <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-      <form class="modal-content" method="POST" action="/create_project" enctype="multipart/form-data">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addProjectLabel">Add New Project</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Vendor</label>
-              <select class="form-select" name="vendor_id" id="vendorSelect" required>
-                <option value="">Select Vendor</option>
-                {% for vendor in vendors %}
-                <option value="{{ vendor.id }}">{{ vendor.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">GST</label>
-              <input type="text" name="gst" id="vendorGST" class="form-control" readonly />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Address</label>
-              <input type="text" name="address" id="vendorAddress" class="form-control" readonly />
-            </div>
+  <!-- Success Message -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-            <div class="col-md-4">
-              <label class="form-label">Quotation/RO</label>
-              <input type="text" name="quotation_ro" class="form-control" required />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Start Date</label>
-              <input type="date" name="start_date" class="form-control" required />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">End Date</label>
-              <input type="date" name="end_date" class="form-control" required />
-            </div>
+  <!-- 🔄 Design Process -->
+  <div class="mt-4">
+    <h5 class="mb-3">📐 Design Process</h5>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+      {% for project in projects %}
+      <div class="col">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h6>{{ project.quotation_ro }} | {{ project.client_name or 'Client' }}</h6>
+            <p class="text-muted mb-1">{{ project.site_location or 'Location' }}</p>
+            <span class="badge status-badge status-{{ project.status.replace(' ', '_') }}">{{ project.status|capitalize }}</span>
 
-            <div class="col-md-6">
-              <label class="form-label">Location</label>
-              <input type="text" name="location" class="form-control" required />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Incharge</label>
-              <input type="text" name="incharge" class="form-control" required />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Notes</label>
-              <textarea name="notes" class="form-control"></textarea>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Upload Drawing</label>
-              <input type="file" name="file" class="form-control" />
-            </div>
-
-            <input type="hidden" name="enquiry_id" value="{{ enquiry_id }}" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Save Project</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </form>
-    </div>
-  </div>
- <!-- 🧭 Design Process Section -->
-  <div class="design-process-heading">Design Process</div>
-
-  <!-- 📝 Measurement Sheet Popup -->
-  <div class="modal fade" id="measurementModal" tabindex="-1" aria-labelledby="measurementModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <form class="modal-content" method="POST" action="/add_measurement">
-        <div class="modal-header">
-          <h5 class="modal-title" id="measurementModalLabel">Measurement Sheet</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="project_id" id="measurement_project_id">
-          <div class="mb-3">
-            <label class="form-label">Client Name</label>
-            <input type="text" class="form-control" name="client_name" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Site Location</label>
-            <input type="text" class="form-control" name="site_location" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Engineer Name</label>
-            <input type="text" class="form-control" name="engineer_name" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Mobile</label>
-            <input type="text" class="form-control" name="mobile" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save and Continue</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 🚦 Design Process Status Buttons -->
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped" id="projectsTable">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Enquiry ID</th>
-          <th>Vendor</th>
-          <th>Location</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for project in projects %}
-        <tr data-project-id="{{ project.id }}">
-          <td>{{ project.id }}</td>
-          <td>{{ project.enquiry_id }}</td>
-          <td>{{ project.vendor_name }}</td>
-          <td>{{ project.location }}</td>
-          <td>{{ project.start_date }}</td>
-          <td>{{ project.end_date }}</td>
-          <td><span class="badge bg-info text-dark">{{ project.status }}</span></td>
-          <td>
-            <!-- 🧾 Measurement -->
             {% if project.status == 'new' %}
-              <button class="btn btn-sm btn-outline-primary" onclick="openMeasurementModal({{ project.id }})">Measurement Sheet</button>
-            {% endif %}
-
-            <!-- 📝 Submit for Review -->
-            {% if project.status == 'preparation' %}
-              <form action="/submit_measurement/{{ project.id }}" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-warning">Submit for Approval</button>
+              <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#measurementModal{{ project.id }}">Start Measurement</button>
+            {% elif project.status == 'preparation' %}
+              <form action="/submit_for_review/{{ project.id }}" method="POST" class="mt-2">
+                <button class="btn btn-sm btn-warning">Submit for Review</button>
               </form>
-            {% endif %}
-
-            <!-- 🔍 Under Review -->
-            {% if project.status == 'submitted for approval' %}
-              <form action="/submit_for_review/{{ project.id }}" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-info">Mark as Under Review</button>
+            {% elif project.status == 'under_review' %}
+              <form action="/approve_project/{{ project.id }}" method="POST" class="mt-2">
+                <button class="btn btn-sm btn-success">Approve</button>
               </form>
+            {% elif project.status == 'approved' %}
+              <a href="/production/{{ project.id }}" class="btn btn-sm btn-outline-success mt-2">Go to Production</a>
             {% endif %}
-
-            <!-- ✅ Approve -->
-            {% if project.status == 'under_review' %}
-              <form action="/approve_project/{{ project.id }}" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-success">Approve</button>
-              </form>
-            {% endif %}
-
-            <!-- ❌ Delete -->
-            <form action="/project/{{ project.id }}/delete" method="POST" style="display:inline;">
-              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-<!-- 📏 Duct Entry Modal (after Measurement Sheet) -->
-<div class="modal fade" id="ductModal" tabindex="-1" aria-labelledby="ductModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form class="modal-content" method="POST" action="/add_duct">
-      <div class="modal-header">
-        <h5 class="modal-title" id="ductModalLabel">Add Duct Entry</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <input type="hidden" name="project_id" id="duct_project_id">
-        <div class="mb-3">
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 📝 Measurement Sheet Modal -->
+  {% for project in projects %}
+  <div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-labelledby="measurementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form method="POST" action="/add_measurement">
+          <div class="modal-header">
+            <h5 class="modal-title">Measurement Sheet – {{ project.quotation_ro }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body row g-3 px-3">
+            <input type="hidden" name="project_id" value="{{ project.id }}">
+            <div class="col-md-6">
+              <label>Client Name</label>
+              <input type="text" class="form-control" name="client_name" required>
+            </div>
+            <div class="col-md-6">
+              <label>Site Location</label>
+              <input type="text" class="form-control" name="site_location" required>
+            </div>
+            <div class="col-md-6">
+              <label>Engineer Name</label>
+              <input type="text" class="form-control" name="engineer_name" required>
+            </div>
+            <div class="col-md-6">
+              <label>Mobile</label>
+              <input type="text" class="form-control" name="mobile" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save & Continue</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- 📋 Duct Entry Form -->
+<div class="card mt-4 shadow-sm border-0">
+  <div class="card-body">
+    <h5 class="card-title">➕ Add Duct Entry</h5>
+    <form id="ductForm" method="POST" action="/add_duct">
+      <input type="hidden" name="project_id" id="duct_project_id">
+      <div class="row g-3">
+
+        <div class="col-md-3">
           <label>Type</label>
-          <select name="type" class="form-select" required>
-            <option value="">Select Type</option>
-            <option value="Rectangular">Rectangular</option>
-            <option value="Round">Round</option>
+          <select class="form-select" name="type" required>
+            <option value="">Select</option>
+            <option value="Straight">Straight</option>
             <option value="Elbow">Elbow</option>
+            <option value="Tee">Tee</option>
+            <option value="Reducer">Reducer</option>
             <option value="Offset">Offset</option>
           </select>
         </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label>Length/Radius</label>
-            <input type="number" step="0.01" name="length_radius" class="form-control" required>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label>Quantity</label>
-            <input type="number" name="quantity" class="form-control" required>
-          </div>
+
+        <div class="col-md-2">
+          <label>W1</label>
+          <input type="number" step="0.01" name="w1" class="form-control" required>
         </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label>W1</label>
-            <input type="number" step="0.01" name="w1" class="form-control">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label>H1</label>
-            <input type="number" step="0.01" name="h1" class="form-control">
-          </div>
+        <div class="col-md-2">
+          <label>H1</label>
+          <input type="number" step="0.01" name="h1" class="form-control" required>
         </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label>W2</label>
-            <input type="number" step="0.01" name="w2" class="form-control">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label>H2</label>
-            <input type="number" step="0.01" name="h2" class="form-control">
-          </div>
+        <div class="col-md-2">
+          <label>W2</label>
+          <input type="number" step="0.01" name="w2" class="form-control">
         </div>
-        <div class="mb-3">
-          <label>Offset Degree</label>
+        <div class="col-md-2">
+          <label>H2</label>
+          <input type="number" step="0.01" name="h2" class="form-control">
+        </div>
+
+        <div class="col-md-2">
+          <label>Length/Radius</label>
+          <input type="number" step="0.01" name="length_radius" class="form-control" required>
+        </div>
+
+        <div class="col-md-2">
+          <label>Qty</label>
+          <input type="number" name="quantity" class="form-control" required>
+        </div>
+
+        <div class="col-md-2">
+          <label>Offset °</label>
           <input type="text" name="offset_degree" class="form-control">
         </div>
-        <div class="mb-3">
+
+        <div class="col-md-2">
           <label>Gauge</label>
-          <input type="text" name="gauge" class="form-control">
+          <select name="gauge" class="form-select" required>
+            <option value="">Select</option>
+            <option value="22">22</option>
+            <option value="24">24</option>
+            <option value="26">26</option>
+            <option value="28">28</option>
+          </select>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Add Entry</button>
+
+        <div class="col-md-2">
+          <label>Area (sqm)</label>
+          <input type="number" step="0.01" name="area" class="form-control" required>
+        </div>
+
+        <div class="col-md-2 mt-4">
+          <button type="submit" class="btn btn-success mt-2 w-100">Add</button>
+        </div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- 📊 Live Duct Table (Populated via JS/API) -->
-<div class="duct-table mt-4">
-  <h5>Duct Entries</h5>
-  <div id="ductLiveTable" class="table-responsive"></div>
+<!-- 📊 Live Duct Table -->
+<div class="card mt-4 shadow-sm border-0">
+  <div class="card-body">
+    <h5 class="card-title">📄 Live Duct Entries</h5>
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Type</th>
+            <th>W1</th>
+            <th>H1</th>
+            <th>W2</th>
+            <th>H2</th>
+            <th>Length/Radius</th>
+            <th>Qty</th>
+            <th>Offset°</th>
+            <th>Gauge</th>
+            <th>Area</th>
+            <th>❌</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for duct in project.ducts %}
+          <tr>
+            <td>{{ duct.type }}</td>
+            <td>{{ duct.w1 }}</td>
+            <td>{{ duct.h1 }}</td>
+            <td>{{ duct.w2 }}</td>
+            <td>{{ duct.h2 }}</td>
+            <td>{{ duct.length_radius }}</td>
+            <td>{{ duct.quantity }}</td>
+            <td>{{ duct.offset_degree }}</td>
+            <td>{{ duct.gauge }}</td>
+            <td>{{ duct.area }}</td>
+            <td>
+              <form method="POST" action="/delete_duct/{{ duct.id }}" onsubmit="return confirm('Delete this entry?');">
+                <button class="btn btn-sm btn-outline-danger">🗑</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 📤 Export Button -->
+    <div class="mt-3 text-end">
+      <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">Export to Excel</a>
+    </div>
+  </div>
 </div>
 
-<!-- 📤 Export Button -->
-<div class="mt-3">
-  <a href="/export_excel/{{ project.id }}" class="btn btn-outline-success">Export to Excel</a>
+  <!-- 🚦 Final Design Stage Controls -->
+<div class="card mt-4 border-0 shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title">🧾 Final Actions</h5>
+
+    <!-- 🔘 Status Based Button Group -->
+    <form method="POST" action="/submit_for_review/{{ project.id }}" class="d-inline">
+      {% if project.status == 'preparation' %}
+      <button type="submit" class="btn btn-warning">📤 Submit for Review</button>
+      {% endif %}
+    </form>
+
+    <form method="POST" action="/submit_measurement/{{ project.id }}" class="d-inline">
+      {% if project.status == 'under_review' %}
+      <button type="submit" class="btn btn-primary">📤 Submit for Approval</button>
+      {% endif %}
+    </form>
+
+    <form method="POST" action="/approve_project/{{ project.id }}" class="d-inline">
+      {% if project.status == 'submitted for approval' %}
+      <button type="submit" class="btn btn-success">✅ Approve</button>
+      {% endif %}
+    </form>
+
+    <!-- 🗑 Project Delete -->
+    <form method="POST" action="/project/{{ project.id }}/delete" class="d-inline ms-2" onsubmit="return confirm('Delete this project permanently?')">
+      <button class="btn btn-outline-danger">🗑 Delete Project</button>
+    </form>
+
+    <!-- 📌 Project Summary Modal Trigger -->
+    <button type="button" class="btn btn-outline-dark float-end" data-bs-toggle="modal" data-bs-target="#summaryModal">
+      📊 View Summary
+    </button>
+  </div>
 </div>
+
+<!-- 📋 Summary Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">📊 Project Summary</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Vendor:</strong> {{ project.vendor_name }}</p>
+        <p><strong>Client:</strong> {{ project.client_name }}</p>
+        <p><strong>Site Location:</strong> {{ project.site_location }}</p>
+        <p><strong>Engineer:</strong> {{ project.engineer_name }} | {{ project.mobile }}</p>
+        <p><strong>Status:</strong> {{ project.status }}</p>
+        <p><strong>Total Duct Area:</strong> {{ project.total_sqm or 0 }} sqm</p>
+        <!-- Add more info as needed -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div> <!-- End container-fluid -->
+  </main>
+</div> <!-- End main row -->
+
+<!-- ✅ Bootstrap & jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ Custom JS -->
 <script>
-  // ✅ Set Project ID in Measurement Modal
-  function openMeasurementModal(projectId) {
-    document.getElementById('measurement_project_id').value = projectId;
-    var modal = new bootstrap.Modal(document.getElementById('measurementModal'));
-    modal.show();
-  }
+  $(document).ready(function () {
+    // Autofill vendor GST and address
+    $('#vendor_id').change(function () {
+      var vendorId = $(this).val();
+      if (vendorId) {
+        $.get('/api/vendor/' + vendorId, function (data) {
+          $('#gst').val(data.gst);
+          $('#address').val(data.address);
+        });
+      }
+    });
 
-  // ✅ Set Project ID in Duct Modal
-  function openDuctModal(projectId) {
-    document.getElementById('duct_project_id').value = projectId;
-    var modal = new bootstrap.Modal(document.getElementById('ductModal'));
-    modal.show();
-    loadDucts(projectId);  // Load live table entries
-  }
+    // Save Measurement Sheet and show duct section
+    $('#saveMeasurementBtn').click(function () {
+      $.post("/add_measurement", $('#measurementForm').serialize())
+        .done(function () {
+          $('#measurementModal').modal('hide');
+          $('#ductSection').removeClass('d-none');
+        });
+    });
 
-  // ✅ Load Duct Table Live
-  function loadDucts(projectId) {
-    fetch(`/api/ducts/${projectId}`)
-      .then(res => res.json())
-      .then(data => {
-        let tableHTML = `
-          <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-              <tr>
-                <th>Type</th>
-                <th>L/R</th>
-                <th>Qty</th>
-                <th>W1</th>
-                <th>H1</th>
-                <th>W2</th>
-                <th>H2</th>
-                <th>Offset</th>
-                <th>Gauge</th>
-                <th>Area</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
+    // Save Duct Entry
+    $('#addDuctBtn').click(function () {
+      $.post("/add_duct", $('#ductForm').serialize())
+        .done(function () {
+          $('#ductForm')[0].reset();
+          loadDucts();
+        });
+    });
 
-        data.forEach(duct => {
-          tableHTML += `
+    // Delete Duct Entry
+    $(document).on('click', '.delete-duct', function () {
+      var id = $(this).data('id');
+      $.post('/delete_duct/' + id)
+        .done(function () {
+          loadDucts();
+        });
+    });
+
+    // Load Duct Entries
+    function loadDucts() {
+      var projectId = $('#project_id').val();
+      $.getJSON('/api/ducts/' + projectId, function (data) {
+        let rows = '';
+        data.forEach(function (item, index) {
+          rows += `
             <tr>
-              <td>${duct.type}</td>
-              <td>${duct.length_radius || ''}</td>
-              <td>${duct.quantity}</td>
-              <td>${duct.w1 || ''}</td>
-              <td>${duct.h1 || ''}</td>
-              <td>${duct.w2 || ''}</td>
-              <td>${duct.h2 || ''}</td>
-              <td>${duct.offset_degree || ''}</td>
-              <td>${duct.gauge || ''}</td>
-              <td>${duct.area?.toFixed(2) || '0.00'}</td>
-              <td>
-                <form method="POST" action="/delete_duct/${duct.id}">
-                  <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                </form>
-              </td>
+              <td>${index + 1}</td>
+              <td>${item.type}</td>
+              <td>${item.w1 || '-'} x ${item.h1 || '-'}</td>
+              <td>${item.w2 || '-'} x ${item.h2 || '-'}</td>
+              <td>${item.length_radius || '-'}</td>
+              <td>${item.quantity}</td>
+              <td>${item.offset_degree || '-'}</td>
+              <td>${item.gauge || '-'}</td>
+              <td>${item.area || '0'}</td>
+              <td><button class="btn btn-sm btn-danger delete-duct" data-id="${item.id}">🗑</button></td>
             </tr>
           `;
         });
-
-        tableHTML += '</tbody></table>';
-        document.getElementById('ductLiveTable').innerHTML = tableHTML;
+        $('#ductTableBody').html(rows);
       });
-  }
+    }
 
-  // ✅ Auto-fill GST & Address when vendor selected
-  function autofillVendorDetails(selectElement) {
-    const vendorId = selectElement.value;
-    if (!vendorId) return;
-
-    fetch(`/api/vendor/${vendorId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.gst) document.getElementById('gst').value = data.gst;
-        if (data.address) document.getElementById('address').value = data.address;
-      });
-  }
-</script>
-  
-  <style>
-  body {
-    background-color: #f9fbfd;
-    font-family: 'Segoe UI', sans-serif;
-  }
-
-  .container {
-    margin-top: 30px;
-  }
-
-  .table th, .table td {
-    vertical-align: middle;
-    text-align: center;
-  }
-
-  .modal-header {
-    background-color: #2c3e50;
-    color: white;
-  }
-
-  .modal-title {
-    font-weight: 500;
-  }
-
-  .form-label {
-    font-weight: 500;
-    color: #2c3e50;
-  }
-
-  .form-control {
-    border-radius: 5px;
-  }
-
-  .btn {
-    border-radius: 5px;
-  }
-
-  .btn-outline-primary {
-    font-weight: 500;
-  }
-
-  .status-badge {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: bold;
-  }
-
-  .status-new { background: #dbeafe; color: #1e3a8a; }
-  .status-preparation { background: #fef3c7; color: #92400e; }
-  .status-under_review { background: #fde68a; color: #92400e; }
-  .status-submitted { background: #c7d2fe; color: #3730a3; }
-  .status-approved { background: #bbf7d0; color: #065f46; }
-
-  .card {
-    box-shadow: 0 0 8px rgba(0,0,0,0.05);
-    border-radius: 10px;
-    padding: 20px;
-    background-color: white;
-  }
-
-  .card h5 {
-    color: #1e40af;
-  }
-
-  .btn-action {
-    margin: 0 2px;
-  }
-
-  .table th {
-    background-color: #1e40af;
-    color: white;
-  }
-
-  .table-striped > tbody > tr:nth-of-type(odd) {
-    background-color: #f0f4ff;
-  }
-
-  .form-section {
-    margin-bottom: 15px;
-  }
-  </style>
-
-  
-  </div> <!-- End of container/project table -->
-  </div> <!-- End of modals (if any remain open) -->
-</div> <!-- End of main container -->
-
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Optional custom scripts -->
-<script>
-  // Your optional JavaScript functions (e.g., toast, auto-fill, live table refresh) here
+    // Initial load if duct section visible
+    if (!$('#ductSection').hasClass('d-none')) {
+      loadDucts();
+    }
+  });
 </script>
 
 </body>
 </html>
+
+  
+
+  
+
   
