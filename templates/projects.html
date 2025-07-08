@@ -1,196 +1,266 @@
+<!-- templates/projects.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Management | Ducting ERP</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Projects | Ducting ERP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
-    .section-title { font-weight: bold; font-size: 1.2rem; margin-top: 20px; }
-    .modal-lg { max-width: 90%; }
-    .table thead th { background-color: #f0f0f0; }
+    body {
+      background-color: #f8f9fa;
+    }
+    .card-header {
+      background-color: #0d6efd;
+      color: white;
+    }
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
-<div class="container-fluid mt-4">
-  <h2 class="text-center mb-4">📁 Project Management Dashboard</h2>
-
+<div class="container mt-4">
+  <h2 class="text-center mb-4">Project Management</h2>
+  <!-- 🔘 Add Project Button -->
   <div class="mb-3 text-end">
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">➕ New Project</button>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">➕ Add Project</button>
   </div>
 
-  <!-- Add Project Modal -->
+  <!-- 🪟 Add Project Modal -->
   <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
-        <form method="POST" action="/create_project" enctype="multipart/form-data">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addProjectModalLabel">➕ Add Project</h5>
+        <form action="/create_project" method="POST" enctype="multipart/form-data">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body row g-3">
-            <div class="col-md-6">
-              <label>Vendor</label>
-              <select class="form-select" name="vendor_id" required>
-                <option value="" disabled selected>Select Vendor</option>
+          <div class="modal-body">
+            <!-- 🔽 Vendor -->
+            <div class="mb-3">
+              <label for="vendor_id" class="form-label">Select Vendor</label>
+              <select class="form-select" name="vendor_id" id="vendor_id" required onchange="fetchVendorDetails(this.value)">
+                <option value="">-- Choose Vendor --</option>
                 {% for vendor in vendors %}
                   <option value="{{ vendor.id }}">{{ vendor.name }}</option>
                 {% endfor %}
               </select>
             </div>
-            <div class="col-md-6">
-              <label>Quotation/RO</label>
-              <input type="text" class="form-control" name="quotation_ro" required>
+
+            <!-- 🧾 Quotation RO -->
+            <div class="mb-3">
+              <label for="quotation_ro" class="form-label">Quotation / RO No.</label>
+              <input type="text" class="form-control" name="quotation_ro" id="quotation_ro" required>
             </div>
-            <div class="col-md-6">
-              <label>Start Date</label>
-              <input type="date" class="form-control" name="start_date" required>
+
+            <!-- 🗓 Dates -->
+            <div class="row">
+              <div class="col">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="start_date" id="start_date" required>
+              </div>
+              <div class="col">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" name="end_date" id="end_date" required>
+              </div>
             </div>
-            <div class="col-md-6">
-              <label>End Date</label>
-              <input type="date" class="form-control" name="end_date" required>
+
+            <!-- 📍 Location, Incharge, Notes -->
+            <div class="row mt-3">
+              <div class="col">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" class="form-control" name="location" id="location" required>
+              </div>
+              <div class="col">
+                <label for="incharge" class="form-label">Project Incharge</label>
+                <input type="text" class="form-control" name="incharge" id="incharge" required>
+              </div>
             </div>
-            <div class="col-md-6">
-              <label>Location</label>
-              <input type="text" class="form-control" name="location">
+
+            <div class="mb-3 mt-3">
+              <label for="notes" class="form-label">Notes / Description</label>
+              <textarea class="form-control" name="notes" id="notes" rows="3"></textarea>
             </div>
-            <div class="col-md-6">
-              <label>In-Charge</label>
-              <input type="text" class="form-control" name="incharge">
+
+            <!-- 📁 Upload File -->
+            <div class="mb-3">
+              <label for="file" class="form-label">Upload File (Optional)</label>
+              <input class="form-control" type="file" id="file" name="file">
             </div>
-            <div class="col-md-12">
-              <label>Notes</label>
-              <textarea class="form-control" name="notes" rows="2"></textarea>
+
+            <!-- 🆔 Enquiry ID (readonly) -->
+            <div class="mb-3">
+              <label for="enquiry_id" class="form-label">Enquiry ID</label>
+              <input type="text" class="form-control" name="enquiry_id" id="enquiry_id" value="{{ enquiry_id }}" readonly>
             </div>
-            <div class="col-md-12">
-              <label>Upload File (Optional)</label>
-              <input type="file" class="form-control" name="file">
-            </div>
-            <input type="hidden" name="enquiry_id" value="{{ enquiry_id }}">
           </div>
           <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Save Project</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-success">💾 Save Project</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
           </div>
         </form>
       </div>
     </div>
   </div>
-<!-- Project List Table -->
-  <div class="table-responsive mt-4">
-    <table class="table table-bordered table-hover align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Vendor</th>
-          <th>Quotation/RO</th>
-          <th>Location</th>
-          <th>Status</th>
-          <th>Total Sq.M</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for project in projects %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ project.vendor_name }}</td>
-          <td>{{ project.quotation_ro }}</td>
-          <td>{{ project.location }}</td>
-          <td>
-            {% if project.status == 'approved' %}
-              <span class="badge bg-success">Approved</span>
-            {% elif project.status == 'under_review' %}
-              <span class="badge bg-warning text-dark">Under Review</span>
-            {% elif project.status == 'submitted for approval' %}
-              <span class="badge bg-primary">Submitted</span>
-            {% elif project.status == 'preparation' %}
-              <span class="badge bg-info text-dark">Preparation</span>
-            {% else %}
-              <span class="badge bg-secondary">New</span>
-            {% endif %}
-          </td>
-          <td>{{ project.total_sqm or 0 }}</td>
-          <td>
-            <!-- Buttons for actions -->
-            <a href="/measurement/{{ project.id }}" class="btn btn-sm btn-outline-info mb-1">Measurement Sheet</a>
-            <a href="/production/{{ project.id }}" class="btn btn-sm btn-outline-primary mb-1">Duct Entry</a>
-            <a href="/export_excel/{{ project.id }}" class="btn btn-sm btn-outline-success mb-1">Export</a>
+  
+<!-- 📋 Project Table -->
+<div class="table-responsive">
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark text-center">
+      <tr>
+        <th>Enquiry ID</th>
+        <th>Vendor</th>
+        <th>Quotation</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Incharge</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for project in projects %}
+      <tr>
+        <td>{{ project.enquiry_id }}</td>
+        <td>{{ project.vendor_name }}</td>
+        <td>{{ project.quotation_ro }}</td>
+        <td>{{ project.location }}</td>
+        <td>
+          <span class="badge bg-info text-dark">{{ project.status|capitalize }}</span>
+        </td>
+        <td>{{ project.start_date }}</td>
+        <td>{{ project.end_date }}</td>
+        <td>{{ project.incharge }}</td>
+        <td class="text-center">
+          <!-- 📌 Design Process Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              Design Process
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <li>
+                <button class="dropdown-item" data-bs-toggle="modal"
+                  data-bs-target="#measurementModal{{ project.id }}">
+                  ✏️ Measurement Sheet
+                </button>
+              </li>
+              <li>
+                <form method="POST" action="/submit_measurement/{{ project.id }}">
+                  <button type="submit" class="dropdown-item">📤 Submit for Approval</button>
+                </form>
+              </li>
+              <li>
+                <form method="POST" action="/submit_for_review/{{ project.id }}">
+                  <button type="submit" class="dropdown-item">📨 Under Review</button>
+                </form>
+              </li>
+              <li>
+                <form method="POST" action="/approve_project/{{ project.id }}">
+                  <button type="submit" class="dropdown-item">✅ Approve</button>
+                </form>
+              </li>
+            </ul>
+          </div>
 
-            <!-- Design Process Popup -->
-            <button class="btn btn-sm btn-outline-dark mb-1" data-bs-toggle="modal" data-bs-target="#designModal{{ project.id }}">Design</button>
+          <!-- 📁 Export -->
+          <a href="/export_excel/{{ project.id }}" class="btn btn-outline-success btn-sm mt-1">⬇️ Export</a>
 
-            <!-- Delete Form -->
-            <form method="POST" action="/project/{{ project.id }}/delete" class="d-inline">
-              <button class="btn btn-sm btn-outline-danger mb-1" onclick="return confirm('Delete this project?')">🗑️</button>
+          <!-- ❌ Delete -->
+          <form action="/project/{{ project.id }}/delete" method="POST" style="display:inline;">
+            <button class="btn btn-outline-danger btn-sm mt-1" onclick="return confirm('Are you sure?')">🗑️</button>
+          </form>
+        </td>
+      </tr>
+
+      <!-- 🪟 Measurement Sheet Modal -->
+      <div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+          <div class="modal-content">
+            <form method="POST" action="/add_measurement">
+              <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Measurement Sheet - {{ project.enquiry_id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" name="project_id" value="{{ project.id }}">
+                <div class="row mb-3">
+                  <div class="col">
+                    <label>Client Name</label>
+                    <input type="text" name="client_name" class="form-control" required>
+                  </div>
+                  <div class="col">
+                    <label>Site Location</label>
+                    <input type="text" name="site_location" class="form-control" required>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col">
+                    <label>Engineer Name</label>
+                    <input type="text" name="engineer_name" class="form-control" required>
+                  </div>
+                  <div class="col">
+                    <label>Mobile</label>
+                    <input type="text" name="mobile" class="form-control" required>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-success" type="submit">💾 Save Measurement</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+              </div>
             </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+          </div>
+        </div>
+      </div>
 
-  {% for project in projects %}
-<!-- Design Process Modal -->
-<div class="modal fade" id="designModal{{ project.id }}" tabindex="-1" aria-labelledby="designModalLabel{{ project.id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="POST" action="/submit_for_review/{{ project.id }}">
-        <div class="modal-header">
-          <h5 class="modal-title" id="designModalLabel{{ project.id }}">Design Process - {{ project.quotation_ro }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p><strong>Status:</strong> {{ project.status }}</p>
-          {% if project.status == 'preparation' %}
-            <p>Measurement Sheet Completed ✅</p>
-            <button type="submit" class="btn btn-primary">Submit for Review</button>
-          {% elif project.status == 'submitted for approval' %}
-            <p>Waiting for admin approval...</p>
-          {% elif project.status == 'under_review' %}
-            <p>Under Review by Admin</p>
-            <form method="POST" action="/approve_project/{{ project.id }}">
-              <button type="submit" class="btn btn-success mt-2">Approve</button>
-            </form>
-          {% elif project.status == 'approved' %}
-            <p>✅ Approved</p>
-          {% else %}
-            <p>Start by filling Measurement Sheet</p>
-          {% endif %}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </form>
-    </div>
-  </div>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-{% endfor %}
-
-</div> <!-- End container -->
-</div> <!-- End content -->
-
-<!-- Bootstrap JS Bundle (includes Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Optional: jQuery for future use -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- 🧠 Auto-fill GST and Address on Vendor Select -->
+<!-- 📌 Vendor GST & Address Auto-fill Script -->
 <script>
-  document.getElementById('vendor_id')?.addEventListener('change', function () {
-    const vendorId = this.value;
-    if (vendorId) {
-      fetch(`/api/vendor/${vendorId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.gst) document.getElementById('gst').value = data.gst;
-          if (data.address) document.getElementById('address').value = data.address;
-        });
+  document.addEventListener("DOMContentLoaded", function () {
+    const vendorSelect = document.getElementById("vendor_id");
+    const gstInput = document.getElementById("vendor_gst");
+    const addressInput = document.getElementById("vendor_address");
+
+    if (vendorSelect) {
+      vendorSelect.addEventListener("change", function () {
+        const vendorId = this.value;
+        if (vendorId) {
+          fetch(`/api/vendor/${vendorId}`)
+            .then((response) => response.json())
+            .then((data) => {
+              gstInput.value = data.gst || "";
+              addressInput.value = data.address || "";
+            })
+            .catch((error) => {
+              gstInput.value = "";
+              addressInput.value = "";
+              console.error("Error fetching vendor data:", error);
+            });
+        }
+      });
     }
   });
 </script>
+
+<!-- ✅ Bootstrap JS & Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ Optional Toasts or Notifications -->
+<script>
+  const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+  const toastList = toastElList.map(function (toastEl) {
+    return new bootstrap.Toast(toastEl)
+  })
+  toastList.forEach(t => t.show())
+</script>
+
 </body>
 </html>
   
