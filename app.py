@@ -404,16 +404,7 @@ def delete_project(project_id):
     flash("Project deleted successfully!", "success")
     return redirect(url_for('projects'))
 
-@app.route('/api/vendor/<int:vendor_id>')
-def get_vendor_info(vendor_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT gst, address FROM vendors WHERE id = ?", (vendor_id,))
-    vendor = cur.fetchone()
-    if vendor:
-        return {'gst': vendor['gst'], 'address': vendor['address']}
-    else:
-        return {}, 404
+
 
 @app.route('/summary')
 def summary():
