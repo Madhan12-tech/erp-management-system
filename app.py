@@ -144,6 +144,25 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template("dashboard.html", user=session['user'])
 
+@app.route('/projects')
+def projects():
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM projects ORDER BY id DESC")
+    projects = c.fetchall()
+    c.execute("SELECT * FROM vendors ORDER BY id DESC")
+    vendors = c.fetchall()
+    conn.close()
+
+    # If needed, pass a specific project to the template
+    project = projects[0] if projects else None
+
+    return render_template('projects.html',
+                           projects=projects,
+                           vendors=vendors,
+                           project=project,  # <-- add this line
+                           enquiry_id="ENQ" + str(datetime.now().timestamp()).replace(".", ""))
+
 # ---------- ✅ Vendor Registration ----------
 @app.route('/vendor_registration', methods=['GET', 'POST'])
 def vendor_registration():
