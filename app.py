@@ -8,11 +8,6 @@ app = Flask(__name__)
 app.secret_key = 'secretkey'
 
 # ---------- ✅ Database Connection ----------
-def get_db():
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    return conn
-
 def init_db():
     conn = get_db()
     cur = conn.cursor()
@@ -40,7 +35,7 @@ def init_db():
         FOREIGN KEY (project_id) REFERENCES projects(id)
     )''')
 
-    # ✅ USERS Table (Admin + Dummy)
+    # ✅ USERS Table
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -104,11 +99,16 @@ def init_db():
         FOREIGN KEY(project_id) REFERENCES projects(id)
     )''')
 
+    # ✅ Insert Dummy Vendor
+    cur.execute("INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+        (1, "Dummy Vendor Pvt Ltd", "29ABCDE1234F2Z5", "123 Main Street, City", "Axis Bank", "1234567890", "UTIB0000123"))
+
+    # ✅ Insert Dummy Contact
+    cur.execute("INSERT OR IGNORE INTO vendor_contacts (vendor_id, name, phone, email) VALUES (?, ?, ?, ?)", 
+        (1, "Mr. Dummy", "9876543210", "dummy@vendor.com"))
+
     conn.commit()
     conn.close()
-
-# ✅ Call once during startup
-init_db()
 
 
 
