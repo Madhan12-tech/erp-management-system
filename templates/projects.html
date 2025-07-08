@@ -260,9 +260,7 @@
   $('#saveAndOpenModal').click(function () {
     const projectId = $(this).data('project');
     $.post(`/submit_measurement/${projectId}`, function () {
-      // After status update, open modal
-      var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
-      modal.show();
+      location.reload();  // ✅ Reload triggers the `{% if status == 'preparation' %}` block
     });
   });
 </script>
