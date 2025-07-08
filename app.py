@@ -8,12 +8,18 @@ app = Flask(__name__)
 app.secret_key = 'secretkey'
 
 # ---------- ✅ Database Connection ----------
+# ✅ Database connection helper
 def get_db():
-    conn = sqlite3.connect("database.db")  # ✅ FIXED
+    conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-    # ✅ Create entries table (duct entries)
+# ✅ Initialize DB with tables and dummy data
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    # ✅ Duct entries table
     cur.execute('''CREATE TABLE IF NOT EXISTS entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         project_id INTEGER,
@@ -36,7 +42,7 @@ def get_db():
         FOREIGN KEY (project_id) REFERENCES projects(id)
     )''')
 
-    # ✅ USERS Table
+    # ✅ Users table
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -48,7 +54,7 @@ def get_db():
     cur.execute("INSERT OR IGNORE INTO users (email, name, role, contact, password) VALUES (?, ?, ?, ?, ?)", 
                 ("admin@ducting.com", "Admin", "Admin", "9999999999", "admin123"))
 
-    # ✅ VENDORS Table
+    # ✅ Vendors
     cur.execute('''CREATE TABLE IF NOT EXISTS vendors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -59,7 +65,7 @@ def get_db():
         ifsc TEXT
     )''')
 
-    # ✅ VENDOR CONTACTS
+    # ✅ Vendor contacts
     cur.execute('''CREATE TABLE IF NOT EXISTS vendor_contacts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vendor_id INTEGER,
@@ -69,7 +75,7 @@ def get_db():
         FOREIGN KEY(vendor_id) REFERENCES vendors(id)
     )''')
 
-    # ✅ PROJECTS TABLE
+    # ✅ Projects
     cur.execute('''CREATE TABLE IF NOT EXISTS projects (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vendor_id INTEGER,
@@ -90,7 +96,7 @@ def get_db():
         FOREIGN KEY(vendor_id) REFERENCES vendors(id)
     )''')
 
-    # ✅ PRODUCTION PROGRESS
+    # ✅ Production progress
     cur.execute('''CREATE TABLE IF NOT EXISTS production_progress (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         project_id INTEGER UNIQUE,
@@ -100,20 +106,19 @@ def get_db():
         FOREIGN KEY(project_id) REFERENCES projects(id)
     )''')
 
-    # ✅ Insert Dummy Vendor
+    # ✅ Dummy vendor
     cur.execute("INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc) VALUES (?, ?, ?, ?, ?, ?, ?)", 
         (1, "Dummy Vendor Pvt Ltd", "29ABCDE1234F2Z5", "123 Main Street, City", "Axis Bank", "1234567890", "UTIB0000123"))
 
-    # ✅ Insert Dummy Contact
+    # ✅ Dummy contact
     cur.execute("INSERT OR IGNORE INTO vendor_contacts (vendor_id, name, phone, email) VALUES (?, ?, ?, ?)", 
         (1, "Mr. Dummy", "9876543210", "dummy@vendor.com"))
 
     conn.commit()
     conn.close()
 
+# ✅ Call it once on startup
 init_db()
-
-
 
 # ---------- ✅ Login ----------
 @app.route('/', methods=['GET', 'POST'])
