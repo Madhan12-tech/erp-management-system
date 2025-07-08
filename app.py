@@ -17,6 +17,34 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
+
+
+    
+
+    # Create entries table (duct entries)
+    c.execute('''CREATE TABLE IF NOT EXISTS entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER,
+        duct_no TEXT,
+        duct_type TEXT,
+        factor TEXT,
+        width1 REAL,
+        height1 REAL,
+        width2 REAL,
+        height2 REAL,
+        length_or_radius REAL,
+        quantity INTEGER,
+        degree_or_offset TEXT,
+        gauge TEXT,
+        area REAL,
+        nuts_bolts TEXT,
+        cleat TEXT,
+        gasket TEXT,
+        corner_pieces TEXT,
+        FOREIGN KEY (project_id) REFERENCES projects(id)
+    )''')
+    
+
     # ✅ USERS Table (Admin + Dummy)
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,22 +99,7 @@ def init_db():
         FOREIGN KEY(vendor_id) REFERENCES vendors(id)
     )''')
 
-    # ✅ DUCTS TABLE
-    cur.execute('''CREATE TABLE IF NOT EXISTS ducts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        type TEXT,
-        w1 REAL,
-        h1 REAL,
-        w2 REAL,
-        h2 REAL,
-        length_radius REAL,
-        quantity INTEGER,
-        offset_degree TEXT,
-        gauge TEXT,
-        area REAL,
-        FOREIGN KEY(project_id) REFERENCES projects(id)
-    )''')
+
 
     # ✅ PRODUCTION PROGRESS
     cur.execute('''CREATE TABLE IF NOT EXISTS production_progress (
