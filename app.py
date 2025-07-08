@@ -344,10 +344,10 @@ def submit_for_review(project_id):
 def submit_measurement(project_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("UPDATE projects SET status = 'submitted for approval' WHERE id = ?", (project_id,))
+    cur.execute("UPDATE projects SET status = 'preparation' WHERE id = ?", (project_id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('projects'))
+    return '', 200  # No redirect needed for AJAX
 
 # ---------- ✅ Approve Project (Final Step) ----------
 @app.route('/approve_project/<int:project_id>', methods=['POST'])
