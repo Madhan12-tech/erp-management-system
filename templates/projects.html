@@ -247,6 +247,15 @@
   </div>
 </div>
 
+  {% if project and project.status == 'preparation' %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
+    modal.show();
+  });
+</script>
+{% endif %}
+
 <script>
   $('#saveAndOpenModal').click(function () {
     const projectId = $(this).data('project');
