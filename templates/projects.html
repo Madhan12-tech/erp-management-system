@@ -71,9 +71,9 @@
   <div class="d-flex flex-wrap gap-2">
 
     {% if project.status == 'new' %}
-      <form method="POST" action="/submit_measurement/{{ project.id }}">
-        <button class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
-      </form>
+      <button class="btn btn-warning" id="saveAndOpenModal" data-project="{{ project.id }}">
+  📋 Save & Continue to Measurement Sheet
+      </button>
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal"
   {% if project.status != 'preparation' %} disabled {% endif %}>
   📐 Measurement Sheet
