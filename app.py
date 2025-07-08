@@ -42,6 +42,17 @@ def init_db():
         FOREIGN KEY (project_id) REFERENCES projects(id)
     )''')
 
+    cur.execute('''CREATE TABLE IF NOT EXISTS ducts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    type TEXT,
+    length REAL,
+    width REAL,
+    height REAL,
+    quantity INTEGER,
+    FOREIGN KEY(project_id) REFERENCES projects(id)
+)''')
+
     # ✅ Users table
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -295,20 +306,28 @@ def add_measurement():
 @app.route('/add_duct', methods=['POST'])
 def add_duct():
     project_id = request.form['project_id']
-    type_ = request.form['type']
-    length = request.form['length']
-    width = request.form['width']
-    height = request.form['height']
+    duct_no = request.form['duct_no']
+    duct_type = request.form['duct_type']
+    factor = request.form['factor']
+    width1 = request.form['width1']
+    height1 = request.form['height1']
+    width2 = request.form['width2']
+    height2 = request.form['height2']
+    length_or_radius = request.form['length_or_radius']
     quantity = request.form['quantity']
+    degree_or_offset = request.form['degree_or_offset']
 
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''
-        INSERT INTO ducts (project_id, type, length, width, height, quantity)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (project_id, type_, length, width, height, quantity))
+        INSERT INTO entries (
+            project_id, duct_no, duct_type, factor, width1, height1, width2,
+            height2, length_or_radius, quantity, degree_or_offset
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (project_id, duct_no, duct_type, factor, width1, height1, width2,
+          height2, length_or_radius, quantity, degree_or_offset))
     conn.commit()
-    return '', 200
+    return redirect(url_for('projects'))
 
 # ---------- ✅ Submit for Review ----------
 @app.route('/submit_for_review/<int:project_id>', methods=['POST'])
