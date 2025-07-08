@@ -373,6 +373,10 @@
           <button class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
         </form>
 
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#measurementSheetModal">
+           📋 Fill Measurement Sheet
+            </button>
+
       {% elif project.status == 'preparation' %}
         <form method="POST" action="/submit_for_review/{{ project.id }}">
           <button class="btn btn-secondary">🚧 Submit for Review</button>
