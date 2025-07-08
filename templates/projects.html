@@ -124,7 +124,7 @@
   <!-- Second Popup: Measurement Sheet Info -->
 <div class="modal fade" id="measurementSheetModal" tabindex="-1" aria-labelledby="measurementSheetModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-md modal-dialog-scrollable">
-    <form class="modal-content" method="post" action="{{ url_for('measurement_entry') }}">
+    <form method="post" action="{{ url_for('measurement_entry', project_id=project.id) }}">
       <div class="modal-header">
         <h5 class="modal-title" id="measurementSheetModalLabel">Measurement Sheet Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
