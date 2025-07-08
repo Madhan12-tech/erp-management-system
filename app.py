@@ -470,8 +470,10 @@ def get_all_vendors():
     conn.close()
     return vendors
 
+# ✅ Call database setup once on startup (works locally + Render)
+init_db()
+
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 
