@@ -412,11 +412,13 @@ def summary():
 
 @app.route('/projects')
 def projects():
+    if 'user' not in session:
+        return redirect(url_for('login'))  # ✅ session check
+
     enquiry_id = str(uuid.uuid4())[:8].upper()
     projects = get_all_projects()
     vendors = get_all_vendors()
     return render_template('projects.html', projects=projects, vendors=vendors, enquiry_id=enquiry_id)
-
 def get_all_projects():
     conn = get_db()
     cur = conn.cursor()
