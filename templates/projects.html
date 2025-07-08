@@ -1,337 +1,431 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Projects | Ducting ERP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      background-color: #f8f9fa;
-      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f4f7;
     }
-    .form-label {
-      font-weight: 500;
+    .modal-lg {
+      max-width: 90%;
     }
     .table th, .table td {
       vertical-align: middle;
-      text-align: center;
-    }
-    .modal-header {
-      background-color: #0d6efd;
-      color: white;
     }
     .status-badge {
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 5px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
     }
-    .status-submitted { background-color: #ffc107; color: #000; }
-    .status-review { background-color: #0dcaf0; color: #000; }
-    .status-approved { background-color: #198754; color: #fff; }
   </style>
 </head>
 <body>
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Ducting Projects Management</h3>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#vendorProjectModal">+ Add Project</button>
+    <h2>Projects Overview</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">+ Add Project</button>
   </div>
 
-  <!-- First Popup: Vendor & Project Info -->
-<div class="modal fade" id="vendorProjectModal" tabindex="-1" aria-labelledby="vendorProjectModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <form class="modal-content" method="post" action="{{ url_for('create_project') }}" enctype="multipart/form-data">
-      <div class="modal-header">
-        <h5 class="modal-title" id="vendorProjectModalLabel">Add New Project</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row">
+    {% for project in projects %}
+      <div class="col-md-6">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ project.name }} ({{ project.enquiry_id }})</h5>
+            <p><strong>Vendor:</strong> {{ project.vendor_name }}</p>
+            <p><strong>Status:</strong> 
+              <span class="badge bg-secondary">{{ project.status }}</span>
+            </p>
+            <div class="d-flex justify-content-between">
+              <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#measurementModal_{{ project.id }}">Measurement Sheet</button>
+              <form method="post" action="{{ url_for('delete_project', project_id=project.id) }}" onsubmit="return confirm('Delete this project?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-body row g-2">
-
-        <div class="col-md-6">
-          <label class="form-label">Vendor Name</label>
-          <select name="vendor_id" id="vendor_id" class="form-select" required onchange="fillVendorDetails(this)">
-            <option value="">Select Vendor</option>
-            {% for vendor in vendors %}
-              <option value="{{ vendor[0] }}">{{ vendor[1] }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Vendor GST No</label>
-          <input type="text" name="vendor_gst" id="vendor_gst" class="form-control" readonly>
-        </div>
-
-        <div class="col-12">
-          <label class="form-label">Vendor Address</label>
-          <textarea name="vendor_address" id="vendor_address" class="form-control" rows="2" readonly></textarea>
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Project Location</label>
-          <input type="text" name="project_location" class="form-control" required>
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Start Date</label>
-          <input type="date" name="start_date" class="form-control" required>
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">End Date</label>
-          <input type="date" name="end_date" class="form-control" required>
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Drawing Upload</label>
-          <input type="file" name="drawing_file" class="form-control" accept=".pdf,.jpg,.png,.jpeg">
-        </div>
-
-        <div class="col-12">
-          <label class="form-label">Project Notes</label>
-          <textarea name="project_notes" class="form-control" rows="2" placeholder="Optional"></textarea>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Save & Continue</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-  const vendorData = {
-    {% for vendor in vendors %}
-      {{ vendor[0] }}: {
-        gst: "{{ vendor[2] }}",
-        address: "{{ vendor[3] }}"
-      },
     {% endfor %}
-  };
+  </div>
+<!-- Add Project Modal -->
+  <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form class="modal-content" method="post" action="{{ url_for('save_vendor_project') }}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Project Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="enquiry_id" value="{{ enquiry_id }}">
 
-  function fillVendorDetails(select) {
-    const id = select.value;
-    document.getElementById('vendor_gst').value = vendorData[id]?.gst || '';
-    document.getElementById('vendor_address').value = vendorData[id]?.address || '';
-  }
-</script>
-
-  <!-- Second Popup: Measurement Sheet Info -->
-{% for project in projects %}
-    <div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-labelledby="measurementModalLabel{{ project.id }}" aria-hidden="true">
-      <div class="modal-dialog">
-        <form method="post" action="{{ url_for('measurement_entry', project_id=project.id) }}">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Measurement Sheet - {{ project.project_name }}</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label for="client_name{{ project.id }}" class="form-label">Client Name</label>
-                <input type="text" class="form-control" name="client_name" required>
+            <div class="row">
+              <div class="col-md-6">
+                <label for="projectName" class="form-label">Project Name</label>
+                <input type="text" class="form-control" name="project_name" required>
               </div>
-              <div class="mb-3">
-                <label for="site_engineer{{ project.id }}" class="form-label">Site Engineer</label>
-                <input type="text" class="form-control" name="site_engineer" required>
+              <div class="col-md-6">
+                <label for="vendorId" class="form-label">Select Vendor</label>
+                <select class="form-select" name="vendor_id" required onchange="autoFillVendorDetails(this)">
+                  <option value="" selected disabled>Select Vendor</option>
+                  {% for vendor in vendors %}
+                    <option value="{{ vendor.id }}" data-gst="{{ vendor.gst }}" data-address="{{ vendor.address }}">{{ vendor.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6 mt-3">
+                <label class="form-label">Vendor GST</label>
+                <input type="text" class="form-control" id="vendorGST" name="vendor_gst" readonly>
+              </div>
+              <div class="col-md-6 mt-3">
+                <label class="form-label">Vendor Address</label>
+                <input type="text" class="form-control" id="vendorAddress" name="vendor_address" readonly>
+              </div>
+              <div class="col-md-6 mt-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="start_date" required>
+              </div>
+              <div class="col-md-6 mt-3">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" name="end_date" required>
+              </div>
+              <div class="col-md-12 mt-3">
+                <label class="form-label">Upload Drawing</label>
+                <input type="file" class="form-control" name="drawing_file" required>
               </div>
             </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-success">Save Measurement</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save & Continue</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           </div>
         </form>
       </div>
     </div>
-    {% endfor %}
-
-  <!-- Duct Entry Section -->
-<div class="container-fluid mt-4" id="ductEntrySection" style="display: none;">
-  <!-- Header showing selected details -->
-  <div class="alert alert-secondary d-flex justify-content-between align-items-center">
-    <div>
-      <strong>Client:</strong> <span id="clientNameDisplay"></span> |
-      <strong>Location:</strong> <span id="projectLocationDisplay"></span> |
-      <strong>Engineer:</strong> <span id="siteEngineerDisplay"></span>
-    </div>
-    <div>
-      <a href="#" class="btn btn-sm btn-success">Export Excel</a>
-      <a href="#" class="btn btn-sm btn-danger">Export PDF</a>
-      <button onclick="window.print()" class="btn btn-sm btn-outline-primary">Print</button>
-    </div>
   </div>
 
-  <div class="row">
-    <!-- Duct Entry Form -->
-    <div class="col-md-4">
-      <form method="POST" action="{{ url_for('add_duct') }}">
-        <input type="hidden" name="project_id" value="{{ project_id }}">
+<script>
+  function autoFillVendorDetails(selectElement) {
+    const gst = selectElement.options[selectElement.selectedIndex].getAttribute('data-gst');
+    const address = selectElement.options[selectElement.selectedIndex].getAttribute('data-address');
+    document.getElementById('vendorGST').value = gst;
+    document.getElementById('vendorAddress').value = address;
+  }
+</script>
 
-        <div class="mb-2">
-          <label class="form-label">Duct No</label>
-          <input type="text" name="duct_no" class="form-control" required>
-        </div>
+  <!-- Dynamic Measurement Modal per Project -->
+{% for project in projects %}
+  <div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-labelledby="measurementModalLabel{{ project.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form method="post" action="{{ url_for('measurement_entry', project_id=project.id) }}">
+          <div class="modal-header">
+            <h5 class="modal-title">Measurement Sheet for {{ project.project_name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="project_id" value="{{ project.id }}">
 
-        <div class="mb-2">
-          <label class="form-label">Type</label>
-          <select name="duct_type" class="form-control" required>
-            <option value="ST">ST</option>
-            <option value="RED">RED</option>
-            <option value="DUM">DUM</option>
-            <option value="OFFSET">OFFSET</option>
-            <option value="SHOE">SHOE</option>
-            <option value="VANES">VANES</option>
-            <option value="ELB">ELB</option>
-          </select>
-        </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Client Name</label>
+                <input type="text" class="form-control" name="client_name" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Site Engineer</label>
+                <input type="text" class="form-control" name="site_engineer" required>
+              </div>
+              <div class="col-md-6 mt-3">
+                <label class="form-label">Drawing Number</label>
+                <input type="text" class="form-control" name="drawing_no" required>
+              </div>
+              <div class="col-md-6 mt-3">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" name="date" required>
+              </div>
+            </div>
 
-        <div class="mb-2">
-          <label class="form-label">Width1</label>
-          <input type="number" name="width1" class="form-control" step="0.01" required>
-        </div>
+            <hr class="my-3">
+            <h6>Duct Entry</h6>
+            <div id="duct-entry-{{ project.id }}">
+              <div class="row g-2">
+                <div class="col-md-2"><input type="text" name="duct_type" placeholder="Type" class="form-control" required></div>
+                <div class="col-md-2"><input type="text" name="length" placeholder="Length" class="form-control" required></div>
+                <div class="col-md-2"><input type="text" name="width" placeholder="Width" class="form-control" required></div>
+                <div class="col-md-2"><input type="text" name="height" placeholder="Height" class="form-control" required></div>
+                <div class="col-md-2"><input type="text" name="quantity" placeholder="Qty" class="form-control" required></div>
+                <div class="col-md-2"><input type="text" name="gauge" placeholder="Gauge" class="form-control" required></div>
+              </div>
+            </div>
 
-        <div class="mb-2">
-          <label class="form-label">Height1</label>
-          <input type="number" name="height1" class="form-control" step="0.01" required>
-        </div>
+            <div class="text-end mt-3">
+              <button type="submit" class="btn btn-primary">Save Entry</button>
+            </div>
 
-        <div class="mb-2">
-          <label class="form-label">Width2</label>
-          <input type="number" name="width2" class="form-control" step="0.01">
-        </div>
+            <!-- Sheet Actions -->
+            <div class="d-flex justify-content-end mt-4">
+              <form method="POST" action="{{ url_for('submit_measurement', project_id=project.id) }}">
+                <button type="submit" class="btn btn-warning">Submit Sheet</button>
+              </form>
+            </div>
 
-        <div class="mb-2">
-          <label class="form-label">Height2</label>
-          <input type="number" name="height2" class="form-control" step="0.01">
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label">Length/Radius</label>
-          <input type="number" name="length_or_radius" class="form-control" step="0.01" required>
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label">Quantity</label>
-          <input type="number" name="quantity" class="form-control" required>
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label">Offset/Degree</label>
-          <input type="number" name="degree_or_offset" class="form-control" step="0.01">
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label">Factor</label>
-          <input type="number" name="factor" class="form-control" step="0.1" value="1.0">
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 mt-2">Add Entry</button>
-      </form>
-    </div>
-
-    <!-- Live Table -->
-    <div class="col-md-8">
-      <table class="table table-bordered table-striped table-sm">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>Duct</th>
-            <th>Type</th>
-            <th>W1</th>
-            <th>H1</th>
-            <th>W2</th>
-            <th>H2</th>
-            <th>Len</th>
-            <th>Qty</th>
-            <th>Offset</th>
-            <th>Gauge</th>
-            <th>Area</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for entry in duct_entries %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ entry[2] }}</td>
-            <td>{{ entry[3] }}</td>
-            <td>{{ entry[4] }}</td>
-            <td>{{ entry[5] }}</td>
-            <td>{{ entry[6] }}</td>
-            <td>{{ entry[7] }}</td>
-            <td>{{ entry[8] }}</td>
-            <td>{{ entry[9] }}</td>
-            <td>{{ entry[10] }}</td>
-            <td>{{ entry[11] }}</td>
-            <td>{{ entry[12] }}</td>
-            <td>
-              <a href="{{ url_for('edit_duct', id=entry[0]) }}" class="btn btn-sm btn-warning">Edit</a>
-              <a href="{{ url_for('delete_duct', id=entry[0]) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this entry?')">Delete</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      <!-- Sheet Actions -->
-      <div class="d-flex justify-content-end mt-2">
-      <form method="POST" action="{{ url_for('submit_measurement', project_id=project.id) }}">
-          <button type="submit" class="btn btn-warning">Submit Sheet</button>
+          </div>
         </form>
       </div>
     </div>
   </div>
-</div>
+{% endfor %}
 
-  <!-- JavaScript to Handle Popups and Auto-fill -->
-<script>
-  function openMeasurementPopup() {
-    const measurementModal = new bootstrap.Modal(document.getElementById('measurementPopup'));
-    measurementModal.show();
-  }
-
-  function continueToSheetPopup() {
-    // Auto fill top row of duct entry section
-    document.getElementById("clientNameDisplay").innerText = document.getElementById("client_name").value;
-    document.getElementById("projectLocationDisplay").innerText = document.getElementById("project_location").value;
-    document.getElementById("siteEngineerDisplay").innerText = document.getElementById("site_engineer").value;
-
-    const sheetModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('measurementPopup'));
-    sheetModal.hide();
-
-    document.getElementById("ductEntrySection").style.display = "block";
-  }
-
-  function fillVendorDetails() {
-    const vendorInfo = {
-      {% for vendor in vendors %}
-        "{{ vendor[1] }}": {
-          gst: "{{ vendor[2] }}",
-          address: "{{ vendor[3] }}"
-        },
+  <div class="container mt-5">
+  <h2 class="text-center mb-4">All Projects</h2>
+  <table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Vendor</th>
+        <th>Project Name</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Status</th>
+        <th>Drawing</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for project in projects %}
+      <tr>
+        <td>{{ project.id }}</td>
+        <td>{{ project.vendor_name }}</td>
+        <td>{{ project.project_name }}</td>
+        <td>{{ project.start_date }}</td>
+        <td>{{ project.end_date }}</td>
+        <td>
+          <form method="post" action="{{ url_for('update_status', project_id=project.id) }}">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="Draft" {% if project.status == 'Draft' %}selected{% endif %}>Draft</option>
+              <option value="Preparation" {% if project.status == 'Preparation' %}selected{% endif %}>Preparation</option>
+              <option value="Under Review" {% if project.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+              <option value="Submitted for Approval" {% if project.status == 'Submitted for Approval' %}selected{% endif %}>Submitted for Approval</option>
+              <option value="Approved" {% if project.status == 'Approved' %}selected{% endif %}>Approved</option>
+              <option value="Production" {% if project.status == 'Production' %}selected{% endif %}>Production</option>
+            </select>
+          </form>
+        </td>
+        <td>
+          {% if project.drawing_file %}
+            <a href="{{ url_for('static', filename='uploads/' + project.drawing_file) }}" target="_blank">View</a>
+          {% else %}
+            No file
+          {% endif %}
+        </td>
+        <td>
+          <div class="d-flex gap-1">
+            <!-- Measurement Sheet Trigger -->
+            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#measurementModal{{ project.id }}">
+              📏 Sheet
+            </button>
+            <!-- Edit -->
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editProjectModal{{ project.id }}">
+              ✏️ Edit
+            </button>
+            <!-- Delete -->
+            <form method="post" action="{{ url_for('delete_project', project_id=project.id) }}" onsubmit="return confirm('Are you sure you want to delete this project?')">
+              <button type="submit" class="btn btn-sm btn-danger">🗑️ Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
       {% endfor %}
-    };
+    </tbody>
+  </table>
+  </div>
 
-    const selectedVendor = document.getElementById("vendor").value;
-    if (vendorInfo[selectedVendor]) {
-      document.getElementById("gst").value = vendorInfo[selectedVendor].gst;
-      document.getElementById("address").value = vendorInfo[selectedVendor].address;
-    } else {
-      document.getElementById("gst").value = "";
-      document.getElementById("address").value = "";
-    }
+  <!-- Project Edit Modal (for each project) -->
+{% for project in projects %}
+<div class="modal fade" id="editProjectModal{{ project.id }}" tabindex="-1" aria-labelledby="editProjectModalLabel{{ project.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('edit_project', project_id=project.id) }}" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editProjectModalLabel{{ project.id }}">Edit Project - {{ project.project_name }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <label for="vendor_id_{{ project.id }}" class="form-label">Vendor</label>
+            <select class="form-select" name="vendor_id" id="vendor_id_{{ project.id }}" required>
+              <option value="">Select Vendor</option>
+              {% for vendor in vendors %}
+              <option value="{{ vendor.id }}" {% if vendor.id == project.vendor_id %}selected{% endif %}>{{ vendor.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="project_name_{{ project.id }}" class="form-label">Project Name</label>
+            <input type="text" class="form-control" name="project_name" id="project_name_{{ project.id }}" value="{{ project.project_name }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="start_date_{{ project.id }}" class="form-label">Start Date</label>
+            <input type="date" class="form-control" name="start_date" id="start_date_{{ project.id }}" value="{{ project.start_date }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="end_date_{{ project.id }}" class="form-label">End Date</label>
+            <input type="date" class="form-control" name="end_date" id="end_date_{{ project.id }}" value="{{ project.end_date }}" required>
+          </div>
+
+          <div class="col-md-12">
+            <label for="drawing_file_{{ project.id }}" class="form-label">Upload Drawing (PDF/Image)</label>
+            <input type="file" class="form-control" name="drawing_file" id="drawing_file_{{ project.id }}">
+            {% if project.drawing_file %}
+              <small>Current: <a href="{{ url_for('static', filename='uploads/' + project.drawing_file) }}" target="_blank">{{ project.drawing_file }}</a></small>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+  <!-- Measurement Sheet Modal per Project -->
+{% for project in projects %}
+<div class="modal fade" id="measurementModal{{ project.id }}" tabindex="-1" aria-labelledby="measurementModalLabel{{ project.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('submit_measurement', project_id=project.id) }}" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title" id="measurementModalLabel{{ project.id }}">Measurement Sheet - {{ project.project_name }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body row g-3">
+
+          <!-- Sheet Info -->
+          <div class="col-md-4">
+            <label class="form-label">Client Name</label>
+            <input type="text" name="client_name" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Site Engineer</label>
+            <input type="text" name="site_engineer" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Date</label>
+            <input type="date" name="sheet_date" class="form-control" required>
+          </div>
+
+          <!-- Duct Entry Form -->
+          <div class="col-md-3">
+            <label class="form-label">Duct Type</label>
+            <input type="text" name="duct_type" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Length</label>
+            <input type="number" step="0.01" name="length" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Width</label>
+            <input type="number" step="0.01" name="width" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Height</label>
+            <input type="number" step="0.01" name="height" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Material</label>
+            <input type="text" name="material" class="form-control">
+          </div>
+
+          <!-- Live Table Placeholder -->
+          <div class="col-md-12 mt-3">
+            <h6>Live Duct Entries (Sample)</h6>
+            <table class="table table-bordered table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Type</th>
+                  <th>Length</th>
+                  <th>Width</th>
+                  <th>Height</th>
+                  <th>Material</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for duct in project.ducts %}
+                <tr>
+                  <td>{{ duct.duct_type }}</td>
+                  <td>{{ duct.length }}</td>
+                  <td>{{ duct.width }}</td>
+                  <td>{{ duct.height }}</td>
+                  <td>{{ duct.material }}</td>
+                  <td>{{ duct.status }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Submit Sheet</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+<!-- Bootstrap Bundle JS for Modal and Interactions -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Optional: Toast Example (Success/Warning) -->
+<script>
+  function showToast(message, type = 'success') {
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+    document.body.appendChild(toastEl);
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+    setTimeout(() => toastEl.remove(), 5000);
   }
 </script>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
+  
   
