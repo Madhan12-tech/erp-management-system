@@ -89,38 +89,113 @@
   {% endif %}
 
   <!-- ✅ LEFT/RIGHT: ENTRY FORM & LIVE TABLE -->
-  {% if project %}
-  <div class="row">
-    <div class="col-md-5">
-      <form method="POST" action="/add_duct">
-        <input type="hidden" name="project_id" value="{{ project.id }}">
-        <div class="card shadow-sm mb-3">
-          <div class="card-header bg-primary text-white">➕ Duct Entry</div>
-          <div class="card-body row g-2">
-            <div class="col-md-6"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
-            <div class="col-md-6"><label>Type</label><input name="duct_type" class="form-control" required></div>
-            <div class="col-md-6"><label>Factor</label><input name="factor" class="form-control"></div>
-            <div class="col-md-6"><label>Gauge</label><input name="gauge" class="form-control"></div>
-            <div class="col-md-4"><label>W1</label><input name="width1" class="form-control"></div>
-            <div class="col-md-4"><label>H1</label><input name="height1" class="form-control"></div>
-            <div class="col-md-4"><label>Qty</label><input name="quantity" class="form-control"></div>
-            <div class="col-md-4"><label>W2</label><input name="width2" class="form-control"></div>
-            <div class="col-md-4"><label>H2</label><input name="height2" class="form-control"></div>
-            <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" class="form-control"></div>
-            <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" class="form-control"></div>
-            <div class="col-md-4"><label>Area</label><input name="area" class="form-control"></div>
-            <div class="col-md-3"><label>Nuts</label><input name="nuts_bolts" class="form-control"></div>
-            <div class="col-md-3"><label>Cleat</label><input name="cleat" class="form-control"></div>
-            <div class="col-md-3"><label>Gasket</label><input name="gasket" class="form-control"></div>
-            <div class="col-md-3"><label>Corner</label><input name="corner_pieces" class="form-control"></div>
-          </div>
-          <div class="card-footer text-end">
-            <button class="btn btn-success">➕ Add Entry</button>
-          </div>
-        </div>
-      </form>
+  <form method="POST" action="{{ url_for('add_duct') }}" class="mb-4" id="ductEntryForm">
+  <input type="hidden" name="project_id" value="{{ project_id }}">
+  {% if edit_entry %}
+    <input type="hidden" name="id" value="{{ edit_entry[0] }}">
+  {% endif %}
+
+  <div class="row g-3">
+
+    <div class="col-md-3">
+      <label for="duct_no" class="form-label">Duct No</label>
+      <input type="text" class="form-control" name="duct_no" required value="{{ edit_entry[2] if edit_entry else '' }}">
     </div>
 
+    <div class="col-md-3">
+      <label for="duct_type" class="form-label">Duct Type</label>
+      <select class="form-select" name="duct_type" id="duct_type" required onchange="updateFieldVisibility()">
+        <option value="">Select Type</option>
+        {% for type in ['ST', 'RED', 'DUM', 'OFFSET', 'SHOE', 'VANES', 'ELB'] %}
+          <option value="{{ type }}" {% if edit_entry and edit_entry[3] == type %}selected{% endif %}>{{ type }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="width1" class="form-label">Width 1 (W1)</label>
+      <input type="number" step="any" class="form-control" name="width1" id="width1" required value="{{ edit_entry[4] if edit_entry else '' }}">
+    </div>
+
+    <div class="col-md-3">
+      <label for="height1" class="form-label">Height 1 (H1)</label>
+      <input type="number" step="any" class="form-control" name="height1" id="height1" required value="{{ edit_entry[5] if edit_entry else '' }}">
+    </div>
+    
+    <div class="col-md-5">
+  <form method="POST" action="/add_duct">
+    <input type="hidden" name="project_id" value="{{ project.id }}">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-primary text-white">➕ Duct Entry</div>
+      <div class="card-body row g-2">
+        <div class="col-md-6">
+          <label>Duct No</label>
+          <input name="duct_no" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label>Type</label>
+          <select name="duct_type" class="form-select" id="ductType" required>
+            <option value="">-- Select Type --</option>
+            <option value="ST">ST</option>
+            <option value="RED">RED</option>
+            <option value="OFFSET">OFFSET</option>
+            <option value="SHOE">SHOE</option>
+            <option value="ELB">ELB</option>
+            <option value="VANES">VANES</option>
+            <option value="DUM">DUM</option>
+          </select>
+        </div>
+
+        <input id="ductType" name="duct_type" class="form-control">
+<input id="factor" name="factor" class="form-control">
+<input id="width1" name="width1" class="form-control">
+<input id="height1" name="height1" class="form-control">
+<input id="width2" name="width2" class="form-control">
+<input id="height2" name="height2" class="form-control">
+<input id="length_or_radius" name="length_or_radius" class="form-control">
+<input id="quantity" name="quantity" class="form-control">
+<input id="degree_or_offset" name="degree_or_offset" class="form-control">
+<input id="area" name="area" class="form-control">
+<input id="gauge" name="gauge" class="form-control">
+<input id="nuts_bolts" name="nuts_bolts" class="form-control">
+<input id="cleat" name="cleat" class="form-control">
+<input id="gasket" name="gasket" class="form-control">
+<input id="corner_pieces" name="corner_pieces" class="form-control">
+
+        <div class="col-md-6 factor-field d-none">
+          <label>Factor</label>
+          <input type="number" step="0.01" name="factor" id="factorInput" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label>Gauge</label>
+          <input name="gauge" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-4"><label>W1</label><input name="width1" class="form-control" required></div>
+        <div class="col-md-4"><label>H1</label><input name="height1" class="form-control" required></div>
+        <div class="col-md-4"><label>Qty</label><input name="quantity" class="form-control" required></div>
+
+        <div class="col-md-4"><label>W2</label><input name="width2" class="form-control"></div>
+        <div class="col-md-4"><label>H2</label><input name="height2" class="form-control"></div>
+        <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" class="form-control" required></div>
+
+        <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" class="form-control"></div>
+
+        <div class="col-md-4"><label>Area</label><input name="area" class="form-control" readonly></div>
+        <div class="col-md-4"><label>Nuts</label><input name="nuts_bolts" class="form-control" readonly></div>
+
+        <div class="col-md-4"><label>Cleat</label><input name="cleat" class="form-control" readonly></div>
+        <div class="col-md-4"><label>Gasket</label><input name="gasket" class="form-control" readonly></div>
+        <div class="col-md-4"><label>Corner</label><input name="corner_pieces" class="form-control" readonly></div>
+      </div>
+
+      <div class="card-footer text-end">
+        <button type="submit" class="btn btn-success">➕ Add Entry</button>
+      </div>
+    </div>
+  </form>
+    </div>
     <div class="col-md-7">
       <div class="card shadow-sm">
         <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
@@ -258,6 +333,98 @@
     $('#vendorAddress').val(opt.data('address') || '');
   });
 </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const ductTypeSelect = document.getElementById('ductType');
+    const factorField = document.querySelector('.factor-field');
+
+    function updateFactorVisibility() {
+      const showFor = ['RED', 'OFFSET', 'SHOE', 'ELB'];
+      if (showFor.includes(ductTypeSelect.value)) {
+        factorField.classList.remove('d-none');
+      } else {
+        factorField.classList.add('d-none');
+      }
+    }
+
+    ductTypeSelect.addEventListener('change', updateFactorVisibility);
+    updateFactorVisibility(); // Run once on load
+  });
+  </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const inputs = ['width1', 'height1', 'width2', 'height2', 'length_or_radius', 'quantity', 'degree_or_offset', 'ductType', 'factor'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', calculateAll);
+    });
+
+    function val(id) {
+      const el = document.getElementById(id);
+      return parseFloat(el?.value || 0);
+    }
+
+    function calculateAll() {
+      const type = document.getElementById('ductType').value.toUpperCase();
+      const w1 = val('width1');
+      const h1 = val('height1');
+      const w2 = val('width2');
+      const h2 = val('height2');
+      const len = val('length_or_radius');
+      const qty = val('quantity');
+      const deg = val('degree_or_offset');
+      const factor = val('factor') || 1;
+
+      let area = 0;
+
+      if (type === 'ST') {
+        area = 2 * (w1 + h1) / 1000 * (len / 1000) * qty;
+      } else if (type === 'RED') {
+        area = (w1 + h1 + w2 + h2) / 1000 * (len / 1000) * qty * factor;
+      } else if (type === 'DUM') {
+        area = (w1 * h1) / 1000000 * qty;
+      } else if (type === 'OFFSET') {
+        area = (w1 + h1 + w2 + h2) / 1000 * ((len + deg) / 1000) * qty * factor;
+      } else if (type === 'SHOE') {
+        area = (w1 + h1) * 2 / 1000 * (len / 1000) * qty * factor;
+      } else if (type === 'VANES') {
+        area = w1 / 1000 * (2 * Math.PI * (w1 / 1000) / 4) * qty;
+      } else if (type === 'ELB') {
+        area = 2 * (w1 + h1) / 1000 * ((h1 / 2 / 1000) + (len / 1000) * (Math.PI * (deg / 180))) * qty * factor;
+      }
+
+      // Update area
+      document.getElementById('area')?.setAttribute('value', area.toFixed(2));
+
+      // Gauge
+      let gauge = '18g';
+      if (w1 <= 751 && h1 <= 751) gauge = '24g';
+      else if (w1 <= 1201 && h1 <= 1201) gauge = '22g';
+      else if (w1 <= 1800 && h1 <= 1800) gauge = '20g';
+      document.getElementById('gauge')?.setAttribute('value', gauge);
+
+      // Nuts
+      document.getElementById('nuts_bolts')?.setAttribute('value', qty * 4);
+
+      // Cleats
+      let cleat = 12;
+      if (gauge === '24g') cleat = 4;
+      else if (gauge === '22g') cleat = 8;
+      else if (gauge === '20g') cleat = 10;
+      document.getElementById('cleat')?.setAttribute('value', qty * cleat);
+
+      // Gasket
+      const gasket = (w1 + h1 + w2 + h2) / 1000 * qty;
+      document.getElementById('gasket')?.setAttribute('value', gasket.toFixed(2));
+
+      // Corners
+      const corners = (type === 'DUM') ? 0 : qty * 8;
+      document.getElementById('corner_pieces')?.setAttribute('value', corners);
+    }
+  });
+                            </script>
 
 </body>
 </html>
