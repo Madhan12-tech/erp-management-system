@@ -53,164 +53,161 @@
       </tbody>
     </table>
   </div>
+{% if project %}
+  <!-- ✅ Project Header Info -->
+  <div class="row bg-light p-3 rounded mb-3 border">
+    <div class="col-md-3"><strong>📁 Project:</strong> {{ project.project_name }}</div>
+    <div class="col-md-3"><strong>🏷 Enquiry:</strong> {{ project.enquiry_no }}</div>
+    <div class="col-md-3"><strong>📅 Start:</strong> {{ project.start_date }}</div>
+    <div class="col-md-3"><strong>📅 End:</strong> {{ project.end_date }}</div>
+  </div>
 
-  {% if project %}
-<!-- ✅ Project Header Info -->
-<div class="row bg-light p-3 rounded mb-3 border">
-  <div class="col-md-3"><strong>📁 Project:</strong> {{ project.project_name }}</div>
-  <div class="col-md-3"><strong>🏷 Enquiry:</strong> {{ project.enquiry_no }}</div>
-  <div class="col-md-3"><strong>📅 Start:</strong> {{ project.start_date }}</div>
-  <div class="col-md-3"><strong>📅 End:</strong> {{ project.end_date }}</div>
-</div>
-
-<!-- ✅ Action Buttons -->
-<div class="d-flex gap-2 mb-3">
-  {% if project.status == 'new' %}
-    <form method="POST" action="/continue_to_measurement/{{ project.id }}">
-      <button type="submit" class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
+  <!-- ✅ Action Buttons -->
+  <div class="d-flex gap-2 mb-3">
+    {% if project.status == 'new' %}
+      <form method="POST" action="/continue_to_measurement/{{ project.id }}">
+        <button type="submit" class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
+      </form>
+    {% endif %}
+    {% if project.status == 'preparation' %}
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal">📐 Measurement Sheet</button>
+    {% endif %}
+    <form method="POST" action="/submit_for_review/{{ project.id }}">
+      <button class="btn btn-secondary">🚧 Submit for Review</button>
     </form>
-  {% endif %}
-  {% if project.status == 'preparation' %}
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal">📐 Measurement Sheet</button>
-  {% endif %}
-  <form method="POST" action="/submit_for_review/{{ project.id }}">
-    <button class="btn btn-secondary">🚧 Submit for Review</button>
-  </form>
-</div>
+  </div>
 
-<!-- ✅ Left: Duct Entry Form -->
-<div class="row">
-  <div class="col-md-5">
-  <form method="POST" action="/add_duct">
-    <input type="hidden" name="project_id" value="{{ project.id }}">
-    
-    <div class="card shadow-sm mb-3">
-      <div class="card-header bg-primary text-white">➕ Duct Entry</div>
-      
-      <div class="card-body row g-2">
-        <div class="col-md-6"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
-        <div class="col-md-6">
-          <label>Type</label>
-          <select name="duct_type" class="form-select" id="ductType" required>
-            <option value="">-- Select Type --</option>
-            <option value="ST">ST</option>
-            <option value="RED">RED</option>
-            <option value="OFFSET">OFFSET</option>
-            <option value="SHOE">SHOE</option>
-            <option value="ELB">ELB</option>
-            <option value="VANES">VANES</option>
-            <option value="DUM">DUM</option>
-          </select>
+  <!-- ✅ Left: Duct Entry Form -->
+  <div class="row">
+    <div class="col-md-5">
+      <form method="POST" action="/add_duct">
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-primary text-white">➕ Duct Entry</div>
+          <div class="card-body row g-2">
+            <div class="col-md-6"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
+            <div class="col-md-6">
+              <label>Type</label>
+              <select name="duct_type" class="form-select" id="ductType" required>
+                <option value="">-- Select Type --</option>
+                <option value="ST">ST</option>
+                <option value="RED">RED</option>
+                <option value="OFFSET">OFFSET</option>
+                <option value="SHOE">SHOE</option>
+                <option value="ELB">ELB</option>
+                <option value="VANES">VANES</option>
+                <option value="DUM">DUM</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 factor-field d-none">
+              <label>Factor</label>
+              <input type="number" step="0.01" name="factor" id="factor" class="form-control">
+            </div>
+
+            <div class="col-md-6">
+              <label>Gauge</label>
+              <input name="gauge" id="gauge" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-4"><label>W1</label><input name="width1" id="width1" class="form-control" required></div>
+            <div class="col-md-4"><label>H1</label><input name="height1" id="height1" class="form-control" required></div>
+            <div class="col-md-4"><label>Qty</label><input name="quantity" id="quantity" class="form-control" required></div>
+
+            <div class="col-md-4"><label>W2</label><input name="width2" id="width2" class="form-control"></div>
+            <div class="col-md-4"><label>H2</label><input name="height2" id="height2" class="form-control"></div>
+            <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" id="length_or_radius" class="form-control" required></div>
+
+            <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" id="degree_or_offset" class="form-control"></div>
+          </div>
+          <div class="card-footer text-end">
+            <button type="submit" class="btn btn-success">➕ Add Entry</button>
+          </div>
         </div>
+      </form>
+    </div>
 
-        <div class="col-md-6 factor-field d-none">
-          <label>Factor</label>
-          <input type="number" step="0.01" name="factor" id="factor" class="form-control">
+<!-- ✅ Right: Live Table with Totals and Actions -->
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
+        <div class="card-body table-responsive p-0">
+          <table class="table table-sm table-striped m-0">
+            <thead class="table-light">
+              <tr>
+                <th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
+                <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th><th>Area</th>
+                <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>🛠</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set total_area = 0 %}
+              {% set total_qty = 0 %}
+              {% set total_nuts = 0 %}
+              {% set total_cleat = 0 %}
+              {% set total_gasket = 0 %}
+              {% set total_corner = 0 %}
+              {% for entry in entries %}
+              <tr>
+                <td>{{ entry.duct_no }}</td>
+                <td>{{ entry.duct_type }}</td>
+                <td>{{ entry.width1 }}</td>
+                <td>{{ entry.height1 }}</td>
+                <td>{{ entry.width2 }}</td>
+                <td>{{ entry.height2 }}</td>
+                <td>{{ entry.length_or_radius }}</td>
+                <td>{{ entry.quantity }}</td>
+                <td>{{ entry.degree_or_offset }}</td>
+                <td>{{ entry.gauge }}</td>
+                <td>{{ "%.2f"|format(entry.area) }}</td>
+                <td>{{ entry.nuts_bolts }}</td>
+                <td>{{ entry.cleat }}</td>
+                <td>{{ "%.2f"|format(entry.gasket) }}</td>
+                <td>{{ entry.corner_pieces }}</td>
+                <td>
+                  <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
+                  <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger"
+                     onclick="return confirm('Delete this entry?')">🗑️</a>
+                </td>
+              </tr>
+              {% set total_area = total_area + entry.area %}
+              {% set total_qty = total_qty + entry.quantity %}
+              {% set total_nuts = total_nuts + entry.nuts_bolts %}
+              {% set total_cleat = total_cleat + entry.cleat %}
+              {% set total_gasket = total_gasket + entry.gasket %}
+              {% set total_corner = total_corner + entry.corner_pieces %}
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light fw-bold">
+              <tr>
+                <td colspan="7" class="text-end">TOTAL:</td>
+                <td>{{ total_qty }}</td>
+                <td></td><td></td>
+                <td>{{ "%.2f"|format(total_area) }}</td>
+                <td>{{ total_nuts }}</td>
+                <td>{{ total_cleat }}</td>
+                <td>{{ "%.2f"|format(total_gasket) }}</td>
+                <td>{{ total_corner }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
-
-        <div class="col-md-6">
-          <label>Gauge</label>
-          <input name="gauge" id="gauge" class="form-control" readonly>
-        </div>
-
-        <div class="col-md-4"><label>W1</label><input name="width1" id="width1" class="form-control" required></div>
-        <div class="col-md-4"><label>H1</label><input name="height1" id="height1" class="form-control" required></div>
-        <div class="col-md-4"><label>Qty</label><input name="quantity" id="quantity" class="form-control" required></div>
-
-        <div class="col-md-4"><label>W2</label><input name="width2" id="width2" class="form-control"></div>
-        <div class="col-md-4"><label>H2</label><input name="height2" id="height2" class="form-control"></div>
-        <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" id="length_or_radius" class="form-control" required></div>
-
-        <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" id="degree_or_offset" class="form-control"></div>
-      </div> <!-- End card-body -->
-
-      <div class="card-footer text-end">
-        <button type="submit" class="btn btn-success">➕ Add Entry</button>
       </div>
 
-    </div> <!-- End card -->
-  </form>
-</div>
-
-<!-- ✅ Right: Live Table with Totals -->
-<div class="col-md-7">
-  <div class="card shadow-sm">
-    <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
-    <div class="card-body table-responsive p-0">
-      <table class="table table-sm table-striped m-0">
-        <thead class="table-light">
-          <tr>
-            <th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
-            <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th><th>Area</th>
-            <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>🛠</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set total_area = 0 %}
-          {% set total_qty = 0 %}
-          {% set total_nuts = 0 %}
-          {% set total_cleat = 0 %}
-          {% set total_gasket = 0 %}
-          {% set total_corner = 0 %}
-          {% for entry in entries %}
-          <tr>
-            <td>{{ entry.duct_no }}</td>
-            <td>{{ entry.duct_type }}</td>
-            <td>{{ entry.width1 }}</td>
-            <td>{{ entry.height1 }}</td>
-            <td>{{ entry.width2 }}</td>
-            <td>{{ entry.height2 }}</td>
-            <td>{{ entry.length_or_radius }}</td>
-            <td>{{ entry.quantity }}</td>
-            <td>{{ entry.degree_or_offset }}</td>
-            <td>{{ entry.gauge }}</td>
-            <td>{{ "%.2f"|format(entry.area) }}</td>
-            <td>{{ entry.nuts_bolts }}</td>
-            <td>{{ entry.cleat }}</td>
-            <td>{{ "%.2f"|format(entry.gasket) }}</td>
-            <td>{{ entry.corner_pieces }}</td>
-            <td>
-              <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
-              <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure to delete this entry?')">🗑️</a>
-            </td>
-          </tr>
-          {% set total_area = total_area + entry.area %}
-          {% set total_qty = total_qty + entry.quantity %}
-          {% set total_nuts = total_nuts + entry.nuts_bolts %}
-          {% set total_cleat = total_cleat + entry.cleat %}
-          {% set total_gasket = total_gasket + entry.gasket %}
-          {% set total_corner = total_corner + entry.corner_pieces %}
-          {% endfor %}
-        </tbody>
-        <tfoot class="table-light fw-bold">
-          <tr>
-            <td colspan="7" class="text-end">TOTAL:</td>
-            <td>{{ total_qty }}</td>
-            <td></td><td></td>
-            <td>{{ "%.2f"|format(total_area) }}</td>
-            <td>{{ total_nuts }}</td>
-            <td>{{ total_cleat }}</td>
-            <td>{{ "%.2f"|format(total_gasket) }}</td>
-            <td>{{ total_corner }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
+      <!-- ✅ Export, Print, and Submit -->
+      <div class="mt-3 d-flex flex-wrap gap-2">
+        <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
+        <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
+        <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print</button>
+        <form method="POST" action="/submit_all/{{ project.id }}">
+          <button class="btn btn-success">📨 Submit All & Move to Production</button>
+        </form>
+      </div>
     </div>
-  </div>
-
-  <!-- 🔧 Export, Print & Submit -->
-  <div class="mt-3 d-flex flex-wrap gap-2">
-    <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
-    <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
-    <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print</button>
-    <form method="POST" action="/submit_all/{{ project.id }}">
-      <button class="btn btn-success">📨 Submit All & Move to Production</button>
-    </form>
-  </div>
-</div>
-
-<!-- ✅ MODAL: MEASUREMENT SHEET -->
+  </div> <!-- End row -->
+  {% endif %}
+<!-- ✅ MODAL: Measurement Sheet Entry -->
 <div class="modal fade" id="measurementSheetModal" tabindex="-1">
   <div class="modal-dialog modal-xl">
     <form method="POST" action="/add_duct">
@@ -240,16 +237,22 @@
               <label>Factor</label>
               <input type="number" step="0.01" name="factor" id="factorModal" class="form-control">
             </div>
+
             <div class="col-md-6"><label>Gauge</label><input name="gauge" id="gaugeModal" class="form-control" readonly></div>
+
             <div class="col-md-4"><label>W1</label><input name="width1" id="width1Modal" class="form-control" required></div>
             <div class="col-md-4"><label>H1</label><input name="height1" id="height1Modal" class="form-control" required></div>
             <div class="col-md-4"><label>Qty</label><input name="quantity" id="quantityModal" class="form-control" required></div>
+
             <div class="col-md-4"><label>W2</label><input name="width2" id="width2Modal" class="form-control"></div>
             <div class="col-md-4"><label>H2</label><input name="height2" id="height2Modal" class="form-control"></div>
             <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" id="length_or_radiusModal" class="form-control" required></div>
+
             <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" id="degree_or_offsetModal" class="form-control"></div>
+
             <div class="col-md-4"><label>Area</label><input name="area" id="areaModal" class="form-control" readonly></div>
             <div class="col-md-4"><label>Nuts</label><input name="nuts_bolts" id="nuts_boltsModal" class="form-control" readonly></div>
+
             <div class="col-md-4"><label>Cleat</label><input name="cleat" id="cleatModal" class="form-control" readonly></div>
             <div class="col-md-4"><label>Gasket</label><input name="gasket" id="gasketModal" class="form-control" readonly></div>
             <div class="col-md-4"><label>Corner</label><input name="corner_pieces" id="corner_piecesModal" class="form-control" readonly></div>
@@ -264,159 +267,7 @@
   </div>
 </div>
 
-<!-- ✅ MODAL: ADD PROJECT -->
-<div class="modal fade" id="addProjectModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form method="POST" action="/create_project" enctype="multipart/form-data">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">➕ Add New Project</h5>
-        </div>
-        <div class="modal-body row g-3 px-4 py-2">
-          <div class="col-md-6">
-            <label>Vendor</label>
-            <select id="vendorSelect" name="vendor_id" class="form-select" required>
-              <option value="">Select Vendor</option>
-              {% for vendor in vendors %}
-              <option value="{{ vendor.id }}" data-address="{{ vendor.address }}" data-gst="{{ vendor.gst }}">{{ vendor.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6"><label>Project Name</label><input name="project_name" class="form-control" required></div>
-          <div class="col-md-6"><label>Enquiry ID</label><input name="enquiry_no" value="{{ enquiry_id }}" class="form-control" readonly></div>
-          <div class="col-md-6"><label>Start Date</label><input type="date" name="start_date" class="form-control" required></div>
-          <div class="col-md-6"><label>End Date</label><input type="date" name="end_date" class="form-control" required></div>
-          <div class="col-md-6"><label>Drawing Upload</label><input type="file" name="drawing_file" class="form-control"></div>
-          <div class="col-md-6"><label>Project Incharge</label><input name="incharge" class="form-control"></div>
-          <div class="col-md-6"><label>Notes</label><textarea name="notes" rows="2" class="form-control"></textarea></div>
-          <div class="col-md-6"><label>Vendor GST</label><input id="vendorGst" class="form-control" readonly></div>
-          <div class="col-md-6"><label>Vendor Address</label><textarea id="vendorAddress" class="form-control" rows="2" readonly></textarea></div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">✅ Save Project</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ✅ SCRIPTS -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-  // ✅ Autofill Vendor Address and GST
-  $('#vendorSelect').on('change', function () {
-    const opt = $(this).find('option:selected');
-    $('#vendorGst').val(opt.data('gst') || '');
-    $('#vendorAddress').val(opt.data('address') || '');
-  });
-</script>
-
-<script>
-  // ✅ Show/hide factor field (main form)
-  document.addEventListener('DOMContentLoaded', function () {
-    const ductTypeSelect = document.getElementById('ductType');
-    const factorField = document.querySelector('.factor-field');
-    function updateFactorVisibility() {
-      const showFor = ['RED', 'OFFSET', 'SHOE', 'ELB'];
-      if (showFor.includes(ductTypeSelect.value)) {
-        factorField.classList.remove('d-none');
-      } else {
-        factorField.classList.add('d-none');
-      }
-    }
-    if (ductTypeSelect) {
-      ductTypeSelect.addEventListener('change', updateFactorVisibility);
-      updateFactorVisibility();
-    }
-  });
-</script>
-
-<script>
-  // ✅ Show/hide factor field (modal form)
-  document.addEventListener('DOMContentLoaded', function () {
-    const ductTypeModal = document.getElementById('ductTypeModal');
-    const factorModalField = document.querySelector('.factor-field-modal');
-    function updateModalFactorVisibility() {
-      const showFor = ['RED', 'OFFSET', 'SHOE', 'ELB'];
-      if (showFor.includes(ductTypeModal.value)) {
-        factorModalField.classList.remove('d-none');
-      } else {
-        factorModalField.classList.add('d-none');
-      }
-    }
-    if (ductTypeModal) {
-      ductTypeModal.addEventListener('change', updateModalFactorVisibility);
-      updateModalFactorVisibility();
-    }
-  });
-</script>
-
-<script>
-  // ✅ Auto calculation (main form)
-  document.addEventListener('DOMContentLoaded', function () {
-    const ids = ['width1', 'height1', 'width2', 'height2', 'length_or_radius', 'quantity', 'degree_or_offset', 'ductType', 'factor'];
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('input', calculateAll);
-    });
-
-    function val(id) {
-      const el = document.getElementById(id);
-      return parseFloat(el?.value || 0);
-    }
-
-    function calculateAll() {
-      const type = document.getElementById('ductType')?.value.toUpperCase() || '';
-      const w1 = val('width1'), h1 = val('height1'), w2 = val('width2'), h2 = val('height2');
-      const len = val('length_or_radius'), qty = val('quantity'), deg = val('degree_or_offset');
-      const factor = val('factor') || 1;
-      let area = 0;
-
-      if (type === 'ST') {
-        area = 2 * (w1 + h1) / 1000 * (len / 1000) * qty;
-      } else if (type === 'RED') {
-        area = (w1 + h1 + w2 + h2) / 1000 * (len / 1000) * qty * factor;
-      } else if (type === 'DUM') {
-        area = (w1 * h1) / 1000000 * qty;
-      } else if (type === 'OFFSET') {
-        area = (w1 + h1 + w2 + h2) / 1000 * ((len + deg) / 1000) * qty * factor;
-      } else if (type === 'SHOE') {
-        area = (w1 + h1) * 2 / 1000 * (len / 1000) * qty * factor;
-      } else if (type === 'VANES') {
-        area = w1 / 1000 * (2 * Math.PI * (w1 / 1000) / 4) * qty;
-      } else if (type === 'ELB') {
-        area = 2 * (w1 + h1) / 1000 * ((h1 / 2 / 1000) + (len / 1000) * (Math.PI * (deg / 180))) * qty * factor;
-      }
-
-      document.getElementById('area')?.setAttribute('value', area.toFixed(2));
-
-      let gauge = '18g';
-      if (w1 <= 751 && h1 <= 751) gauge = '24g';
-      else if (w1 <= 1201 && h1 <= 1201) gauge = '22g';
-      else if (w1 <= 1800 && h1 <= 1800) gauge = '20g';
-      document.getElementById('gauge')?.setAttribute('value', gauge);
-
-      document.getElementById('nuts_bolts')?.setAttribute('value', qty * 4);
-
-      let cleat = 12;
-      if (gauge === '24g') cleat = 4;
-      else if (gauge === '22g') cleat = 8;
-      else if (gauge === '20g') cleat = 10;
-      document.getElementById('cleat')?.setAttribute('value', qty * cleat);
-
-      const gasket = (w1 + h1 + w2 + h2) / 1000 * qty;
-      document.getElementById('gasket')?.setAttribute('value', gasket.toFixed(2));
-
-      const corners = (type === 'DUM') ? 0 : qty * 8;
-      document.getElementById('corner_pieces')?.setAttribute('value', corners);
-    }
-  });
-</script>
-
-<!-- ✅ Auto Open Modal if status is 'preparation' -->
+<!-- ✅ Auto-show modal if project is in preparation -->
 {% if project and project.status == 'preparation' %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -425,9 +276,127 @@
   });
 </script>
 {% endif %}
+<script>
+// ✅ Common calculation logic for both main and modal
+function setupAutoCalculation(prefix = '') {
+  const get = (id) => parseFloat(document.getElementById(prefix + id)?.value || 0);
+  const set = (id, val) => {
+    const el = document.getElementById(prefix + id);
+    if (el) el.setAttribute('value', val);
+  };
 
+  function calculate() {
+    const type = (document.getElementById(prefix + 'ductType')?.value || '').toUpperCase();
+    const w1 = get('width1'), h1 = get('height1'), w2 = get('width2'), h2 = get('height2');
+    const len = get('length_or_radius'), qty = get('quantity'), deg = get('degree_or_offset');
+    const factor = get('factor') || 1;
+    let area = 0;
 
-</div> <!-- End container -->
+    if (type === 'ST') {
+      area = 2 * (w1 + h1) / 1000 * (len / 1000) * qty;
+    } else if (type === 'RED') {
+      area = (w1 + h1 + w2 + h2) / 1000 * (len / 1000) * qty * factor;
+    } else if (type === 'DUM') {
+      area = (w1 * h1) / 1000000 * qty;
+    } else if (type === 'OFFSET') {
+      area = (w1 + h1 + w2 + h2) / 1000 * ((len + deg) / 1000) * qty * factor;
+    } else if (type === 'SHOE') {
+      area = (w1 + h1) * 2 / 1000 * (len / 1000) * qty * factor;
+    } else if (type === 'VANES') {
+      area = w1 / 1000 * (2 * Math.PI * (w1 / 1000) / 4) * qty;
+    } else if (type === 'ELB') {
+      area = 2 * (w1 + h1) / 1000 * ((h1 / 2 / 1000) + (len / 1000) * (Math.PI * (deg / 180))) * qty * factor;
+    }
+
+    set('area', area.toFixed(2));
+
+    let gauge = '18g';
+    if (w1 <= 751 && h1 <= 751) gauge = '24g';
+    else if (w1 <= 1201 && h1 <= 1201) gauge = '22g';
+    else if (w1 <= 1800 && h1 <= 1800) gauge = '20g';
+    set('gauge', gauge);
+
+    set('nuts_bolts', qty * 4);
+
+    let cleat = 12;
+    if (gauge === '24g') cleat = 4;
+    else if (gauge === '22g') cleat = 8;
+    else if (gauge === '20g') cleat = 10;
+    set('cleat', qty * cleat);
+
+    const gasket = (w1 + h1 + w2 + h2) / 1000 * qty;
+    set('gasket', gasket.toFixed(2));
+
+    const corners = (type === 'DUM') ? 0 : qty * 8;
+    set('corner_pieces', corners);
+  }
+
+  const fields = ['width1', 'height1', 'width2', 'height2', 'length_or_radius', 'quantity', 'degree_or_offset', 'factor', 'ductType'];
+  fields.forEach(id => {
+    const el = document.getElementById(prefix + id);
+    if (el) el.addEventListener('input', calculate);
+  });
+
+  // Auto run on load
+  calculate();
+}
+
+// ✅ DOM ready setup
+document.addEventListener('DOMContentLoaded', function () {
+  setupAutoCalculation('');
+  setupAutoCalculation('Modal');
+});
+</script>
+
+<script>
+// ✅ Show factor field only for types RED, OFFSET, etc.
+function setupFactorField(typeId, fieldClass) {
+  const ductTypeSelect = document.getElementById(typeId);
+  const factorField = document.querySelector(fieldClass);
+
+  function update() {
+    const value = ductTypeSelect?.value;
+    const show = ['RED', 'OFFSET', 'SHOE', 'ELB'].includes(value);
+    if (show) factorField?.classList.remove('d-none');
+    else factorField?.classList.add('d-none');
+  }
+
+  if (ductTypeSelect) {
+    ductTypeSelect.addEventListener('change', update);
+    update();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  setupFactorField('ductType', '.factor-field');
+  setupFactorField('ductTypeModal', '.factor-field-modal');
+});
+</script>
+<!-- ✅ Final Scripts and Enhancements --><!-- ✅ Auto show modal if project status is 'preparation' -->{% if project and project.status == 'preparation' %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var modal = new bootstrap.Modal(document.getElementById('measurementSheetModal'));
+    modal.show();
+  });
+</script>{% endif %}
+
+<!-- ✅ Autofill vendor GST and address on dropdown change --><script>
+  document.getElementById('vendorSelect')?.addEventListener('change', function () {
+    const selected = this.options[this.selectedIndex];
+    document.getElementById('vendorGst').value = selected.getAttribute('data-gst') || '';
+    document.getElementById('vendorAddress').value = selected.getAttribute('data-address') || '';
+  });
+</script><!-- ✅ Prevent accidental form resubmission on refresh --><script>
+  if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+  }
+</script><!-- ✅ Tooltip Initialization (if used) --><script>
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+</script><!-- ✅ Bootstrap and jQuery Scripts --><script src="https://code.jquery.com/jquery-3.6.0.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script><!-- ✅ Closing container --></div> <!-- End container -->
 </body>
 </html>
 
