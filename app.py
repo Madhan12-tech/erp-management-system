@@ -496,25 +496,38 @@ def open_project(project_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Get the project
+    # Get the selected project
     cur.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
     project = cur.fetchone()
 
-    # Get the vendor name (if needed)
+    # Add vendor name to project
     if project:
         cur.execute("SELECT name FROM vendors WHERE id = ?", (project["vendor_id"],))
         vendor = cur.fetchone()
         project = dict(project)
         project["vendor_name"] = vendor["name"] if vendor else ""
 
-    # ✅ Get duct entries
+    # ✅ Get all projects (for the project table on top)
+    cur.execute("SELECT projects.*, vendors.name AS vendor_name FROM projects JOIN vendors ON projects.vendor_id = vendors.id")
+    projects = cur.fetchall()
+
+    # ✅ Get all vendors (for the vendor dropdown in modal)
+    cur.execute("SELECT * FROM vendors")
+    vendors = cur.fetchall()
+
+    # ✅ Get entries for this project
     cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
     entries = cur.fetchall()
 
     conn.close()
 
-    return render_template("projects.html", project=project, entries=entries, projects=[], vendors=[])
-
+    return render_template(
+        "projects.html",
+        project=project,
+        entries=entries,
+        projects=projects,
+        vendors=vendors
+    )
 
 
 @app.route('/summary')
