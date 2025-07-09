@@ -268,59 +268,63 @@
 </div>
 
 <!-- ✅ MODAL: Add New Project -->
-<div class="modal fade" id="addProjectModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form method="POST" action="/create_project" enctype="multipart/form-data">
-      <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">➕ Add New Project</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body row g-3">
-          <div class="col-md-6">
-            <label>Project Name</label>
-            <input name="project_name" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>Enquiry No</label>
-            <input name="enquiry_no" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>Start Date</label>
-            <input name="start_date" type="date" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>End Date</label>
-            <input name="end_date" type="date" class="form-control" required>
-          </div>
-          <div class="col-md-12">
-            <label>Vendor</label>
-            <select name="vendor_id" class="form-select" id="vendorSelect" required>
-              <option value="">-- Select Vendor --</option>
-              {% for vendor in vendors %}
-              <option value="{{ vendor.id }}"
-                      data-gst="{{ vendor.gst }}"
-                      data-address="{{ vendor.address }}">
-                {{ vendor.name }}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label>Vendor GST</label>
-            <input type="text" class="form-control" id="vendorGst" readonly>
-          </div>
-          <div class="col-md-6">
-            <label>Vendor Address</label>
-            <input type="text" class="form-control" id="vendorAddress" readonly>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">✅ Create</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
-        </div>
-      </div>
-    </form>
+<div class="modal-body row g-3">
+  <div class="col-md-6">
+    <label>Project Name</label>
+    <input name="project_name" class="form-control" required>
+  </div>
+  <div class="col-md-6">
+    <label>Enquiry No</label>
+    <input name="enquiry_no" class="form-control" required>
+  </div>
+  <div class="col-md-6">
+    <label>Start Date</label>
+    <input name="start_date" type="date" class="form-control" required>
+  </div>
+  <div class="col-md-6">
+    <label>End Date</label>
+    <input name="end_date" type="date" class="form-control" required>
+  </div>
+
+  <div class="col-md-12">
+    <label>Vendor</label>
+    <select name="vendor_id" class="form-select" id="vendorSelect" required>
+      <option value="">-- Select Vendor --</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}"
+              data-gst="{{ vendor.gst }}"
+              data-address="{{ vendor.address }}">
+        {{ vendor.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-6">
+    <label>Vendor GST</label>
+    <input type="text" class="form-control" id="vendorGst" readonly>
+  </div>
+  <div class="col-md-6">
+    <label>Vendor Address</label>
+    <input type="text" class="form-control" id="vendorAddress" readonly>
+  </div>
+
+  <!-- ✅ NEW: Incharge -->
+  <div class="col-md-6">
+    <label>Incharge</label>
+    <input name="incharge" class="form-control" placeholder="Enter Incharge Name" required>
+  </div>
+
+  <!-- ✅ NEW: Notes -->
+  <div class="col-md-6">
+    <label>Notes</label>
+    <textarea name="notes" class="form-control" rows="1" placeholder="Optional Notes"></textarea>
+  </div>
+
+  <!-- ✅ NEW: File Upload -->
+  <div class="col-md-12">
+    <label>Drawing File (optional)</label>
+    <input type="file" name="drawing_file" class="form-control">
   </div>
 </div>
 
