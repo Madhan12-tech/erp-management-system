@@ -128,73 +128,7 @@
     </form>
   </div>
 
-  <!-- 🔧 Live Table + Totals + Actions -->
-<div class="col-md-7">
-  <div class="card shadow-sm">
-    <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
-    <div class="card-body table-responsive p-0">
-      <table class="table table-sm table-striped m-0">
-        <thead class="table-light">
-          <tr>
-            <th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
-            <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th><th>Area</th>
-            <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>🛠</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set total_area = 0 %}
-          {% set total_qty = 0 %}
-          {% set total_nuts = 0 %}
-          {% set total_cleat = 0 %}
-          {% set total_gasket = 0 %}
-          {% set total_corner = 0 %}
-          {% for entry in entries %}
-          <tr>
-            <td>{{ entry.duct_no }}</td>
-            <td>{{ entry.duct_type }}</td>
-            <td>{{ entry.width1 }}</td>
-            <td>{{ entry.height1 }}</td>
-            <td>{{ entry.width2 }}</td>
-            <td>{{ entry.height2 }}</td>
-            <td>{{ entry.length_or_radius }}</td>
-            <td>{{ entry.quantity }}</td>
-            <td>{{ entry.degree_or_offset }}</td>
-            <td>{{ entry.gauge }}</td>
-            <td>{{ "%.2f"|format(entry.area) }}</td>
-            <td>{{ entry.nuts_bolts }}</td>
-            <td>{{ entry.cleat }}</td>
-            <td>{{ "%.2f"|format(entry.gasket) }}</td>
-            <td>{{ entry.corner_pieces }}</td>
-            <td>
-              <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
-              <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger"
-                 onclick="return confirm('Are you sure to delete this entry?')">🗑️</a>
-            </td>
-          </tr>
-          {% set total_area = total_area + entry.area %}
-          {% set total_qty = total_qty + entry.quantity %}
-          {% set total_nuts = total_nuts + entry.nuts_bolts %}
-          {% set total_cleat = total_cleat + entry.cleat %}
-          {% set total_gasket = total_gasket + entry.gasket %}
-          {% set total_corner = total_corner + entry.corner_pieces %}
-          {% endfor %}
-        </tbody>
-        <tfoot class="table-light fw-bold">
-          <tr>
-            <td colspan="7" class="text-end">TOTAL:</td>
-            <td>{{ total_qty }}</td>
-            <td></td><td></td>
-            <td>{{ "%.2f"|format(total_area) }}</td>
-            <td>{{ total_nuts }}</td>
-            <td>{{ total_cleat }}</td>
-            <td>{{ "%.2f"|format(total_gasket) }}</td>
-            <td>{{ total_corner }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
+  
 
   <!-- 🔧 Export, Print & Submit -->
   <div class="mt-3 d-flex flex-wrap gap-2">
@@ -220,7 +154,74 @@
 {% endif %}
 
   <!-- ✅ MODAL: MEASUREMENT SHEET -->
-<!-
+<!-- ✅ Right: Live Table for Duct Entries -->
+<div class="col-md-7">
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
+    <div class="card-body p-0">
+      <div class="table-responsive" style="max-height: 400px; overflow-x: auto;">
+        <table class="table table-sm table-striped text-nowrap m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
+              <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th><th>Area</th>
+              <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>🛠</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in entries %}
+            <tr>
+              <td>{{ entry.duct_no }}</td>
+              <td>{{ entry.duct_type }}</td>
+              <td>{{ entry.width1 }}</td>
+              <td>{{ entry.height1 }}</td>
+              <td>{{ entry.width2 }}</td>
+              <td>{{ entry.height2 }}</td>
+              <td>{{ entry.length_or_radius }}</td>
+              <td>{{ entry.quantity }}</td>
+              <td>{{ entry.degree_or_offset }}</td>
+              <td>{{ entry.gauge }}</td>
+              <td>{{ entry.area }}</td>
+              <td>{{ entry.nuts_bolts }}</td>
+              <td>{{ entry.cleat }}</td>
+              <td>{{ entry.gasket }}</td>
+              <td>{{ entry.corner_pieces }}</td>
+              <td>
+                <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
+                <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this entry?')">🗑️</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td colspan="7">TOTAL:</td>
+              <td>{{ total_qty }}</td>
+              <td></td>
+              <td></td>
+              <td>{{ total_area }}</td>
+              <td>{{ total_nuts }}</td>
+              <td>{{ total_cleat }}</td>
+              <td>{{ total_gasket }}</td>
+              <td>{{ total_corner }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Table Controls -->
+  <div class="mt-3 d-flex flex-wrap gap-2">
+    <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
+    <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
+    <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print</button>
+    <form method="POST" action="/submit_all/{{ project.id }}">
+      <button class="btn btn-success">📨 Submit All & Move to Production</button>
+    </form>
+  </div>
+</div>
 
   <!-- ✅ Export, Print & Submit -->
   <div class="mt-3 d-flex flex-wrap gap-2">
