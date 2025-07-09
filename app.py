@@ -441,24 +441,6 @@ def approve_project(project_id):
     return redirect(url_for('projects'))
 
 
-# ---------- ✅ Submit All & Move to Production View ----------
-@app.route('/submit_all/<int:project_id>', methods=['POST'])
-def submit_all(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-
-    # ✅ Update project status
-    cur.execute("UPDATE projects SET status = 'submitted' WHERE id = ?", (project_id,))
-
-    # Optionally: Lock entries
-    # cur.execute("UPDATE entries SET status = 'locked' WHERE project_id = ?", (project_id,))
-
-    conn.commit()
-    conn.close()
-
-    flash("✅ Project submitted and moved to production.", "success")
-    return redirect(url_for('production', project_id=project_id))
-
 
 # ---------- ✅ View Production Status ----------
 @app.route("/production/<int:project_id>")
