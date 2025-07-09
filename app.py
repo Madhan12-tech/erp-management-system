@@ -417,17 +417,7 @@ def open_project(project_id):
     )
 
 
-# ---------- ✅ Delete Project ----------
-@app.route('/project/<int:project_id>/delete', methods=['POST'])
-def delete_project(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM entries WHERE project_id = ?", (project_id,))
-    cur.execute("DELETE FROM projects WHERE id = ?", (project_id,))
-    conn.commit()
-    conn.close()
-    flash("✅ Project deleted successfully!", "success")
-    return redirect(url_for('projects'))
+
 
 
 # ---------- ✅ Approve Project (Final Step) ----------
