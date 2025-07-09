@@ -384,14 +384,15 @@ def save_vendor_project():
     flash("Vendor project saved successfully!", "success")
     return redirect(url_for('projects'))
 
-# ---------- ✅ API: Get Duct Entries for Project (Live Table) ----------
+
+# ---------- ✅ FIXED: Get Duct Entries for Project (Live Table) ----------
 @app.route('/api/ducts/<int:project_id>')
 def api_ducts(project_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ducts WHERE project_id = ?", (project_id,))
-    ducts = [dict(row) for row in cur.fetchall()]
-    return ducts
+    cur.execute("SELECT * FROM entries WHERE project_id = ?", (project_id,))
+    entries = [dict(row) for row in cur.fetchall()]
+    return jsonify(entries)
 
 # ---------- ✅ Delete Duct Entry ----------
 @app.route('/delete_duct/<int:id>', methods=['POST'])
