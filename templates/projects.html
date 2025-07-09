@@ -81,45 +81,56 @@
 <!-- ✅ Left: Duct Entry Form -->
 <div class="row">
   <div class="col-md-5">
-    <form method="POST" action="/add_duct">
-      <input type="hidden" name="project_id" value="{{ project.id }}">
-      <div class="card shadow-sm mb-3">
-        <div class="card-header bg-primary text-white">➕ Duct Entry</div>
-        <div class="card-body row g-2">
-          <div class="col-md-6"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
-          <div class="col-md-6">
-            <label>Type</label>
-            <select name="duct_type" class="form-select" id="ductType" required>
-              <option value="">-- Select Type --</option>
-              <option value="ST">ST</option>
-              <option value="RED">RED</option>
-              <option value="OFFSET">OFFSET</option>
-              <option value="SHOE">SHOE</option>
-              <option value="ELB">ELB</option>
-              <option value="VANES">VANES</option>
-              <option value="DUM">DUM</option>
-            </select>
-          </div>
-          <div class="col-md-6 factor-field d-none">
-            <label>Factor</label>
-            <input type="number" step="0.01" name="factor" id="factor" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label>Gauge</label>
-            <input name="gauge" id="gauge" class="form-control" readonly>
-          </div>
-          <div class="col-md-4"><label>W1</label><input name="width1" id="width1" class="form-control" required></div>
-          <div class="col-md-4"><label>H1</label><input name="height1" id="height1" class="form-control" required></div>
-          <div class="col-md-4"><label>Qty</label><input name="quantity" id="quantity" class="form-control" required></div>
-          <div class="col-md-4"><label>W2</label><input name="width2" id="width2" class="form-control"></div>
-          <div class="col-md-4"><label>H2</label><input name="height2" id="height2" class="form-control"></div>
-          <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" id="length_or_radius" class="form-control" required></div>
-          <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" id="degree_or_offset" class="form-control"></div>
+  <form method="POST" action="/add_duct">
+    <input type="hidden" name="project_id" value="{{ project.id }}">
+    
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-primary text-white">➕ Duct Entry</div>
+      
+      <div class="card-body row g-2">
+        <div class="col-md-6"><label>Duct No</label><input name="duct_no" class="form-control" required></div>
+        <div class="col-md-6">
+          <label>Type</label>
+          <select name="duct_type" class="form-select" id="ductType" required>
+            <option value="">-- Select Type --</option>
+            <option value="ST">ST</option>
+            <option value="RED">RED</option>
+            <option value="OFFSET">OFFSET</option>
+            <option value="SHOE">SHOE</option>
+            <option value="ELB">ELB</option>
+            <option value="VANES">VANES</option>
+            <option value="DUM">DUM</option>
+          </select>
+        </div>
 
-          </div> <!-- End Duct Entry Form Body -->
-</div> <!-- End Card -->
-</form>
-</div> <!-- End col-md-5 -->
+        <div class="col-md-6 factor-field d-none">
+          <label>Factor</label>
+          <input type="number" step="0.01" name="factor" id="factor" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label>Gauge</label>
+          <input name="gauge" id="gauge" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-4"><label>W1</label><input name="width1" id="width1" class="form-control" required></div>
+        <div class="col-md-4"><label>H1</label><input name="height1" id="height1" class="form-control" required></div>
+        <div class="col-md-4"><label>Qty</label><input name="quantity" id="quantity" class="form-control" required></div>
+
+        <div class="col-md-4"><label>W2</label><input name="width2" id="width2" class="form-control"></div>
+        <div class="col-md-4"><label>H2</label><input name="height2" id="height2" class="form-control"></div>
+        <div class="col-md-4"><label>Length/Radius</label><input name="length_or_radius" id="length_or_radius" class="form-control" required></div>
+
+        <div class="col-md-4"><label>Deg/Offset</label><input name="degree_or_offset" id="degree_or_offset" class="form-control"></div>
+      </div> <!-- End card-body -->
+
+      <div class="card-footer text-end">
+        <button type="submit" class="btn btn-success">➕ Add Entry</button>
+      </div>
+
+    </div> <!-- End card -->
+  </form>
+</div>
 
 <!-- ✅ Right: Live Table with Totals -->
 <div class="col-md-7">
