@@ -249,7 +249,7 @@
                 <td>{{ entry.quantity }}</td>
                 <td>{{ entry.degree_or_offset }}</td>
                 <td>{{ entry.gauge }}</td>
-                <td>{{ "%.2f"|format(entry.area) }}</td>
+                <td>{{ "%.2f"|format(entry.area or 0) }}</td>
                 <td>{{ entry.nuts_bolts }}</td>
                 <td>{{ entry.cleat }}</td>
                 <td>{{ "%.2f"|format(entry.gasket) }}</td>
