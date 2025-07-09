@@ -138,7 +138,7 @@
     <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
     <div class="card-body table-responsive p-0">
       <table class="table table-sm table-striped m-0">
-        <thead class="table-light sticky-top">
+        <thead class="table-light">
           <tr>
             <th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
             <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th><th>Area</th>
@@ -171,7 +171,7 @@
             <td>{{ entry.corner_pieces }}</td>
             <td>
               <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
-              <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this entry?')">🗑️</a>
+              <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure to delete this entry?')">🗑️</a>
             </td>
           </tr>
           {% set total_area = total_area + entry.area %}
@@ -208,9 +208,7 @@
       <button class="btn btn-success">📨 Submit All & Move to Production</button>
     </form>
   </div>
-</div> <!-- End col-md-7 -->
-</div> <!-- End row -->
-{% endif %}
+</div>
 
 <!-- ✅ MODAL: MEASUREMENT SHEET -->
 <div class="modal fade" id="measurementSheetModal" tabindex="-1">
