@@ -490,6 +490,31 @@ def delete_project(project_id):
     flash("Project deleted successfully!", "success")
     return redirect(url_for('projects'))
 
+@app.route('/project/<int:project_id>')
+def open_project(project_id):
+    conn = sqlite3.connect('your_database.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Get the project
+    cur.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+    project = cur.fetchone()
+
+    # Get the vendor name (if needed)
+    if project:
+        cur.execute("SELECT name FROM vendors WHERE id = ?", (project["vendor_id"],))
+        vendor = cur.fetchone()
+        project = dict(project)
+        project["vendor_name"] = vendor["name"] if vendor else ""
+
+    # ✅ Get duct entries
+    cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
+    entries = cur.fetchall()
+
+    conn.close()
+
+    return render_template("projects.html", project=project, entries=entries, projects=[], vendors=[])
+
 
 
 @app.route('/summary')
