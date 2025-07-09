@@ -482,6 +482,24 @@ def summary():
     return "<h2>Summary Coming Soon...</h2>"
 
 
+@app.route('/submit_all/<project_id>', methods=['POST'])
+def submit_all(project_id):
+    conn = sqlite3.connect('your_db.db')
+    cursor = conn.cursor()
+
+    # ✅ Mark project as submitted
+    cursor.execute("UPDATE projects SET status = 'submitted' WHERE id = ?", (project_id,))
+    
+    # ✅ Optionally, you can lock the duct entries or archive
+    # cursor.execute("UPDATE duct_entries SET status = 'locked' WHERE project_id = ?", (project_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash("Project submitted and moved to production.", "success")
+    return redirect(url_for('production_view', project_id=project_id))
+
+
     
 def get_all_projects():
     conn = get_db()
