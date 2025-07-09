@@ -341,7 +341,8 @@ def add_duct():
     ''', (project_id, duct_no, duct_type, factor, width1, height1, width2,
           height2, length_or_radius, quantity, degree_or_offset))
     conn.commit()
-    return redirect(url_for('projects'))
+
+    return redirect(url_for('open_project', project_id=project_id))  # ✅ Correct redirect
 
 # ---------- ✅ Submit for Review ----------
 @app.route('/submit_for_review/<int:project_id>', methods=['POST'])
