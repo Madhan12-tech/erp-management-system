@@ -354,6 +354,60 @@ def submit_for_review(project_id):
     conn.close()
     return redirect(url_for('projects'))
 
+
+@app.route('/init_db')
+def init_db():
+    conn = sqlite3.connect('your_database.db')
+    cur = conn.cursor()
+
+    # Projects Table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_name TEXT,
+            enquiry_no TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            vendor_id INTEGER,
+            status TEXT,
+            notes TEXT,
+            incharge TEXT,
+            drawing_file TEXT
+        )
+    ''')
+
+    # Vendors Table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS vendors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            gst TEXT,
+            address TEXT
+        )
+    ''')
+
+    # Duct Entries Table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            duct_no TEXT,
+            duct_type TEXT,
+            factor REAL,
+            width1 REAL,
+            height1 REAL,
+            width2 REAL,
+            height2 REAL,
+            length_or_radius REAL,
+            quantity INTEGER,
+            degree_or_offset REAL
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+    return "✅ Database initialized successfully!"
+
 # ---------- ✅ Submit Measurement Sheet for Approval ----------
 @app.route('/submit_measurement/<int:project_id>', methods=['POST'])
 def submit_measurement(project_id):
