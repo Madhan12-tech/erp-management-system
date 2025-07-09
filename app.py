@@ -155,6 +155,20 @@ def login():
     return render_template("login.html")
 
 
+@app.route('/register_employee')
+def register_employee():
+    return render_template('employee_form.html')
+
+@app.route('/employees')
+def employees():
+    conn = sqlite3.connect('database.db')
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM employees')
+    data = cur.fetchall()
+    conn.close()
+    return render_template('employee_list.html', employees=data)
+
+
 # ---------- ✅ Logout ----------
 @app.route('/logout')
 def logout():
