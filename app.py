@@ -211,6 +211,24 @@ def vendor_registration():
     return render_template('vendor_registration.html')
 
 
+@app.route('/migrate_add_weight')
+def migrate_add_weight():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        # Check if column already exists
+        cur.execute("PRAGMA table_info(duct_entries)")
+        columns = [row[1] for row in cur.fetchall()]
+        if 'weight' not in columns:
+            cur.execute("ALTER TABLE duct_entries ADD COLUMN weight REAL DEFAULT 0")
+            conn.commit()
+            return "✅ 'weight' column added to duct_entries table."
+        else:
+            return "ℹ️ 'weight' column already exists."
+    finally:
+        conn.close()
+
+
 # ---------- ✅ Vendor Info API (for auto-fill) ----------
 @app.route('/api/vendor/<int:vendor_id>')
 def get_vendor_info(vendor_id):
