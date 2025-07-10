@@ -396,7 +396,7 @@ def edit_duct_entry(id):
         conn.commit()
         conn.close()
         flash('Entry updated successfully.', 'success')
-        return redirect(url_for('project_detail', project_id=request.form.get('project_id', 1)))
+        return redirect(url_for('open_project', project_id=request.form.get('project_id', 1)))
     else:
         cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
         entry = cur.fetchone()
