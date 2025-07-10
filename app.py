@@ -361,74 +361,65 @@ def delete_duct(id):
     return '', 200
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM duct_entries WHERE project_id=?", (project_id,))
-    entries = c.fetchall()
-    conn.close()
-
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
-    y = 800
-    for entry in entries:
-        p.drawString(30, y, str(entry))
-        y -= 20
+    width, height = A4
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    
+    # Fetch project name
+    c.execute("SELECT name FROM projects WHERE id=?", (project_id,))
+    project = c.fetchone()
+    project_name = project[0] if project else "Project"
+
+    # Fetch duct entries
+    c.execute("SELECT duct_no, duct_type, width1, height1, quantity, area, weight FROM duct_entries WHERE project_id=?", (project_id,))
+    entries = c.fetchall()
+
+    # Table data
+    data = [
+        ["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]
+    ]
+    total_qty = total_area = total_weight = 0.0
+
+    for row in entries:
+        w = float(row[2]) if row[2] else 0
+        h = float(row[3]) if row[3] else 0
+        qty = float(row[4]) if row[4] else 0
+        area = float(row[5]) if row[5] else 0
+        weight = float(row[6]) if row[6] else 0
+        data.append([row[0], row[1], w, h, qty, area, weight])
+        total_qty += qty
+        total_area += area
+        total_weight += weight
+
+    # Add totals row
+    data.append(["", "", "", "Total", total_qty, total_area, total_weight])
+
+    # Draw title
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 50, f"{project_name} - Duct Entry Sheet")
+
+    # Create and style the table
+    table = Table(data, colWidths=[65, 60, 50, 50, 50, 60, 60])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+    ]))
+
+    # Position table on the PDF
+    table.wrapOn(p, width, height)
+    table.drawOn(p, 50, height - 100 - 25 * len(data))
+
+    p.showPage()
     p.save()
 
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name='duct_entries.pdf', mimetype='application/pdf')
-
-
-@app.route('/edit/<int:id>', methods=['GET', 'POST'])
-def edit_duct_entry(id):
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-
-        if request.method == 'POST':
-            project_id = request.form.get('project_id', 1)
-
-            data = (
-                request.form['duct_no'], request.form['duct_type'], request.form.get('factor'),
-                request.form['width1'], request.form['height1'], request.form.get('width2'),
-                request.form.get('height2'), request.form['length_or_radius'], request.form['quantity'],
-                request.form.get('degree_or_offset'), request.form['gauge'], request.form.get('area'),
-                request.form.get('nuts_bolts'), request.form.get('cleat'), request.form.get('gasket'),
-                request.form.get('corner_pieces'), id
-            )
-
-            cur.execute('''
-                UPDATE duct_entries
-                SET duct_no=?, duct_type=?, factor=?, width1=?, height1=?, width2=?, height2=?, 
-                    length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?,
-                    nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
-                WHERE id=?
-            ''', data)
-
-            conn.commit()
-            conn.close()
-
-            flash('✅ Entry updated successfully.', 'success')
-            return redirect(url_for('open_project', project_id=project_id))
-
-        else:
-            cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
-            entry_row = cur.fetchone()
-
-            if entry_row:
-                entry = dict(entry_row)  # ✅ Simpler conversion
-                conn.close()
-                return render_template("edit_entry.html", entry=entry)
-            else:
-                conn.close()
-                return "❌ Entry not found", 404
-
-    except Exception as e:
-        import traceback
-        print("❌ ERROR in /edit/<id> route:")
-        traceback.print_exc()  # 👈 Logs full stack trace to console
-        return "❌ Internal Server Error", 500
-
+    return send_file(buffer, as_attachment=True, download_name=f"{project_name}_duct_sheet.pdf", mimetype='application/pdf')
 # ---------- ✅ Export Duct Table to Excel ----------
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
