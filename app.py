@@ -339,30 +339,6 @@ def delete_duct(id):
     cur.execute("DELETE FROM entries WHERE id = ?", (id,))
     conn.commit()
     return '', 200
-
-@app.route('/edit/<int:entry_id>', methods=['GET', 'POST'])
-def edit_duct_entry(entry_id):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    if request.method == 'POST':
-        # Handle form submission to update
-        data = request.form
-        c.execute('''UPDATE duct_entries SET duct_no=?, duct_type=?, width1=?, height1=?, width2=?, height2=?,
-                     length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?, nuts_bolts=?, cleat=?, 
-                     gasket=?, corner_pieces=? WHERE id=?''',
-                  (data['duct_no'], data['duct_type'], data['width1'], data['height1'], data['width2'], data['height2'],
-                   data['length_or_radius'], data['quantity'], data['degree_or_offset'], data['gauge'], data['area'],
-                   data['nuts_bolts'], data['cleat'], data['gasket'], data['corner_pieces'], entry_id))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('dashboard'))  # or redirect to the project page
-    else:
-        c.execute("SELECT * FROM duct_entries WHERE id=?", (entry_id,))
-        entry = c.fetchone()
-        conn.close()
-        return render_template("edit_entry.html", entry=entry)
-
-
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
     conn = sqlite3.connect('database.db')
@@ -373,16 +349,38 @@ def export_pdf(project_id):
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
-
     y = 800
     for entry in entries:
         p.drawString(30, y, str(entry))
         y -= 20
-
     p.save()
+
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='duct_entries.pdf', mimetype='application/pdf')
 
+@app.route('/edit/<int:entry_id>', methods=['GET', 'POST'])
+def edit_duct_entry(entry_id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    if request.method == 'POST':
+        form = request.form
+        c.execute('''UPDATE duct_entries SET
+                     duct_no=?, duct_type=?, width1=?, height1=?, width2=?, height2=?,
+                     length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?,
+                     nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
+                     WHERE id=?''',
+                  (form['duct_no'], form['duct_type'], form['width1'], form['height1'],
+                   form['width2'], form['height2'], form['length_or_radius'], form['quantity'],
+                   form['degree_or_offset'], form['gauge'], form['area'], form['nuts_bolts'],
+                   form['cleat'], form['gasket'], form['corner_pieces'], entry_id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('dashboard'))
+    else:
+        c.execute("SELECT * FROM duct_entries WHERE id=?", (entry_id,))
+        entry = c.fetchone()
+        conn.close()
+        return render_template("edit_entry.html", entry=entry)
 # ---------- ✅ Export Duct Table to Excel ----------
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
