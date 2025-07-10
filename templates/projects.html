@@ -47,69 +47,62 @@
   </button>
 
   <!-- ✅ MODAL: Add New Project -->
-<div class="modal fade" id="addProjectModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form method="POST" action="/create_project" enctype="multipart/form-data">
-      <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">➕ Add New Project</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body row g-3">
-          <div class="col-md-6">
-            <label>Project Name</label>
-            <input name="project_name" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>Enquiry No</label>
-            <input name="enquiry_no" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>Start Date</label>
-            <input name="start_date" type="date" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label>End Date</label>
-            <input name="end_date" type="date" class="form-control" required>
-          </div>
-          <div class="col-md-12">
-            <label>Vendor</label>
-            <select name="vendor_id" class="form-select" id="vendorSelect" required>
-              <option value="">-- Select Vendor --</option>
-              {% for vendor in vendors %}
-              <option value="{{ vendor.id }}" data-gst="{{ vendor.gst }}" data-address="{{ vendor.address }}">
-                {{ vendor.name }}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label>Vendor GST</label>
-            <input type="text" class="form-control" id="vendorGst" readonly>
-          </div>
-          <div class="col-md-6">
-            <label>Vendor Address</label>
-            <input type="text" class="form-control" id="vendorAddress" readonly>
-          </div>
-          <div class="col-md-12">
-            <label>Drawing File (Optional)</label>
-            <input type="file" name="drawing_file" class="form-control">
-          </div>
-          <div class="col-md-12">
-            <label>Notes</label>
-            <textarea name="notes" class="form-control" rows="2"></textarea>
-          </div>
-          <div class="col-md-12">
-            <label>Incharge</label>
-            <input name="incharge" class="form-control" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">✅ Create</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
-        </div>
-      </div>
-    </form>
+   <form method="POST" action="/add_duct">
+  <input type="hidden" name="project_id" value="{{ project.id }}">
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label>Duct No</label>
+      <input name="duct_no" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Duct Type</label>
+      <input name="duct_type" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Factor</label>
+      <input name="factor" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Width 1</label>
+      <input name="width1" type="number" step="any" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Height 1</label>
+      <input name="height1" type="number" step="any" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Width 2</label>
+      <input name="width2" type="number" step="any" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Height 2</label>
+      <input name="height2" type="number" step="any" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Length or Radius</label>
+      <input name="length_or_radius" type="number" step="any" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Quantity</label>
+      <input name="quantity" type="number" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Degree or Offset</label>
+      <input name="degree_or_offset" class="form-control" required>
+    </div>
+
+    <!-- ✅ Newly Added Gauge Field -->
+    <div class="col-md-4">
+      <label>Gauge</label>
+      <input name="gauge" class="form-control" required>
+    </div>
+
+    <div class="col-md-12 text-end mt-3">
+      <button type="submit" class="btn btn-primary">➕ Add Entry</button>
+    </div>
+  </div>
+   </form>
   </div>
 </div>
 
