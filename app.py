@@ -371,6 +371,7 @@ def export_pdf(project_id):
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
     from io import BytesIO
+    from num2words import num2words
     import os
 
     buffer = BytesIO()
@@ -380,17 +381,25 @@ def export_pdf(project_id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # ✅ Fetch project name using client_name
-    c.execute("SELECT client_name FROM projects WHERE id=?", (project_id,))
-    project = c.fetchone()
-    project_title = project[0] if project else "Project"
+    # ✅ Fetch project info
+    c.execute("""
+        SELECT client_name, site_location, engineer_name, mobile, start_date, end_date
+        FROM projects WHERE id = ?
+    """, (project_id,))
+    proj = c.fetchone()
+    client_name = proj[0] if proj else "Project"
+    site_location = proj[1] if proj else ""
+    engineer_name = proj[2] if proj else ""
+    mobile = proj[3] if proj else ""
+    start_date = proj[4] if proj else ""
+    end_date = proj[5] if proj else ""
 
-    # ✅ Optional: Company logo (top-left)
+    # ✅ Company Logo
     logo_path = os.path.join("static", "logo.png")
     if os.path.exists(logo_path):
         p.drawImage(logo_path, 50, height - 80, width=80, preserveAspectRatio=True, mask='auto')
 
-    # ✅ Company Name and Address (top-center)
+    # ✅ Company Details
     p.setFont("Helvetica-Bold", 16)
     p.drawString(200, height - 50, "Vanes Engineering Pvt Ltd")
 
@@ -398,46 +407,70 @@ def export_pdf(project_id):
     p.drawString(200, height - 65, "No. 23, Industrial Estate, Chennai, Tamil Nadu - 600058")
     p.drawString(200, height - 78, "Email: info@vanesengineering.com | Phone: +91-98765-43210")
 
-    # ✅ Title under header
-    p.setFont("Helvetica-Bold", 13)
-    p.drawString(50, height - 110, f"{project_title} - Duct Entry Sheet")
+    # ✅ Project Header
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, height - 110, f"Client: {client_name}")
+    p.drawString(300, height - 110, f"Site: {site_location}")
+    p.drawString(50, height - 125, f"Engineer: {engineer_name}")
+    p.drawString(300, height - 125, f"Mobile: {mobile}")
+    p.drawString(50, height - 140, f"Duration: {start_date} to {end_date}")
 
-    # ✅ Fetch duct entries (no 'weight' column)
-    c.execute("SELECT duct_no, duct_type, width1, height1, quantity, area FROM duct_entries WHERE project_id=?", (project_id,))
+    # ✅ Fetch duct entries
+    c.execute("""
+        SELECT duct_no, duct_type, width1, height1, quantity, area, weight
+        FROM duct_entries WHERE project_id = ?
+    """, (project_id,))
     entries = c.fetchall()
+    conn.close()
 
-    # ✅ Table data
-    data = [["Duct No", "Type", "Width", "Height", "Qty", "Area"]]
-    total_qty = total_area = 0.0
+    # ✅ Table Data
+    data = [["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]]
+    total_qty = total_area = total_weight = 0
 
     for row in entries:
         w = float(row[2]) if row[2] else 0
         h = float(row[3]) if row[3] else 0
         qty = float(row[4]) if row[4] else 0
         area = float(row[5]) if row[5] else 0
-        data.append([row[0], row[1], w, h, qty, area])
+        weight = float(row[6]) if row[6] else 0
+        data.append([row[0], row[1], w, h, qty, area, weight])
         total_qty += qty
         total_area += area
+        total_weight += weight
 
-    data.append(["", "", "", "Total", total_qty, total_area])
+    # ✅ Add totals row
+    data.append(["", "", "", "Total", total_qty, total_area, total_weight])
 
     # ✅ Draw table
-    table = Table(data, colWidths=[65, 60, 50, 50, 60, 60])
+    table = Table(data, colWidths=[60, 55, 50, 50, 50, 60, 60])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-        ('GRID', (0,0), (-1,-1), 1, colors.black),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER')
     ]))
     table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 140 - 25 * len(data))
+    table.drawOn(p, 50, height - 190 - 25 * len(data))
+
+    # ✅ Total area in words
+    area_text = num2words(round(total_area, 2), to='decimal').replace(" point", " point ").capitalize()
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(50, height - 200 - 25 * len(data), f"Total Area in Words: {area_text} square meters")
+
+    # ✅ Signature lines
+    p.setFont("Helvetica", 10)
+    p.drawString(50, 80, "Engineer Signature: __________________")
+    p.drawString(300, 80, "Client Signature: __________________")
 
     p.showPage()
     p.save()
     buffer.seek(0)
 
-    return send_file(buffer, as_attachment=True, download_name=f"{project_title}_duct_sheet.pdf", mimetype='application/pdf')
+    return send_file(buffer, as_attachment=True,
+                     download_name=f"{client_name}_duct_sheet.pdf",
+                     mimetype='application/pdf')
+
 
 
 @app.route('/export_excel/<int:project_id>')
