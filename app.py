@@ -368,7 +368,12 @@ def delete_duct(id):
 
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
-    from reportlab.lib.units import inch
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import Table, TableStyle
+    from reportlab.lib import colors
+    from reportlab.pdfgen import canvas
+    from io import BytesIO
+    import os
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
@@ -377,49 +382,44 @@ def export_pdf(project_id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # ✅ Get project name
-    c.execute("SELECT client_name, site_location FROM projects WHERE id=?", (project_id,))
+    # ✅ Use correct column
+    c.execute("SELECT client_name FROM projects WHERE id=?", (project_id,))
     project = c.fetchone()
-    client_name = project[0] if project else "Project"
-    site_location = project[1] if project else "Site"
-    title_text = f"{client_name} - {site_location} Duct Entry Sheet"
+    project_title = project[0] if project else "Project"
 
-    # ✅ Draw logo
-    logo_path = os.path.join("static", "images", "logo.png")
-    if os.path.exists(logo_path):
-        p.drawImage(logo_path, 40, height - 80, width=100, height=50)
-
-    # ✅ Draw title
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(160, height - 50, title_text)
-
-    # ✅ Fetch duct entries
+    # ✅ Fetch duct entries (NO weight column used)
     c.execute("""
-        SELECT duct_no, duct_type, width1, height1, quantity, area, weight
+        SELECT duct_no, duct_type, width1, height1, quantity, area
         FROM duct_entries WHERE project_id=?
     """, (project_id,))
     entries = c.fetchall()
 
     # ✅ Table data
-    data = [["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]]
-    total_qty = total_area = total_weight = 0.0
+    data = [["Duct No", "Type", "Width", "Height", "Qty", "Area"]]
+    total_qty = total_area = 0.0
 
     for row in entries:
         w = float(row[2]) if row[2] else 0
         h = float(row[3]) if row[3] else 0
         qty = float(row[4]) if row[4] else 0
         area = float(row[5]) if row[5] else 0
-        weight = float(row[6]) if row[6] else 0
-        data.append([row[0], row[1], w, h, qty, area, weight])
+        data.append([row[0], row[1], w, h, qty, area])
         total_qty += qty
         total_area += area
-        total_weight += weight
 
-    # ✅ Totals
-    data.append(["", "", "", "Total", total_qty, total_area, total_weight])
+    data.append(["", "", "", "Total", total_qty, total_area])
 
-    # ✅ Build table
-    table = Table(data, colWidths=[65, 60, 50, 50, 50, 60, 60])
+    # ✅ Draw logo
+    logo_path = os.path.join("static", "logo.png")
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, 50, height - 80, width=100, preserveAspectRatio=True)
+
+    # ✅ Title
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(160, height - 50, f"{project_title} - Duct Entry Sheet")
+
+    # ✅ Draw table
+    table = Table(data, colWidths=[60, 60, 50, 50, 50, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
         ('GRID', (0,0), (-1,-1), 1, colors.black),
@@ -428,14 +428,13 @@ def export_pdf(project_id):
         ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
     ]))
     table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 130 - 25 * len(data))
+    table.drawOn(p, 50, height - 120 - 25 * len(data))
 
     p.showPage()
     p.save()
     buffer.seek(0)
 
-    filename = f"{client_name}_{site_location}_duct_sheet.pdf".replace(" ", "_")
-    return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
+    return send_file(buffer, as_attachment=True, download_name=f"{project_title}_duct_sheet.pdf", mimetype='application/pdf')
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
     conn = get_db()
