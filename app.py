@@ -444,7 +444,6 @@ def export_pdf(project_id):
     # ✅ Company Details
     p.setFont("Helvetica-Bold", 16)
     p.drawString(200, height - 50, "Vanes Engineering Pvt Ltd")
-
     p.setFont("Helvetica", 10)
     p.drawString(200, height - 65, "No. 23, Industrial Estate, Chennai, Tamil Nadu - 600058")
     p.drawString(200, height - 78, "Email: info@vanesengineering.com | Phone: +91-98765-43210")
@@ -480,8 +479,7 @@ def export_pdf(project_id):
         total_area += area
         total_weight += weight
 
-    # ✅ Add totals row
-    data.append(["", "", "", "Total", total_qty, total_area, total_weight])
+    data.append(["", "", "", "Total", total_qty, round(total_area, 2), round(total_weight, 2)])
 
     # ✅ Draw table
     table = Table(data, colWidths=[60, 55, 50, 50, 50, 60, 60])
@@ -495,10 +493,22 @@ def export_pdf(project_id):
     table.wrapOn(p, width, height)
     table.drawOn(p, 50, height - 190 - 25 * len(data))
 
-    # ✅ Total area in words
-    area_text = num2words(round(total_area, 2), to='decimal').replace(" point", " point ").capitalize()
+    # ✅ Convert area and weight to words
+    def convert_to_words(value):
+        try:
+            int_part = int(value)
+            decimal_part = int(round((value - int_part) * 100))
+            return f"{num2words(int_part).capitalize()} point {num2words(decimal_part)}"
+        except:
+            return "Not available"
+
+    area_words = convert_to_words(round(total_area, 2))
+    weight_words = convert_to_words(round(total_weight, 2))
+
+    # ✅ Display totals in words
     p.setFont("Helvetica-Bold", 10)
-    p.drawString(50, height - 200 - 25 * len(data), f"Total Area in Words: {area_text} square meters")
+    p.drawString(50, height - 210 - 25 * len(data), f"Total Area in Words: {area_words} square meters")
+    p.drawString(50, height - 225 - 25 * len(data), f"Total Weight in Words: {weight_words} kilograms")
 
     # ✅ Signature lines
     p.setFont("Helvetica", 10)
@@ -512,7 +522,6 @@ def export_pdf(project_id):
     return send_file(buffer, as_attachment=True,
                      download_name=f"{client_name}_duct_sheet.pdf",
                      mimetype='application/pdf')
-
 
 
 @app.route('/export_excel/<int:project_id>')
