@@ -286,12 +286,12 @@
                      onclick="return confirm('Delete this entry?')">🗑️</a>
                 </td>
               </tr>
-              {% set total_area = total_area + (entry.area or 0) %}
-              {% set total_qty = total_qty + (entry.quantity or 0) %}
-              {% set total_nuts = total_nuts + (entry.nuts_bolts or 0) %}
-              {% set total_cleat = total_cleat + (entry.cleat or 0) %}
-              {% set total_gasket = total_gasket + (entry.gasket or 0) %}
-              {% set total_corner = total_corner + (entry.corner_pieces or 0) %}
+              {% set total_area = total_area + (entry.area or 0)|float %}
+              {% set total_qty = total_qty + (entry.quantity or 0)|float %}
+              {% set total_nuts = total_nuts + (entry.nuts_bolts or 0)|float %}
+              {% set total_cleat = total_cleat + (entry.cleat or 0)|float %}
+              {% set total_gasket = total_gasket + (entry.gasket or 0)|float %}
+              {% set total_corner = total_corner + (entry.corner_pieces or 0)|float %}
               {% endfor %}
               </tbody>
             <tfoot class="table-light fw-bold">
