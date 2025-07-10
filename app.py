@@ -363,6 +363,8 @@ def delete_duct(id):
     cur.execute("DELETE FROM duct_entries WHERE id = ?", (id,))
     conn.commit()
     return '', 200
+
+
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
     buffer = BytesIO()
@@ -371,9 +373,9 @@ def export_pdf(project_id):
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    
-    # Fetch project name
-    c.execute("SELECT name FROM projects WHERE id=?", (project_id,))
+
+    # ✅ Fixed: Use the correct column name (project_name)
+    c.execute("SELECT project_name FROM projects WHERE id=?", (project_id,))
     project = c.fetchone()
     project_name = project[0] if project else "Project"
 
