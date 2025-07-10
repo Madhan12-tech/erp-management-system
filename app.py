@@ -1,4 +1,4 @@
-8from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify
 from datetime import datetime
 from io import BytesIO
 import sqlite3
