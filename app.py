@@ -322,13 +322,13 @@ def add_duct():
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''
-        INSERT INTO entries (
-            project_id, duct_no, duct_type, factor, width1, height1, width2,
-            height2, length_or_radius, quantity, degree_or_offset
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (project_id, duct_no, duct_type, factor, width1, height1, width2,
-          height2, length_or_radius, quantity, degree_or_offset))
-    conn.commit()
+    INSERT INTO duct_entries (
+        project_id, duct_no, duct_type, factor,
+        width1, height1, width2, height2,
+        length_or_radius, quantity, degree_or_offset
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+''', (project_id, duct_no, duct_type, factor, width1, height1, width2,
+      height2, length_or_radius, quantity, degree_or_offset))
 
     return redirect(url_for('open_project', project_id=project_id))
 
