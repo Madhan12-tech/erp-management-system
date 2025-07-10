@@ -21,6 +21,7 @@
       ✏️ Edit Duct Entry
     </div>
     <form method="POST" action="/edit/{{ entry.id }}">
+      <input type="hidden" name="project_id" value="{{ entry.project_id }}">
       <div class="card-body row g-3">
         <div class="col-md-4"><label>Duct No</label><input name="duct_no" value="{{ entry.duct_no }}" class="form-control" required></div>
         <div class="col-md-4"><label>Duct Type</label><input name="duct_type" value="{{ entry.duct_type }}" class="form-control" required></div>
