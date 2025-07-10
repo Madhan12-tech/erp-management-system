@@ -24,6 +24,30 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
+    # ✅ One-time migration: Add 'weight' column to duct_entries if missing
+def migrate_add_weight_column():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT weight FROM duct_entries LIMIT 1")
+    except sqlite3.OperationalError:
+        cur.execute("ALTER TABLE duct_entries ADD COLUMN weight REAL DEFAULT 0")
+        conn.commit()
+        print("✅ 'weight' column added to duct_entries")
+    conn.close()
+
+# ✅ One-time migration: Add 'area' column to duct_entries if missing
+def migrate_add_area_column():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT area FROM duct_entries LIMIT 1")
+    except sqlite3.OperationalError:
+        cur.execute("ALTER TABLE duct_entries ADD COLUMN area REAL DEFAULT 0")
+        conn.commit()
+        print("✅ 'area' column added to duct_entries")
+    conn.close()
+
     # Projects Table
     cur.execute('''
         CREATE TABLE IF NOT EXISTS projects (
