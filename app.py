@@ -338,7 +338,7 @@ def add_duct():
 def api_ducts(project_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM entries WHERE project_id = ?", (project_id,))
+    cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
     entries = [dict(row) for row in cur.fetchall()]
     return jsonify(entries)
 
@@ -348,7 +348,7 @@ def api_ducts(project_id):
 def delete_duct(id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM entries WHERE id = ?", (id,))
+    cur.execute("DELETE FROM duct_entries WHERE id = ?", (id,))
     conn.commit()
     return '', 200
 @app.route('/export_pdf/<int:project_id>')
@@ -455,7 +455,7 @@ def open_project(project_id):
     vendors = cur.fetchall()
 
     # ✅ Duct entries
-    cur.execute("SELECT * FROM entries WHERE project_id = ?", (project_id,))
+    cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
     entries = cur.fetchall()
 
     conn.close()
@@ -467,6 +467,7 @@ def open_project(project_id):
         projects=projects,
         vendors=vendors
     )
+
 
 
 
@@ -578,8 +579,7 @@ def delete_project(project_id):
     cur = conn.cursor()
     
     # Delete related ducts and project
-    cur.execute("DELETE FROM ducts WHERE project_id = ?", (project_id,))
-    cur.execute("DELETE FROM entries WHERE project_id = ?", (project_id,))
+    cur.execute("DELETE FROM duct_entries WHERE project_id = ?", (project_id,))
     cur.execute("DELETE FROM production_progress WHERE project_id = ?", (project_id,))
     cur.execute("DELETE FROM projects WHERE id = ?", (project_id,))
     
