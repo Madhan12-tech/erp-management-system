@@ -368,6 +368,8 @@ def delete_duct(id):
 
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
+    from reportlab.lib.units import inch
+
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -375,19 +377,31 @@ def export_pdf(project_id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # ✅ Using correct column: title
-    c.execute("SELECT title FROM projects WHERE id=?", (project_id,))
+    # ✅ Get project name
+    c.execute("SELECT client_name, site_location FROM projects WHERE id=?", (project_id,))
     project = c.fetchone()
-    project_title = project[0] if project else "Project"
+    client_name = project[0] if project else "Project"
+    site_location = project[1] if project else "Site"
+    title_text = f"{client_name} - {site_location} Duct Entry Sheet"
 
-    # Fetch duct entries
-    c.execute("SELECT duct_no, duct_type, width1, height1, quantity, area, weight FROM duct_entries WHERE project_id=?", (project_id,))
+    # ✅ Draw logo
+    logo_path = os.path.join("static", "images", "logo.png")
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, 40, height - 80, width=100, height=50)
+
+    # ✅ Draw title
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(160, height - 50, title_text)
+
+    # ✅ Fetch duct entries
+    c.execute("""
+        SELECT duct_no, duct_type, width1, height1, quantity, area, weight
+        FROM duct_entries WHERE project_id=?
+    """, (project_id,))
     entries = c.fetchall()
 
-    # Table data with header row
-    data = [
-        ["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]
-    ]
+    # ✅ Table data
+    data = [["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]]
     total_qty = total_area = total_weight = 0.0
 
     for row in entries:
@@ -401,14 +415,10 @@ def export_pdf(project_id):
         total_area += area
         total_weight += weight
 
-    # Totals row
+    # ✅ Totals
     data.append(["", "", "", "Total", total_qty, total_area, total_weight])
 
-    # Title at top
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 50, f"{project_title} - Duct Entry Sheet")
-
-    # Create and draw table
+    # ✅ Build table
     table = Table(data, colWidths=[65, 60, 50, 50, 50, 60, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
@@ -418,14 +428,14 @@ def export_pdf(project_id):
         ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
     ]))
     table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 100 - 25 * len(data))
+    table.drawOn(p, 50, height - 130 - 25 * len(data))
 
     p.showPage()
     p.save()
-
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f"{project_title}_duct_sheet.pdf", mimetype='application/pdf')
-# ---------- ✅ Export Duct Table to Excel ----------
+
+    filename = f"{client_name}_{site_location}_duct_sheet.pdf".replace(" ", "_")
+    return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
     conn = get_db()
