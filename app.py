@@ -325,7 +325,17 @@ def add_duct():
     length_or_radius = request.form['length_or_radius']
     quantity = request.form['quantity']
     degree_or_offset = request.form['degree_or_offset']
-    gauge = request.form.get('gauge', '')  # ✅ This is the missing field
+    gauge = request.form.get('gauge', '')  # Optional
+
+    # ✅ Weight calculation logic
+    try:
+        w = float(width1)
+        h = float(height1)
+        q = int(quantity)
+        gauge_factor = 0.035  # You can fine-tune this based on material thickness
+        weight = round(w * h * q * gauge_factor, 2)
+    except:
+        weight = 0
 
     conn = get_db()
     cur = conn.cursor()
@@ -333,12 +343,12 @@ def add_duct():
         INSERT INTO duct_entries (
             project_id, duct_no, duct_type, factor,
             width1, height1, width2, height2,
-            length_or_radius, quantity, degree_or_offset, gauge
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            length_or_radius, quantity, degree_or_offset, gauge, weight
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         project_id, duct_no, duct_type, factor,
         width1, height1, width2, height2,
-        length_or_radius, quantity, degree_or_offset, gauge
+        length_or_radius, quantity, degree_or_offset, gauge, weight
     ))
 
     conn.commit()
