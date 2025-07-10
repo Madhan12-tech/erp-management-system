@@ -365,6 +365,7 @@ def delete_duct(id):
     return '', 200
 
 
+
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
     buffer = BytesIO()
@@ -374,16 +375,16 @@ def export_pdf(project_id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # ✅ Fixed: Use the correct column name (project_name)
-    c.execute("SELECT project_name FROM projects WHERE id=?", (project_id,))
+    # ✅ Using correct column: title
+    c.execute("SELECT title FROM projects WHERE id=?", (project_id,))
     project = c.fetchone()
-    project_name = project[0] if project else "Project"
+    project_title = project[0] if project else "Project"
 
     # Fetch duct entries
     c.execute("SELECT duct_no, duct_type, width1, height1, quantity, area, weight FROM duct_entries WHERE project_id=?", (project_id,))
     entries = c.fetchall()
 
-    # Table data
+    # Table data with header row
     data = [
         ["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]
     ]
@@ -400,14 +401,14 @@ def export_pdf(project_id):
         total_area += area
         total_weight += weight
 
-    # Add totals row
+    # Totals row
     data.append(["", "", "", "Total", total_qty, total_area, total_weight])
 
-    # Draw title
+    # Title at top
     p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, height - 50, f"{project_name} - Duct Entry Sheet")
+    p.drawString(50, height - 50, f"{project_title} - Duct Entry Sheet")
 
-    # Create and style the table
+    # Create and draw table
     table = Table(data, colWidths=[65, 60, 50, 50, 50, 60, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
@@ -416,8 +417,6 @@ def export_pdf(project_id):
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
     ]))
-
-    # Position table on the PDF
     table.wrapOn(p, width, height)
     table.drawOn(p, 50, height - 100 - 25 * len(data))
 
@@ -425,7 +424,7 @@ def export_pdf(project_id):
     p.save()
 
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f"{project_name}_duct_sheet.pdf", mimetype='application/pdf')
+    return send_file(buffer, as_attachment=True, download_name=f"{project_title}_duct_sheet.pdf", mimetype='application/pdf')
 # ---------- ✅ Export Duct Table to Excel ----------
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
