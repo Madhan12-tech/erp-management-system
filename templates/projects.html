@@ -275,11 +275,11 @@
                 <td>{{ entry.quantity }}</td>
                 <td>{{ entry.degree_or_offset }}</td>
                 <td>{{ entry.gauge }}</td>
-                <td>{{ "%.2f"|format(entry.area|float) }}</td>
-                <td>{{ entry.nuts_bolts }}</td>
-                <td>{{ entry.cleat }}</td>
-                <td>{{ "%.2f"|format(entry.gasket or 0) }}</td>
-                <td>{{ "%.2f"|format(entry.gasket|float) }}</td>
+                <td>{{ "%.2f"|format((entry.area or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.nuts_bolts or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.cleat or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.gasket or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.corner_pieces or 0)|float) }}</td>
                 <td>
                   <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
                   <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger"
