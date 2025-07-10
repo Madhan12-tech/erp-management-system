@@ -375,46 +375,56 @@ def export_pdf(project_id):
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='duct_entries.pdf', mimetype='application/pdf')
 
+
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_duct_entry(id):
-    conn = get_db()
-    cur = conn.cursor()
-    
-    if request.method == 'POST':
-        project_id = request.form.get('project_id', 1)  # ✅ Make sure it's passed in the form
+    try:
+        conn = get_db()
+        cur = conn.cursor()
 
-        data = (
-            request.form['duct_no'], request.form['duct_type'], request.form.get('factor'),
-            request.form['width1'], request.form['height1'], request.form.get('width2'),
-            request.form.get('height2'), request.form['length_or_radius'], request.form['quantity'],
-            request.form.get('degree_or_offset'), request.form['gauge'], request.form.get('area'),
-            request.form.get('nuts_bolts'), request.form.get('cleat'), request.form.get('gasket'),
-            request.form.get('corner_pieces'), id
-        )
+        if request.method == 'POST':
+            project_id = request.form.get('project_id', 1)
 
-        cur.execute('''
-            UPDATE duct_entries
-            SET duct_no=?, duct_type=?, factor=?, width1=?, height1=?, width2=?, height2=?, 
-                length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?,
-                nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
-            WHERE id=?
-        ''', data)
+            data = (
+                request.form['duct_no'], request.form['duct_type'], request.form.get('factor'),
+                request.form['width1'], request.form['height1'], request.form.get('width2'),
+                request.form.get('height2'), request.form['length_or_radius'], request.form['quantity'],
+                request.form.get('degree_or_offset'), request.form['gauge'], request.form.get('area'),
+                request.form.get('nuts_bolts'), request.form.get('cleat'), request.form.get('gasket'),
+                request.form.get('corner_pieces'), id
+            )
 
-        conn.commit()
-        conn.close()
+            cur.execute('''
+                UPDATE duct_entries
+                SET duct_no=?, duct_type=?, factor=?, width1=?, height1=?, width2=?, height2=?, 
+                    length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?,
+                    nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
+                WHERE id=?
+            ''', data)
 
-        flash('✅ Entry updated successfully.', 'success')
-        return redirect(url_for('open_project', project_id=project_id))  # ✅ Correct endpoint
-    else:
-        cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
-        entry = cur.fetchone()
-        conn.close()
+            conn.commit()
+            conn.close()
 
-        if entry:
-            entry = dict(zip([col[0] for col in cur.description], entry))
-            return render_template("edit_entry.html", entry=entry)
+            flash('✅ Entry updated successfully.', 'success')
+            return redirect(url_for('open_project', project_id=project_id))
+
         else:
-            return "❌ Entry not found", 404
+            cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
+            entry_row = cur.fetchone()
+
+            if entry_row:
+                entry = dict(entry_row)  # ✅ Simpler conversion
+                conn.close()
+                return render_template("edit_entry.html", entry=entry)
+            else:
+                conn.close()
+                return "❌ Entry not found", 404
+
+    except Exception as e:
+        import traceback
+        print("❌ ERROR in /edit/<id> route:")
+        traceback.print_exc()  # 👈 Logs full stack trace to console
+        return "❌ Internal Server Error", 500
 
 # ---------- ✅ Export Duct Table to Excel ----------
 @app.route('/export_excel/<int:project_id>')
