@@ -42,7 +42,7 @@ def init_db():
 
     # Entries Table (duct_entries)
     # Entries Table (duct_entries)
-cur.execute('''
+    cur.execute('''
     CREATE TABLE IF NOT EXISTS duct_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         project_id INTEGER,
@@ -66,8 +66,8 @@ cur.execute('''
     )
 ''')
 
-    # Vendors
-    cur.execute('''
+     # Vendors
+     cur.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -79,8 +79,8 @@ cur.execute('''
         )
     ''')
 
-    # Vendor Contacts
-    cur.execute('''
+      # Vendor Contacts
+      cur.execute('''
         CREATE TABLE IF NOT EXISTS vendor_contacts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             vendor_id INTEGER,
@@ -91,8 +91,8 @@ cur.execute('''
         )
     ''')
 
-    # Users Table
-    cur.execute('''
+      # Users Table
+      cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -102,17 +102,17 @@ cur.execute('''
             password TEXT
         )
     ''')
-    cur.execute("INSERT OR IGNORE INTO users (email, name, role, contact, password) VALUES (?, ?, ?, ?, ?)",
+     cur.execute("INSERT OR IGNORE INTO users (email, name, role, contact, password) VALUES (?, ?, ?, ?, ?)",
                 ("admin@ducting.com", "Admin", "Admin", "9999999999", "admin123"))
 
     # Dummy Vendor & Contact
-    cur.execute("INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+      cur.execute("INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc) VALUES (?, ?, ?, ?, ?, ?, ?)", 
         (1, "Dummy Vendor Pvt Ltd", "29ABCDE1234F2Z5", "123 Main Street, City", "Axis Bank", "1234567890", "UTIB0000123"))
-    cur.execute("INSERT OR IGNORE INTO vendor_contacts (vendor_id, name, phone, email) VALUES (?, ?, ?, ?)",
+      cur.execute("INSERT OR IGNORE INTO vendor_contacts (vendor_id, name, phone, email) VALUES (?, ?, ?, ?)",
         (1, "Mr. Dummy", "9876543210", "dummy@vendor.com"))
 
-    conn.commit()
-    conn.close()
+      conn.commit()
+      conn.close()
 
 # ✅ Initialize DB on startup
 init_db()
