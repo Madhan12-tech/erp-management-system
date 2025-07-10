@@ -318,6 +318,7 @@ def add_duct():
     length_or_radius = request.form['length_or_radius']
     quantity = request.form['quantity']
     degree_or_offset = request.form['degree_or_offset']
+    gauge = request.form.get('gauge', '')  # ✅ This is the missing field
 
     conn = get_db()
     cur = conn.cursor()
@@ -325,18 +326,17 @@ def add_duct():
         INSERT INTO duct_entries (
             project_id, duct_no, duct_type, factor,
             width1, height1, width2, height2,
-            length_or_radius, quantity, degree_or_offset
+            length_or_radius, quantity, degree_or_offset, gauge
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         project_id, duct_no, duct_type, factor,
         width1, height1, width2, height2,
-        length_or_radius, quantity, degree_or_offset
+        length_or_radius, quantity, degree_or_offset, gauge
     ))
 
     conn.commit()
     conn.close()
     return redirect(url_for('open_project', project_id=project_id))
-
 
 # ---------- ✅ Live Duct Table API ----------
 @app.route('/api/ducts/<int:project_id>')
