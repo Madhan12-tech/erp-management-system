@@ -5,6 +5,13 @@ import pandas as pd
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
+from flask import send_file
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+import sqlite3
 
 app = Flask(__name__)
 app.secret_key = 'secretkey'
