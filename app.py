@@ -379,7 +379,10 @@ def export_pdf(project_id):
 def edit_duct_entry(id):
     conn = get_db()
     cur = conn.cursor()
+    
     if request.method == 'POST':
+        project_id = request.form.get('project_id', 1)  # ✅ Make sure it's passed in the form
+
         data = (
             request.form['duct_no'], request.form['duct_type'], request.form.get('factor'),
             request.form['width1'], request.form['height1'], request.form.get('width2'),
@@ -388,24 +391,30 @@ def edit_duct_entry(id):
             request.form.get('nuts_bolts'), request.form.get('cleat'), request.form.get('gasket'),
             request.form.get('corner_pieces'), id
         )
+
         cur.execute('''
-            UPDATE duct_entries SET duct_no=?, duct_type=?, factor=?, width1=?, height1=?, width2=?, height2=?, 
-            length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?, nuts_bolts=?, cleat=?, 
-            gasket=?, corner_pieces=? WHERE id=?
+            UPDATE duct_entries
+            SET duct_no=?, duct_type=?, factor=?, width1=?, height1=?, width2=?, height2=?, 
+                length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?,
+                nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
+            WHERE id=?
         ''', data)
+
         conn.commit()
         conn.close()
-        flash('Entry updated successfully.', 'success')
-        return redirect(url_for('open_project', project_id=request.form.get('project_id', 1)))
+
+        flash('✅ Entry updated successfully.', 'success')
+        return redirect(url_for('open_project', project_id=project_id))  # ✅ Correct endpoint
     else:
         cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
         entry = cur.fetchone()
         conn.close()
+
         if entry:
             entry = dict(zip([col[0] for col in cur.description], entry))
             return render_template("edit_entry.html", entry=entry)
         else:
-            return "Entry not found", 404
+            return "❌ Entry not found", 404
 
 # ---------- ✅ Export Duct Table to Excel ----------
 @app.route('/export_excel/<int:project_id>')
