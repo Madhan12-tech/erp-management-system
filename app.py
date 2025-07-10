@@ -40,34 +40,33 @@ def init_db():
         )
     ''')
 
-    # Entries Table (duct_entries)
-    # Entries Table (duct_entries)
+    # Duct Entries Table
     cur.execute('''
-    CREATE TABLE IF NOT EXISTS duct_entries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        duct_no TEXT,
-        duct_type TEXT,
-        factor TEXT,
-        width1 REAL,
-        height1 REAL,
-        width2 REAL,
-        height2 REAL,
-        length_or_radius REAL,
-        quantity INTEGER,
-        degree_or_offset TEXT,
-        gauge TEXT,
-        area REAL,
-        nuts_bolts TEXT,
-        cleat TEXT,
-        gasket TEXT,
-        corner_pieces TEXT,
-        FOREIGN KEY (project_id) REFERENCES projects(id)
-    )
-''')
+        CREATE TABLE IF NOT EXISTS duct_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            duct_no TEXT,
+            duct_type TEXT,
+            factor TEXT,
+            width1 REAL,
+            height1 REAL,
+            width2 REAL,
+            height2 REAL,
+            length_or_radius REAL,
+            quantity INTEGER,
+            degree_or_offset TEXT,
+            gauge TEXT,
+            area REAL,
+            nuts_bolts TEXT,
+            cleat TEXT,
+            gasket TEXT,
+            corner_pieces TEXT,
+            FOREIGN KEY (project_id) REFERENCES projects(id)
+        )
+    ''')
 
-     # Vendors
-     cur.execute('''
+    # Vendors Table
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -79,8 +78,8 @@ def init_db():
         )
     ''')
 
-      # Vendor Contacts
-      cur.execute('''
+    # Vendor Contacts
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS vendor_contacts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             vendor_id INTEGER,
@@ -91,8 +90,8 @@ def init_db():
         )
     ''')
 
-      # Users Table
-      cur.execute('''
+    # Users Table
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -102,20 +101,32 @@ def init_db():
             password TEXT
         )
     ''')
-     cur.execute("INSERT OR IGNORE INTO users (email, name, role, contact, password) VALUES (?, ?, ?, ?, ?)",
-                ("admin@ducting.com", "Admin", "Admin", "9999999999", "admin123"))
 
-    # Dummy Vendor & Contact
-      cur.execute("INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-        (1, "Dummy Vendor Pvt Ltd", "29ABCDE1234F2Z5", "123 Main Street, City", "Axis Bank", "1234567890", "UTIB0000123"))
-      cur.execute("INSERT OR IGNORE INTO vendor_contacts (vendor_id, name, phone, email) VALUES (?, ?, ?, ?)",
-        (1, "Mr. Dummy", "9876543210", "dummy@vendor.com"))
+    # Default admin user
+    cur.execute('''
+        INSERT OR IGNORE INTO users (email, name, role, contact, password)
+        VALUES (?, ?, ?, ?, ?)
+    ''', ("admin@ducting.com", "Admin", "Admin", "9999999999", "admin123"))
 
-      conn.commit()
-      conn.close()
+    # Dummy vendor & contact
+    cur.execute('''
+        INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (1, "Dummy Vendor Pvt Ltd", "29ABCDE1234F2Z5", "123 Main Street, City", "Axis Bank", "1234567890", "UTIB0000123"))
 
-# ✅ Initialize DB on startup
+    cur.execute('''
+        INSERT OR IGNORE INTO vendor_contacts (vendor_id, name, phone, email)
+        VALUES (?, ?, ?, ?)
+    ''', (1, "Mr. Dummy", "9876543210", "dummy@vendor.com"))
+
+    conn.commit()
+    conn.close()
+
+
+# ✅ Call this once when app starts (or trigger from route)
 init_db()
+ 
+
 
 # ---------- ✅ Login ----------
 @app.route('/', methods=['GET', 'POST'])
