@@ -3,6 +3,8 @@ import sqlite3, os
 from datetime import datetime
 import pandas as pd
 from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 
 app = Flask(__name__)
 app.secret_key = 'secretkey'
