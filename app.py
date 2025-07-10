@@ -366,74 +366,100 @@ def delete_duct(id):
 
 
 
+
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
-    from reportlab.lib.pagesizes import A4
-    from reportlab.platypus import Table, TableStyle
-    from reportlab.lib import colors
-    from reportlab.pdfgen import canvas
-    from io import BytesIO
-    import os
-
+    from num2words import num2words
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db()
     c = conn.cursor()
 
-    # ✅ Use correct column
-    c.execute("SELECT client_name FROM projects WHERE id=?", (project_id,))
+    # Fetch project details
+    c.execute("SELECT * FROM projects WHERE id=?", (project_id,))
     project = c.fetchone()
-    project_title = project[0] if project else "Project"
 
-    # ✅ Fetch duct entries (NO weight column used)
+    if not project:
+        return "Project not found", 404
+
+    project_title = project["client_name"] or "Project"
+    site_location = project["site_location"] or ""
+    engineer_name = project["engineer_name"] or ""
+    mobile = project["mobile"] or ""
+    start_date = project["start_date"] or ""
+    end_date = project["end_date"] or ""
+
+    # Company Logo (optional path)
+    logo_path = "static/logo.png"
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, 50, height - 80, width=100, height=40)
+
+    # Company Name
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(160, height - 50, "Vanes Engineering Pvt Ltd")
+
+    # Project Info
+    p.setFont("Helvetica", 10)
+    p.drawString(50, height - 100, f"Client: {project_title}")
+    p.drawString(300, height - 100, f"Engineer: {engineer_name}")
+    p.drawString(50, height - 115, f"Site Location: {site_location}")
+    p.drawString(300, height - 115, f"Mobile: {mobile}")
+    p.drawString(50, height - 130, f"Start Date: {start_date}")
+    p.drawString(300, height - 130, f"End Date: {end_date}")
+
+    # Fetch duct entries
     c.execute("""
-        SELECT duct_no, duct_type, width1, height1, quantity, area
+        SELECT duct_no, duct_type, width1, height1, width2, height2,
+               length_or_radius, quantity, area, factor, gauge, degree_or_offset
         FROM duct_entries WHERE project_id=?
     """, (project_id,))
     entries = c.fetchall()
 
-    # ✅ Table data
-    data = [["Duct No", "Type", "Width", "Height", "Qty", "Area"]]
+    # Table Data
+    data = [["Duct No", "Type", "W1", "H1", "W2", "H2", "Length", "Qty", "Area", "Factor", "Gauge", "Deg/Off"]]
     total_qty = total_area = 0.0
 
     for row in entries:
-        w = float(row[2]) if row[2] else 0
-        h = float(row[3]) if row[3] else 0
-        qty = float(row[4]) if row[4] else 0
-        area = float(row[5]) if row[5] else 0
-        data.append([row[0], row[1], w, h, qty, area])
+        values = [row[i] if row[i] else "" for i in range(len(row))]
+        try:
+            qty = float(row[7] or 0)
+            area = float(row[8] or 0)
+        except:
+            qty = area = 0
         total_qty += qty
         total_area += area
+        data.append(list(values))
 
-    data.append(["", "", "", "Total", total_qty, total_area])
+    data.append(["", "", "", "", "", "", "Total", total_qty, total_area, "", "", ""])
 
-    # ✅ Draw logo
-    logo_path = os.path.join("static", "logo.png")
-    if os.path.exists(logo_path):
-        p.drawImage(logo_path, 50, height - 80, width=100, preserveAspectRatio=True)
-
-    # ✅ Title
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(160, height - 50, f"{project_title} - Duct Entry Sheet")
-
-    # ✅ Draw table
-    table = Table(data, colWidths=[60, 60, 50, 50, 50, 60])
+    # Draw Table
+    table = Table(data, colWidths=[45, 45, 35, 35, 35, 35, 45, 35, 45, 35, 35, 45])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-        ('GRID', (0,0), (-1,-1), 1, colors.black),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER')
     ]))
     table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 120 - 25 * len(data))
+    table.drawOn(p, 30, height - 180 - 22 * len(data))
+
+    # Total Area in words
+    area_text = num2words(round(total_area, 2), to='decimal').replace(" point", " point ").capitalize()
+    p.setFont("Helvetica", 10)
+    p.drawString(50, 80, f"Total Area in Words: {area_text} square meters")
+
+    # Signature lines
+    p.drawString(50, 50, "Prepared by: __________________")
+    p.drawString(220, 50, "Checked by: __________________")
+    p.drawString(400, 50, "Approved by: __________________")
 
     p.showPage()
     p.save()
-    buffer.seek(0)
 
+    buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name=f"{project_title}_duct_sheet.pdf", mimetype='application/pdf')
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
