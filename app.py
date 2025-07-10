@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import sqlite3, os
 from datetime import datetime
 import pandas as pd
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = 'secretkey'
