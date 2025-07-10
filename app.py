@@ -375,29 +375,38 @@ def export_pdf(project_id):
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='duct_entries.pdf', mimetype='application/pdf')
 
-@app.route('/edit/<int:entry_id>', methods=['GET', 'POST'])
-def edit_duct_entry(entry_id):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit_duct_entry(id):
+    conn = get_db()
+    cur = conn.cursor()
     if request.method == 'POST':
-        form = request.form
-        c.execute('''UPDATE duct_entries SET
-                     duct_no=?, duct_type=?, width1=?, height1=?, width2=?, height2=?,
-                     length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?,
-                     nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
-                     WHERE id=?''',
-                  (form['duct_no'], form['duct_type'], form['width1'], form['height1'],
-                   form['width2'], form['height2'], form['length_or_radius'], form['quantity'],
-                   form['degree_or_offset'], form['gauge'], form['area'], form['nuts_bolts'],
-                   form['cleat'], form['gasket'], form['corner_pieces'], entry_id))
+        data = (
+            request.form['duct_no'], request.form['duct_type'], request.form.get('factor'),
+            request.form['width1'], request.form['height1'], request.form.get('width2'),
+            request.form.get('height2'), request.form['length_or_radius'], request.form['quantity'],
+            request.form.get('degree_or_offset'), request.form['gauge'], request.form.get('area'),
+            request.form.get('nuts_bolts'), request.form.get('cleat'), request.form.get('gasket'),
+            request.form.get('corner_pieces'), id
+        )
+        cur.execute('''
+            UPDATE duct_entries SET duct_no=?, duct_type=?, factor=?, width1=?, height1=?, width2=?, height2=?, 
+            length_or_radius=?, quantity=?, degree_or_offset=?, gauge=?, area=?, nuts_bolts=?, cleat=?, 
+            gasket=?, corner_pieces=? WHERE id=?
+        ''', data)
         conn.commit()
         conn.close()
-        return redirect(url_for('dashboard'))
+        flash('Entry updated successfully.', 'success')
+        return redirect(url_for('project_detail', project_id=request.form.get('project_id', 1)))
     else:
-        c.execute("SELECT * FROM duct_entries WHERE id=?", (entry_id,))
-        entry = c.fetchone()
+        cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
+        entry = cur.fetchone()
         conn.close()
-        return render_template("edit_entry.html", entry=entry)
+        if entry:
+            entry = dict(zip([col[0] for col in cur.description], entry))
+            return render_template("edit_entry.html", entry=entry)
+        else:
+            return "Entry not found", 404
+
 # ---------- ✅ Export Duct Table to Excel ----------
 @app.route('/export_excel/<int:project_id>')
 def export_excel(project_id):
