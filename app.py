@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify
+8from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify
 from datetime import datetime
 from io import BytesIO
 import sqlite3
@@ -627,8 +627,7 @@ def production(project_id):
     project = cur.fetchone()
 
     # ✅ Calculate total sqm from duct dimensions
-    cur.execute("SELECT SUM(length * width * quantity) FROM ducts WHERE project_id = ?", (project_id,))
-    total_sqm = cur.fetchone()[0] or 0
+    cur.execute("SELECT SUM(width1 * height1 * quantity) FROM duct_entries WHERE project_id = ?", (project_id,))
 
     # ✅ Update total_sqm in projects table
     cur.execute("UPDATE projects SET total_sqm = ? WHERE id = ?", (total_sqm, project_id))
