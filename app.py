@@ -622,17 +622,57 @@ def production(project_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # ✅ Get project
+    # Fetch project
     cur.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
     project = cur.fetchone()
+    if not project:
+        flash("Project not found", "danger")
+        return redirect(url_for('projects'))
 
-    # ✅ Calculate total sqm from duct dimensions
-    cur.execute("SELECT SUM(width1 * height1 * quantity) FROM duct_entries WHERE project_id = ?", (project_id,))
+    # Fetch all duct entries for the project
+    cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
+    ducts = cur.fetchall()
 
-    # ✅ Update total_sqm in projects table
-    cur.execute("UPDATE projects SET total_sqm = ? WHERE id = ?", (total_sqm, project_id))
+    total_area = 0
+    total_weight = 0
 
-    # ✅ Get or create progress record
+    # Calculate and update area/weight for each duct
+    for duct in ducts:
+        try:
+            width = float(duct["width1"])
+            height = float(duct["height1"])
+            qty = int(duct["quantity"])
+            area = round(width * height * qty, 2)
+            weight = round(area * 0.035, 2)  # assume 0.035 as gauge factor
+
+            # Update the duct entry
+            cur.execute("""
+                UPDATE duct_entries
+                SET area = ?, weight = ?
+                WHERE id = ?
+            """, (area, weight, duct["id"]))
+
+            total_area += area
+            total_weight += weight
+        except Exception as e:
+            print("Calculation error:", e)
+
+    # Update project's total sqm
+    cur.execute("UPDATE projects SET total_sqm = ? WHERE id = ?", (total_area, project_id))
+
+    # Create production_progress table if not exists
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS production_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER UNIQUE,
+            sheet_cutting REAL DEFAULT 0,
+            plasma_fabrication REAL DEFAULT 0,
+            boxing_assembly REAL DEFAULT 0,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        )
+    ''')
+
+    # Fetch or insert production_progress
     cur.execute("SELECT * FROM production_progress WHERE project_id = ?", (project_id,))
     progress = cur.fetchone()
     if not progress:
@@ -643,7 +683,9 @@ def production(project_id):
 
     conn.commit()
     conn.close()
-    return render_template("production.html", project=project, progress=progress)
+
+    return render_template("production.html", project=project, progress=progress, ducts=ducts,
+                           total_area=total_area, total_weight=total_weight)
 
 
 # ---------- ✅ Update Production Progress ----------
