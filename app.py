@@ -327,8 +327,11 @@ def add_duct():
             width1, height1, width2, height2,
             length_or_radius, quantity, degree_or_offset
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (project_id, duct_no, duct_type, factor, width1, height1, width2,
-          height2, length_or_radius, quantity, degree_or_offset))
+    ''', (
+        project_id, duct_no, duct_type, factor,
+        width1, height1, width2, height2,
+        length_or_radius, quantity, degree_or_offset
+    ))
 
     conn.commit()
     conn.close()
