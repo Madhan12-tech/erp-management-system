@@ -440,48 +440,52 @@ def api_ducts(project_id):
 
 @app.route('/edit_duct/<int:id>', methods=['GET', 'POST'])
 def edit_duct(id):
-    conn = get_db()
+    conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
+    cursor = conn.cursor()
 
-    cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
-    duct = cur.fetchone()
-
-    if not duct:
-        flash("Entry not found", "danger")
-        return redirect(url_for('projects'))
+    # Fetch entry
+    cursor.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
+    entry = cursor.fetchone()
 
     if request.method == 'POST':
-        # Collect updated values
         duct_no = request.form['duct_no']
+        duct_type = request.form['duct_type']
         width1 = request.form['width1']
         height1 = request.form['height1']
+        width2 = request.form.get('width2') or None
+        height2 = request.form.get('height2') or None
         length_or_radius = request.form['length_or_radius']
+        degree_or_offset = request.form.get('degree_or_offset') or None
         quantity = request.form['quantity']
-        factor = request.form['factor']
-        gauge = request.form.get('gauge', '')
+        factor = request.form.get('factor') or 1
+        area = request.form.get('area') or 0
+        gauge = request.form.get('gauge') or ''
+        nuts_bolts = request.form.get('nuts_bolts') or 0
+        cleat = request.form.get('cleat') or 0
+        gasket = request.form.get('gasket') or 0
+        corner_pieces = request.form.get('corner_pieces') or 0
 
-        # Recalculate area and weight
-        try:
-            area = round(float(width1) * float(height1) * int(quantity), 2)
-            weight = round(area * 0.035, 2)
-        except:
-            area = 0
-            weight = 0
-
-        cur.execute("""
+        cursor.execute("""
             UPDATE duct_entries
-            SET duct_no = ?, width1 = ?, height1 = ?, length_or_radius = ?, quantity = ?, factor = ?, gauge = ?, area = ?, weight = ?
-            WHERE id = ?
-        """, (duct_no, width1, height1, length_or_radius, quantity, factor, gauge, area, weight, id))
+            SET duct_no=?, duct_type=?, width1=?, height1=?, width2=?, height2=?,
+                length_or_radius=?, degree_or_offset=?, quantity=?, factor=?, area=?, gauge=?,
+                nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
+            WHERE id=?
+        """, (
+            duct_no, duct_type, width1, height1, width2, height2,
+            length_or_radius, degree_or_offset, quantity, factor, area, gauge,
+            nuts_bolts, cleat, gasket, corner_pieces, id
+        ))
         conn.commit()
+        project_id = entry['project_id']
         conn.close()
-
-        flash("Entry updated successfully", "success")
-        return redirect(url_for('production', project_id=duct['project_id']))
+        return redirect(url_for('view_project', project_id=project_id))  # ✅ Redirects back to projects.html
 
     conn.close()
-    return render_template('edit_entry.html', duct=duct)
+    return render_template('edit_duct_entry.html', entry=entry)
+
+
 @app.route('/update_duct/<int:id>', methods=['POST'])
 def update_duct(id):
     conn = get_db()
