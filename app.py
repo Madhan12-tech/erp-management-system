@@ -364,7 +364,7 @@ def add_duct():
         w = float(width1)
         h = float(height1)
         q = int(quantity)
-        gauge_factor = 0.035  # You can fine-tune this based on material thickness
+        gauge_factor = 0.035  # Adjust as needed
         weight = round(w * h * q * gauge_factor, 2)
     except:
         weight = 0
@@ -385,8 +385,7 @@ def add_duct():
 
     conn.commit()
     conn.close()
-    return redirect(url_for('open_project', project_id=project_id))
-
+    return redirect(url_for('production', project_id=project_id))
 # ---------- ✅ Live Duct Table API ----------
 @app.route('/api/ducts/<int:project_id>')
 def api_ducts(project_id):
@@ -402,9 +401,24 @@ def api_ducts(project_id):
 def delete_duct(id):
     conn = get_db()
     cur = conn.cursor()
+
+    # Get project_id before deleting
+    cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return "Entry not found", 404
+
+    project_id = row['project_id']
+
+    # Delete the duct entry
     cur.execute("DELETE FROM duct_entries WHERE id = ?", (id,))
     conn.commit()
-    return '', 200
+    conn.close()
+
+    # Redirect back to the production module
+    return redirect(url_for('production', project_id=project_id))
 
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
