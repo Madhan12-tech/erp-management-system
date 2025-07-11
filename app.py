@@ -156,11 +156,51 @@ def migrate_add_area_column():
         print("✅ 'area' column added to duct_entries")
     conn.close()
 
+def migrate_duct_entries():
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Add 'area' column if not exists
+    try:
+        cur.execute("SELECT area FROM duct_entries LIMIT 1")
+    except sqlite3.OperationalError:
+        cur.execute("ALTER TABLE duct_entries ADD COLUMN area REAL DEFAULT 0")
+        print("✅ Added 'area' column to duct_entries")
+
+    # Add 'weight' column if not exists
+    try:
+        cur.execute("SELECT weight FROM duct_entries LIMIT 1")
+    except sqlite3.OperationalError:
+        cur.execute("ALTER TABLE duct_entries ADD COLUMN weight REAL DEFAULT 0")
+        print("✅ Added 'weight' column to duct_entries")
+
+    conn.commit()
+    conn.close()
+
+def migrate_production_progress():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS production_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            sheet_cutting_sqm REAL DEFAULT 0,
+            plasma_fabrication_sqm REAL DEFAULT 0,
+            boxing_assembly_sqm REAL DEFAULT 0
+        )
+    ''')
+    print("✅ Ensured 'production_progress' table exists")
+    conn.commit()
+    conn.close()
+
 
 # ✅ Call this once when app starts (or trigger from route)
 init_db()
 migrate_add_weight_column()
 migrate_add_area_column()
+migrate_duct_entries()
+migrate_production_progress()
  
 
 
