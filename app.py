@@ -386,47 +386,85 @@ def add_measurement():
 # ---------- ✅ Add Duct Entry ----------
 @app.route('/add_duct', methods=['POST'])
 def add_duct():
+    from math import pi
+
+    # Get form values
     project_id = request.form['project_id']
     duct_no = request.form['duct_no']
-    duct_type = request.form['duct_type']
-    factor = request.form['factor']
-    width1 = request.form['width1']
-    height1 = request.form['height1']
-    width2 = request.form['width2']
-    height2 = request.form['height2']
-    length_or_radius = request.form['length_or_radius']
-    quantity = request.form['quantity']
-    degree_or_offset = request.form['degree_or_offset']
-    gauge = request.form.get('gauge', '')  # Optional
+    duct_type = request.form['duct_type'].upper()
+    factor = float(request.form.get('factor', 1))
+    width1 = float(request.form.get('width1', 0))
+    height1 = float(request.form.get('height1', 0))
+    width2 = float(request.form.get('width2', 0))
+    height2 = float(request.form.get('height2', 0))
+    length = float(request.form.get('length_or_radius', 0))
+    quantity = int(request.form.get('quantity', 0))
+    degree = float(request.form.get('degree_or_offset', 0))
 
-    # ✅ Weight and Area calculation
-    try:
-        w = float(width1)
-        h = float(height1)
-        q = int(quantity)
-        area = round(w * h * q, 2)
-        weight = round(area * 0.035, 2)  # gauge factor
-    except:
-        area = 0
-        weight = 0
+    # Area Calculation (in square meters)
+    area = 0
+    if duct_type == 'ST':
+        area = 2 * (width1 + height1) / 1000 * (length / 1000) * quantity
+    elif duct_type == 'RED':
+        area = (width1 + height1 + width2 + height2) / 1000 * (length / 1000) * quantity * factor
+    elif duct_type == 'DUM':
+        area = (width1 * height1) / 1_000_000 * quantity
+    elif duct_type == 'OFFSET':
+        area = (width1 + height1 + width2 + height2) / 1000 * ((length + degree) / 1000) * quantity * factor
+    elif duct_type == 'SHOE':
+        area = (width1 + height1) * 2 / 1000 * (length / 1000) * quantity * factor
+    elif duct_type == 'VANES':
+        area = width1 / 1000 * (2 * pi * (width1 / 1000) / 4) * quantity
+    elif duct_type == 'ELB':
+        area = 2 * (width1 + height1) / 1000 * ((height1 / 2 / 1000) + (length / 1000) * (pi * (degree / 180))) * quantity * factor
+    area = round(area, 2)
 
+    # Gauge logic
+    gauge = '18g'
+    if width1 <= 751 and height1 <= 751:
+        gauge = '24g'
+    elif width1 <= 1201 and height1 <= 1201:
+        gauge = '22g'
+    elif width1 <= 1800 and height1 <= 1800:
+        gauge = '20g'
+
+    # Nuts & Bolts
+    nuts_bolts = round(quantity * 4, 2)
+
+    # Cleats based on gauge
+    cleat_factor = {'24g': 4, '22g': 8, '20g': 10, '18g': 12}.get(gauge, 12)
+    cleat = round(quantity * cleat_factor, 2)
+
+    # Gasket (in meters)
+    gasket = round((width1 + height1 + width2 + height2) / 1000 * quantity, 2)
+
+    # Corner pieces
+    corner_pieces = 0 if duct_type == 'DUM' else round(quantity * 8, 2)
+
+    # Weight (assumed as 0.035 * area)
+    weight = round(area * 0.035, 2)
+
+    # Insert into DB
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''
         INSERT INTO duct_entries (
             project_id, duct_no, duct_type, factor,
             width1, height1, width2, height2,
-            length_or_radius, quantity, degree_or_offset, gauge, area, weight
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            length_or_radius, quantity, degree_or_offset,
+            gauge, area, weight,
+            nuts_bolts, cleat, gasket, corner_pieces
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         project_id, duct_no, duct_type, factor,
         width1, height1, width2, height2,
-        length_or_radius, quantity, degree_or_offset, gauge, area, weight
+        length, quantity, degree,
+        gauge, area, weight,
+        nuts_bolts, cleat, gasket, corner_pieces
     ))
     conn.commit()
     conn.close()
 
-    # ✅ Correct endpoint here
     return redirect(url_for('open_project', project_id=project_id))
 # ---------- ✅ Live Duct Table API ----------
 @app.route('/api/ducts/<int:project_id>')
