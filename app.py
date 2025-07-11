@@ -453,7 +453,7 @@ def edit_duct(id):
         return redirect(url_for('projects'))
 
     if request.method == 'POST':
-        # Update logic
+        # Form data
         duct_no = request.form['duct_no']
         width1 = request.form['width1']
         height1 = request.form['height1']
@@ -469,16 +469,18 @@ def edit_duct(id):
             area = 0
             weight = 0
 
+        # Update database
         cur.execute('''
             UPDATE duct_entries
             SET duct_no = ?, width1 = ?, height1 = ?, length_or_radius = ?, quantity = ?, factor = ?, gauge = ?, area = ?, weight = ?
             WHERE id = ?
         ''', (duct_no, width1, height1, length_or_radius, quantity, factor, gauge, area, weight, id))
         conn.commit()
+        project_id = duct['project_id']
         conn.close()
 
         flash("Entry updated", "success")
-        return redirect(url_for('production', project_id=duct['project_id']))
+        return redirect(url_for('production', project_id=project_id))
 
     conn.close()
     return render_template('edit_entry.html', duct=duct)
@@ -533,27 +535,29 @@ def update_duct(id):
 
 
 # ---------- ✅ Delete Duct Entry ----------
-@app.route('/delete_duct/<int:id>', methods=['GET', 'POST'])
+@app.route('/delete_duct/<int:id>', methods=['POST'])
 def delete_duct(id):
     conn = get_db()
+    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Get the project_id before deleting the entry
+    # Get project_id before deleting
     cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
     row = cur.fetchone()
 
     if not row:
         conn.close()
-        return "Entry not found", 404
+        flash("Entry not found", "danger")
+        return redirect(url_for('projects'))
 
     project_id = row['project_id']
 
-    # Delete the duct entry
+    # Delete the entry
     cur.execute("DELETE FROM duct_entries WHERE id = ?", (id,))
     conn.commit()
     conn.close()
 
-    flash("Duct entry deleted successfully.", "success")
+    flash("Entry deleted", "success")
     return redirect(url_for('production', project_id=project_id))
 
 @app.route('/export_pdf/<int:project_id>')
