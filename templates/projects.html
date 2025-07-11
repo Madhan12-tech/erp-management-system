@@ -161,100 +161,64 @@
   </div>
 
   <!-- Left Side: Limited Duct Entry Form -->
-  <div class="row">
-    <div class="col-md-5">
-      <form method="POST" action="/add_duct">
-        <input type="hidden" name="project_id" value="{{ project.id }}">
-        <div class="card shadow-sm mb-3">
-          <div class="card-header bg-primary text-white">➕ Duct Entry</div>
-          <div class="card-body row g-2">
-
-            <div class="col-md-6">
-              <label>Duct No</label>
-              <input name="duct_no" class="form-control" required>
-            </div>
-
-            <div class="col-md-6">
-              <label>Type</label>
-              <select name="duct_type" id="ductType" class="form-select" required>
-                <option value="">-- Select Type --</option>
-                <option value="ST">ST</option>
-                <option value="RED">RED</option>
-                <option value="OFFSET">OFFSET</option>
-                <option value="SHOE">SHOE</option>
-                <option value="ELB">ELB</option>
-                <option value="VANES">VANES</option>
-                <option value="DUM">DUM</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label>W1</label>
-              <input name="width1" id="width1" type="number" step="any" class="form-control" required>
-            </div>
-
-            <div class="col-md-6">
-              <label>H1</label>
-              <input name="height1" id="height1" type="number" step="any" class="form-control" required>
-            </div>
-
-            <div class="col-md-6">
-              <label>Qty</label>
-              <input name="quantity" id="quantity" type="number" step="1" class="form-control" required>
-            </div>
-
-            <div class="col-md-6">
-              <label>Length/Radius</label>
-              <input name="length_or_radius" id="length_or_radius" type="number" step="any" class="form-control" required>
-            </div>
-
-            <div class="col-md-6">
-              <label>Deg/Offset</label>
-              <input name="degree_or_offset" id="degree_or_offset" type="number" step="any" class="form-control">
-            </div>
-
-            <div class="col-md-6 factor-field d-none">
-              <label>Factor</label>
-              <input name="factor" id="factor" type="number" step="0.01" class="form-control" value="1.0">
-            </div>
-
-            <!-- Auto-calculated fields (read-only) -->
-            <div class="col-md-6">
-              <label>Gauge</label>
-              <input name="gauge" id="gauge" class="form-control readonly-input" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label>Area</label>
-              <input name="area" id="area" class="form-control readonly-input" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label>Nuts</label>
-              <input name="nuts_bolts" id="nuts_bolts" class="form-control readonly-input" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label>Cleat</label>
-              <input name="cleat" id="cleat" class="form-control readonly-input" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label>Gasket</label>
-              <input name="gasket" id="gasket" class="form-control readonly-input" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label>Corner</label>
-              <input name="corner_pieces" id="corner_pieces" class="form-control readonly-input" readonly>
-            </div>
-          </div>
-          <div class="card-footer text-end">
-            <button type="submit" class="btn btn-success">➕ Add Entry</button>
-          </div>
+  <!-- ✅ Duct Entry Form with Only Limited Editable Fields --><div class="col-md-5">
+  <form method="POST" action="/add_duct">
+    <input type="hidden" name="project_id" value="{{ project.id }}">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-primary text-white">➕ Duct Entry</div>
+      <div class="card-body row g-2">
+        <div class="col-md-6">
+          <label>Duct No</label>
+          <input name="duct_no" class="form-control" required>
         </div>
-      </form>
+        <div class="col-md-6">
+          <label>Type</label>
+          <select name="duct_type" id="ductType" class="form-select" required>
+            <option value="">-- Select Type --</option>
+            <option value="ST">ST</option>
+            <option value="RED">RED</option>
+            <option value="OFFSET">OFFSET</option>
+            <option value="SHOE">SHOE</option>
+            <option value="ELB">ELB</option>
+            <option value="VANES">VANES</option>
+            <option value="DUM">DUM</option>
+          </select>
+        </div><div class="col-md-6">
+      <label>W1</label>
+      <input name="width1" id="width1" type="number" step="any" class="form-control" required>
     </div>
+    <div class="col-md-6">
+      <label>H1</label>
+      <input name="height1" id="height1" type="number" step="any" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label>Qty</label>
+      <input name="quantity" id="quantity" type="number" step="1" class="form-control" required>
+    </div>
+    <div class="col-md-6">
+      <label>Length/Radius</label>
+      <input name="length_or_radius" id="length_or_radius" type="number" step="any" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label>Deg/Offset</label>
+      <input name="degree_or_offset" id="degree_or_offset" type="number" step="any" class="form-control">
+    </div>
+
+    <div class="col-md-6 factor-field d-none">
+      <label>Factor</label>
+      <input name="factor" id="factor" type="number" step="0.01" class="form-control" value="1.0">
+    </div>
+
+  </div>
+  <div class="card-footer text-end">
+    <button type="submit" class="btn btn-success">➕ Add Entry</button>
+  </div>
+</div>
+
+  </form>
+  </div>
 
     <div class="col-md-7">
       <div class="card shadow-sm">
