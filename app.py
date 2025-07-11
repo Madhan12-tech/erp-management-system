@@ -438,52 +438,72 @@ def api_ducts(project_id):
     return jsonify(entries)
 
 
-@app.route('/edit_duct/<int:id>', methods=['GET', 'POST'])
-def edit_duct(id):
-    conn = sqlite3.connect('database.db')
+
+@app.route("/edit_duct/<int:entry_id>", methods=["GET", "POST"])
+def edit_duct(entry_id):
+    conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cur = conn.cursor()
 
-    # Fetch entry
-    cursor.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
-    entry = cursor.fetchone()
+    # Fetch the entry
+    cur.execute("SELECT * FROM duct_entries WHERE id = ?", (entry_id,))
+    entry = cur.fetchone()
 
-    if request.method == 'POST':
-        duct_no = request.form['duct_no']
-        duct_type = request.form['duct_type']
-        width1 = request.form['width1']
-        height1 = request.form['height1']
-        width2 = request.form.get('width2') or None
-        height2 = request.form.get('height2') or None
-        length_or_radius = request.form['length_or_radius']
-        degree_or_offset = request.form.get('degree_or_offset') or None
-        quantity = request.form['quantity']
-        factor = request.form.get('factor') or 1
-        area = request.form.get('area') or 0
-        gauge = request.form.get('gauge') or ''
-        nuts_bolts = request.form.get('nuts_bolts') or 0
-        cleat = request.form.get('cleat') or 0
-        gasket = request.form.get('gasket') or 0
-        corner_pieces = request.form.get('corner_pieces') or 0
+    if not entry:
+        flash("Entry not found", "danger")
+        return redirect(url_for("home"))  # or wherever you want to go on failure
 
-        cursor.execute("""
-            UPDATE duct_entries
-            SET duct_no=?, duct_type=?, width1=?, height1=?, width2=?, height2=?,
-                length_or_radius=?, degree_or_offset=?, quantity=?, factor=?, area=?, gauge=?,
-                nuts_bolts=?, cleat=?, gasket=?, corner_pieces=?
-            WHERE id=?
-        """, (
-            duct_no, duct_type, width1, height1, width2, height2,
-            length_or_radius, degree_or_offset, quantity, factor, area, gauge,
-            nuts_bolts, cleat, gasket, corner_pieces, id
-        ))
+    project_id = entry["project_id"]
+
+    if request.method == "POST":
+        # Get updated data from the form
+        data = {
+            "duct_no": request.form.get("duct_no"),
+            "duct_type": request.form.get("duct_type"),
+            "width1": request.form.get("width1"),
+            "height1": request.form.get("height1"),
+            "width2": request.form.get("width2"),
+            "height2": request.form.get("height2"),
+            "length_or_radius": request.form.get("length_or_radius"),
+            "degree_or_offset": request.form.get("degree_or_offset"),
+            "quantity": request.form.get("quantity"),
+            "gauge": request.form.get("gauge"),
+            "factor": request.form.get("factor"),
+            "area": request.form.get("area"),
+            "nuts_bolts": request.form.get("nuts_bolts"),
+            "cleat": request.form.get("cleat"),
+            "gasket": request.form.get("gasket"),
+            "corner_pieces": request.form.get("corner_pieces")
+        }
+
+        # Update DB
+        cur.execute("""
+            UPDATE duct_entries SET
+              duct_no = :duct_no,
+              duct_type = :duct_type,
+              width1 = :width1,
+              height1 = :height1,
+              width2 = :width2,
+              height2 = :height2,
+              length_or_radius = :length_or_radius,
+              degree_or_offset = :degree_or_offset,
+              quantity = :quantity,
+              gauge = :gauge,
+              factor = :factor,
+              area = :area,
+              nuts_bolts = :nuts_bolts,
+              cleat = :cleat,
+              gasket = :gasket,
+              corner_pieces = :corner_pieces
+            WHERE id = :entry_id
+        """, {**data, "entry_id": entry_id})
         conn.commit()
-        project_id = entry['project_id']
         conn.close()
-        return redirect(url_for('view_project', project_id=project_id))  # ✅ Redirects back to projects.html
+        flash("Entry updated successfully", "success")
+        return redirect(url_for('open_project', project_id=project_id))  # ✅ correct route
 
     conn.close()
-    return render_template('edit_duct_entry.html', entry=entry)
+    return render_template("edit_duct_entry.html", entry=entry)
 
 
 @app.route('/update_duct/<int:id>', methods=['POST'])
