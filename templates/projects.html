@@ -5,6 +5,10 @@
   <title>Projects | Ducting ERP</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    .readonly-input {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+    }
     body {
       background: #f9f9f9;
       font-family: 'Segoe UI', sans-serif;
@@ -414,6 +418,18 @@ document.addEventListener('DOMContentLoaded', function () {
   setupAutoCalculation('Modal');
   setupFactorField('ductType', '.factor-field');
   setupFactorField('ductTypeModal', '.factor-field-modal');
+  // ✅ Vendor GST & Address Autofill
+const vendorSelect = document.getElementById('vendorSelect');
+const gstField = document.getElementById('vendorGst');
+const addressField = document.getElementById('vendorAddress');
+
+if (vendorSelect) {
+  vendorSelect.addEventListener('change', function () {
+    const selected = vendorSelect.options[vendorSelect.selectedIndex];
+    gstField.value = selected.dataset.gst || '';
+    addressField.value = selected.dataset.address || '';
+  });
+}
 });
 </script>
 
@@ -428,6 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <!-- ✅ Bootstrap JS bundle (includes Popper.js) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   
 </body>
 </html>
