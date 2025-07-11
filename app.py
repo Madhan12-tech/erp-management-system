@@ -438,6 +438,71 @@ def api_ducts(project_id):
     return jsonify(entries)
 
 
+@app.route('/edit_duct/<int:id>', methods=['GET'])
+def edit_duct(id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
+    duct = cur.fetchone()
+    if not duct:
+        conn.close()
+        return "Entry not found", 404
+
+    # You may need project details to pass into the template
+    cur.execute("SELECT * FROM projects WHERE id = ?", (duct['project_id'],))
+    project = cur.fetchone()
+    conn.close()
+
+    return render_template("edit_duct.html", duct=duct, project=project)
+
+@app.route('/update_duct/<int:id>', methods=['POST'])
+def update_duct(id):
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Collect form data
+    duct_no = request.form['duct_no']
+    duct_type = request.form['duct_type']
+    factor = request.form['factor']
+    width1 = request.form['width1']
+    height1 = request.form['height1']
+    width2 = request.form['width2']
+    height2 = request.form['height2']
+    length_or_radius = request.form['length_or_radius']
+    quantity = request.form['quantity']
+    degree_or_offset = request.form['degree_or_offset']
+    gauge = request.form.get('gauge', '')
+
+    try:
+        w = float(width1)
+        h = float(height1)
+        q = int(quantity)
+        area = round(w * h * q, 2)
+        weight = round(area * 0.035, 2)
+    except:
+        area = 0
+        weight = 0
+
+    cur.execute("""
+        UPDATE duct_entries
+        SET duct_no = ?, duct_type = ?, factor = ?, width1 = ?, height1 = ?,
+            width2 = ?, height2 = ?, length_or_radius = ?, quantity = ?, 
+            degree_or_offset = ?, gauge = ?, area = ?, weight = ?
+        WHERE id = ?
+    """, (
+        duct_no, duct_type, factor, width1, height1, width2, height2,
+        length_or_radius, quantity, degree_or_offset, gauge, area, weight, id
+    ))
+
+    # Get project_id to redirect
+    cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
+    row = cur.fetchone()
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('production', project_id=row['project_id']))
+
+
 # ---------- ✅ Delete Duct Entry ----------
 @app.route('/delete_duct/<int:id>', methods=['GET', 'POST'])
 def delete_duct(id):
