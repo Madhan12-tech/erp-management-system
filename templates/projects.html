@@ -257,11 +257,11 @@
             <td>{{ entry.degree_or_offset }}</td>
             <td>{{ entry.factor }}</td>
             <td>{{ entry.gauge }}</td>
-            <td>{{ "%.2f"|format(entry.area or 0) }}</td>
-            <td>{{ "%.2f"|format(entry.nuts_bolts or 0) }}</td>
-            <td>{{ "%.2f"|format(entry.cleat or 0) }}</td>
-            <td>{{ "%.2f"|format(entry.gasket or 0) }}</td>
-            <td>{{ "%.2f"|format(entry.corner_pieces or 0) }}</td>
+            <td>{{ "%.2f"|format(entry.nuts_bolts|float or 0) }}</td>
+            <td>{{ "%.2f"|format(entry.cleat|float or 0) }}</td>
+            <td>{{ "%.2f"|format(entry.gasket|float or 0) }}</td>
+            <td>{{ "%.2f"|format(entry.corner_pieces|float or 0) }}</td>
+            <td>{{ "%.2f"|format(entry.weight|float or 0) }}</td>
             <td>
               <a href="/edit_duct/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
               <form action="{{ url_for('delete_duct', entry_id=entry.id) }}" method="post" style="display:inline;">
