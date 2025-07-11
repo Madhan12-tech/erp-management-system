@@ -3,172 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <title>Duct Entry</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
-    .readonly-input { background-color: #f1f1f1; }
-    th, td { text-align: center; vertical-align: middle; }
-    .row-flex { display: flex; gap: 15px; flex-wrap: wrap; }
-    .form-section { flex: 1; min-width: 300px; }
-    .table-section { flex: 2; min-width: 600px; overflow-x: auto; }
+    input[readonly] {
+      background-color: #f5f5f5;
+    }
+    .form-section {
+      display: flex;
+      gap: 20px;
+    }
+    .form-left, .form-right {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
-<div class="container-fluid p-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h6>Project: {{ project[1] }} | Entries</h6>
-  </div>
-  <div class="row-flex">
-    <!-- Entry Form -->
-    <div class="form-section">
-      <form method="POST" action="{{ url_for('add_duct') }}">
-        <input type="hidden" name="project_id" value="{{ project_id }}"/>
-        {% if edit_entry %}
-        <input type="hidden" name="id" value="{{ edit_entry[0] }}"/>
-        {% endif %}
 
-        <div class="mb-2"><label>Duct No</label>
-          <input type="text" name="duct_no" id="duct_no" class="form-control" required
-                 value="{{ edit_entry[2] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>Type</label>
-          <select name="duct_type" id="duct_type" class="form-select" required>
-            {% for t in ['ST','RED','DUM','OFFSET','SHOE','VANES','ELB'] %}
-            <option value="{{t}}" {% if edit_entry and edit_entry[3]==t %}selected{% endif %}>{{t}}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="mb-2"><label>W1 (mm)</label>
-          <input type="number" name="width1" id="width1" step="0.01" class="form-control" required
-                 value="{{ edit_entry[4] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>H1 (mm)</label>
-          <input type="number" name="height1" id="height1" step="0.01" class="form-control" required
-                 value="{{ edit_entry[5] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>W2 (mm)</label>
-          <input type="number" name="width2" id="width2" step="0.01" class="form-control"
-                 value="{{ edit_entry[6] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>H2 (mm)</label>
-          <input type="number" name="height2" id="height2" step="0.01" class="form-control"
-                 value="{{ edit_entry[7] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>Length/Radius (mm)</label>
-          <input type="number" name="length_or_radius" id="length_or_radius" step="0.01" class="form-control" required
-                 value="{{ edit_entry[8] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>Quantity</label>
-          <input type="number" name="quantity" id="quantity" class="form-control" required
-                 value="{{ edit_entry[9] if edit_entry else '' }}"/>
-        </div>
-        <div class="mb-2"><label>Degree/Offset</label>
-          <input type="number" name="degree_or_offset" id="degree_or_offset" step="0.01" class="form-control"
-                 value="{{ edit_entry[10] if edit_entry else '' }}"/>
-        </div>
+<h2>Duct Entry for {{ project[1] }}</h2>
 
-        <!-- Live calculation outputs -->
-        <div class="mb-2"><label>Area (sq.m)</label>
-          <input type="text" id="calculated_area" class="form-control readonly-input" readonly/>
-        </div>
-        <div class="mb-2"><label>Nuts</label>
-          <input type="text" id="calculated_nuts" class="form-control readonly-input" readonly/>
-        </div>
-        <div class="mb-2"><label>Cleat</label>
-          <input type="text" id="calculated_cleat" class="form-control readonly-input" readonly/>
-        </div>
-        <div class="mb-2"><label>Gasket (m)</label>
-          <input type="text" id="calculated_gasket" class="form-control readonly-input" readonly/>
-        </div>
-        <div class="mb-2"><label>Corner Pieces</label>
-          <input type="text" id="calculated_corner" class="form-control readonly-input" readonly/>
-        </div>
+<form action="/add_duct" method="POST">
+  <input type="hidden" name="project_id" value="{{ project_id }}">
+  {% if edit_entry %}
+    <input type="hidden" name="id" value="{{ edit_entry[0] }}">
+  {% endif %}
 
-        <button type="submit" class="btn btn-primary mt-2">{{ edit_entry and 'Update' or 'Add' }}</button>
-      </form>
-    </div>
-
-    <!-- Entries Table -->
-    <div class="table-section">
-      <table class="table table-bordered table-sm">
-        <thead class="table-light">
-          <tr>
-            <th>#</th><th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
-            <th>Len</th><th>Qty</th><th>Gauge</th><th>Area</th><th>Nuts</th><th>Cleat</th>
-            <th>Gasket</th><th>Corner</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in entries %}
-          <tr>
-            <td>{{loop.index}}</td>
-            <td>{{e[2]}}</td><td>{{e[3]}}</td><td>{{e[4]}}</td><td>{{e[5]}}</td>
-            <td>{{e[6]}}</td><td>{{e[7]}}</td><td>{{e[8]}}</td><td>{{e[9]}}</td>
-            <td>{{e[12]}}</td><td>{{'%.2f'%e[13]}}</td><td>{{e[14]}}</td><td>{{e[15]}}</td>
-            <td>{{'%.2f'%e[16]}}</td><td>{{e[17]}}</td>
-            <td>
-              <a href="{{ url_for('edit_duct', id=e[0]) }}" class="btn btn-sm btn-warning">Edit</a>
-              <a href="{{ url_for('delete_duct', id=e[0]) }}" class="btn btn-sm btn-danger"
-                 onclick="return confirm('Delete this entry?')">Delete</a>
-            </td>
-          </tr>
+  <div class="form-section">
+    <!-- Left Side Inputs -->
+    <div class="form-left">
+      <label>Duct No: <input type="text" name="duct_no" id="duct_no" value="{{ edit_entry[2] if edit_entry }}"></label><br>
+      <label>Type:
+        <select name="duct_type" id="duct_type">
+          {% for type in ['ST', 'RED', 'DUM', 'OFFSET', 'SHOE', 'VANES', 'ELB'] %}
+            <option value="{{ type }}" {% if edit_entry and edit_entry[3] == type %}selected{% endif %}>{{ type }}</option>
           {% endfor %}
-        </tbody>
-        <tfoot class="table-light fw-bold">
-          <tr>
-            <td colspan="8" class="text-end">Totals:</td>
-            <td>{{total_qty}}</td><td></td><td>{{'%.2f'%total_area}}</td>
-            <td>{{total_bolts}}</td><td>{{total_cleat}}</td><td>{{'%.2f'%total_gasket}}</td><td>{{total_corner}}</td><td></td>
-          </tr>
-        </tfoot>
-      </table>
+        </select>
+      </label><br>
+      <label>Width 1: <input type="number" name="width1" id="width1" value="{{ edit_entry[4] if edit_entry }}"></label><br>
+      <label>Height 1: <input type="number" name="height1" id="height1" value="{{ edit_entry[5] if edit_entry }}"></label><br>
+      <label>Width 2: <input type="number" name="width2" id="width2" value="{{ edit_entry[6] if edit_entry }}"></label><br>
+      <label>Height 2: <input type="number" name="height2" id="height2" value="{{ edit_entry[7] if edit_entry }}"></label><br>
+      <label>Length/Radius: <input type="number" name="length_or_radius" id="length" value="{{ edit_entry[8] if edit_entry }}"></label><br>
+      <label>Quantity: <input type="number" name="quantity" id="quantity" value="{{ edit_entry[9] if edit_entry }}"></label><br>
+      <label>Degree/Offset: <input type="number" name="degree_or_offset" id="degree" value="{{ edit_entry[10] if edit_entry }}"></label><br>
+      <label>Factor: <input type="number" step="0.1" name="factor" id="factor" value="{{ edit_entry[11] if edit_entry else 1 }}"></label><br>
+    </div>
+
+    <!-- Right Side Live Calculations -->
+    <div class="form-right">
+      <label>Gauge: <input type="text" name="gauge" id="gauge" readonly></label><br>
+      <label>Area (m²): <input type="number" step="0.01" name="area" id="area" readonly></label><br>
+      <label>Nuts & Bolts: <input type="number" name="nuts_bolts" id="nuts_bolts" readonly></label><br>
+      <label>Cleat: <input type="number" name="cleat" id="cleat" readonly></label><br>
+      <label>Gasket: <input type="number" step="0.01" name="gasket" id="gasket" readonly></label><br>
+      <label>Corner Pieces: <input type="number" name="corner_pieces" id="corner_pieces" readonly></label><br>
     </div>
   </div>
-</div>
 
+  <br><button type="submit">Save</button>
+</form>
+
+<hr>
+
+<!-- Live JavaScript Calculations -->
 <script>
-function calculateFields() {
-  const toNum = id => parseFloat(document.getElementById(id).value) || 0;
-  const w1 = toNum('width1'), h1 = toNum('height1'),
-        w2 = toNum('width2'), h2 = toNum('height2'),
-        len = toNum('length_or_radius'), qty = toNum('quantity'),
-        deg = toNum('degree_or_offset');
-  const type = document.getElementById('duct_type').value;
+function calculate() {
+  let type = $('#duct_type').val();
+  let w1 = parseFloat($('#width1').val()) || 0;
+  let h1 = parseFloat($('#height1').val()) || 0;
+  let w2 = parseFloat($('#width2').val()) || 0;
+  let h2 = parseFloat($('#height2').val()) || 0;
+  let len = parseFloat($('#length').val()) || 0;
+  let qty = parseInt($('#quantity').val()) || 0;
+  let deg = parseFloat($('#degree').val()) || 0;
+  let factor = parseFloat($('#factor').val()) || 1;
 
+  // Gauge
+  let gauge = "18g";
+  if (w1 <= 751 && h1 <= 751) gauge = "24g";
+  else if (w1 <= 1201 && h1 <= 1201) gauge = "22g";
+  else if (w1 <= 1800 && h1 <= 1800) gauge = "20g";
+  $('#gauge').val(gauge);
+
+  // Area
   let area = 0;
-  if (type === 'ST') {
-    area = 2*(w1+h1)/1000*(len/1000)*qty;
-  } else if (type === 'RED') {
-    area = (w1+h1+w2+h2)/1000*(len/1000)*qty;
-  } else if (type === 'DUM') {
-    area = w1*h1/1e6*qty;
-  } else if (type === 'OFFSET') {
-    area = (w1+h1+w2+h2)/1000*((len+deg)/1000)*qty;
-  } else if (type === 'SHOE') {
-    area = (w1+h1)*2/1000*(len/1000)*qty;
-  } else if (type === 'VANES') {
-    area = w1/1000*(2*3.14*(w1/1000)/4)*qty;
-  } else if (type === 'ELB') {
-    area = 2*(w1+h1)/1000*((h1/2/1000)+(len/1000)*(3.14*(deg/180)))*qty;
+  if (type === "ST") {
+    area = 2 * (w1 + h1) / 1000 * (len / 1000) * qty;
+  } else if (type === "RED") {
+    area = (w1 + h1 + w2 + h2) / 1000 * (len / 1000) * qty * factor;
+  } else if (type === "DUM") {
+    area = (w1 * h1) / 1000000 * qty;
+  } else if (type === "OFFSET") {
+    area = (w1 + h1 + w2 + h2) / 1000 * ((len + deg) / 1000) * qty * factor;
+  } else if (type === "SHOE") {
+    area = (w1 + h1) * 2 / 1000 * (len / 1000) * qty * factor;
+  } else if (type === "VANES") {
+    area = w1 / 1000 * (2 * 3.14 * (w1 / 1000) / 4) * qty;
+  } else if (type === "ELB") {
+    area = 2 * (w1 + h1) / 1000 * ((h1 / 2 / 1000) + (len / 1000) * (3.14 * (deg / 180))) * qty * factor;
   }
+  $('#area').val(area.toFixed(2));
 
-  const nuts = qty*4;
-  const cleat = qty * 8;
-  const gasket = ((w1+h1+w2+h2)/1000)*qty;
-  const corner = (type==='DUM')?0:qty*8;
+  // Nuts & Bolts
+  $('#nuts_bolts').val(qty * 4);
 
-  document.getElementById('calculated_area').value = area.toFixed(2);
-  document.getElementById('calculated_nuts').value = nuts;
-  document.getElementById('calculated_cleat').value = cleat;
-  document.getElementById('calculated_gasket').value = gasket.toFixed(2);
-  document.getElementById('calculated_corner').value = corner;
+  // Cleat
+  let cleat = 12;
+  if (gauge === '24g') cleat = 4;
+  else if (gauge === '22g') cleat = 8;
+  else if (gauge === '20g') cleat = 10;
+  $('#cleat').val(cleat * qty);
+
+  // Gasket
+  let gasket = (w1 + h1 + w2 + h2) / 1000 * qty;
+  $('#gasket').val(gasket.toFixed(2));
+
+  // Corner Pieces
+  $('#corner_pieces').val(type === "DUM" ? 0 : qty * 8);
 }
 
-['width1','height1','width2','height2','length_or_radius','quantity','degree_or_offset','duct_type']
-  .forEach(id => document.getElementById(id).addEventListener('input', calculateFields));
-
-window.onload = calculateFields;
+$('input, select').on('input change', calculate);
+$(document).ready(calculate);
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
