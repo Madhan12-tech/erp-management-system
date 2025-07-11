@@ -439,12 +439,12 @@ def api_ducts(project_id):
 
 
 # ---------- ✅ Delete Duct Entry ----------
-@app.route('/delete_duct/<int:id>', methods=['POST'])
+@app.route('/delete_duct/<int:id>', methods=['GET', 'POST'])
 def delete_duct(id):
     conn = get_db()
     cur = conn.cursor()
 
-    # Get project_id before deleting
+    # Get the project_id before deleting the entry
     cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
     row = cur.fetchone()
 
@@ -459,7 +459,7 @@ def delete_duct(id):
     conn.commit()
     conn.close()
 
-    # Redirect back to the production module
+    flash("Duct entry deleted successfully.", "success")
     return redirect(url_for('production', project_id=project_id))
 
 @app.route('/export_pdf/<int:project_id>')
