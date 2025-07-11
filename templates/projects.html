@@ -281,9 +281,11 @@
                 <td>{{ "%.2f"|format((entry.gasket or 0)|float) }}</td>
                 <td>{{ "%.2f"|format((entry.corner_pieces or 0)|float) }}</td>
                 <td>
-                  <a href="/edit/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
-                  <a href="/delete/{{ entry.id }}" class="btn btn-sm btn-danger"
-                     onclick="return confirm('Delete this entry?')">🗑️</a>
+                <td>
+                <a href="/edit_duct/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
+                <a href="/delete_duct/{{ entry.id }}" class="btn btn-sm btn-danger"
+                   onclick="return confirm('Delete this entry?')">🗑️</a>
+                  </td>
                 </td>
               </tr>
               {% set total_area = total_area + (entry.area or 0)|float %}
