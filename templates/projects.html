@@ -243,6 +243,12 @@
           </tr>
         </thead>
         <tbody>
+          {% set total_area = 0 %}
+          {% set total_nuts = 0 %}
+          {% set total_cleat = 0 %}
+          {% set total_gasket = 0 %}
+          {% set total_corner = 0 %}
+          {% set total_weight = 0 %}
           {% set total = namespace(qty=0, area=0, nuts=0, cleat=0, gasket=0, corner=0) %}
           {% for entry in entries %}
           <tr>
