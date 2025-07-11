@@ -444,7 +444,6 @@ def edit_duct(id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Fetch the duct entry
     cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
     duct = cur.fetchone()
 
@@ -453,7 +452,7 @@ def edit_duct(id):
         return redirect(url_for('projects'))
 
     if request.method == 'POST':
-        # Form data
+        # Collect updated values
         duct_no = request.form['duct_no']
         width1 = request.form['width1']
         height1 = request.form['height1']
@@ -462,6 +461,7 @@ def edit_duct(id):
         factor = request.form['factor']
         gauge = request.form.get('gauge', '')
 
+        # Recalculate area and weight
         try:
             area = round(float(width1) * float(height1) * int(quantity), 2)
             weight = round(area * 0.035, 2)
@@ -469,23 +469,19 @@ def edit_duct(id):
             area = 0
             weight = 0
 
-        # Update database
-        cur.execute('''
+        cur.execute("""
             UPDATE duct_entries
             SET duct_no = ?, width1 = ?, height1 = ?, length_or_radius = ?, quantity = ?, factor = ?, gauge = ?, area = ?, weight = ?
             WHERE id = ?
-        ''', (duct_no, width1, height1, length_or_radius, quantity, factor, gauge, area, weight, id))
+        """, (duct_no, width1, height1, length_or_radius, quantity, factor, gauge, area, weight, id))
         conn.commit()
-        project_id = duct['project_id']
         conn.close()
 
-        flash("Entry updated", "success")
-        return redirect(url_for('production', project_id=project_id))
+        flash("Entry updated successfully", "success")
+        return redirect(url_for('production', project_id=duct['project_id']))
 
     conn.close()
     return render_template('edit_entry.html', duct=duct)
-
-
 @app.route('/update_duct/<int:id>', methods=['POST'])
 def update_duct(id):
     conn = get_db()
@@ -538,26 +534,21 @@ def update_duct(id):
 @app.route('/delete_duct/<int:id>', methods=['POST'])
 def delete_duct(id):
     conn = get_db()
-    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Get project_id before deleting
     cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
     row = cur.fetchone()
 
     if not row:
         conn.close()
-        flash("Entry not found", "danger")
-        return redirect(url_for('projects'))
+        return "Entry not found", 404
 
     project_id = row['project_id']
 
-    # Delete the entry
     cur.execute("DELETE FROM duct_entries WHERE id = ?", (id,))
     conn.commit()
     conn.close()
 
-    flash("Entry deleted", "success")
     return redirect(url_for('production', project_id=project_id))
 
 @app.route('/export_pdf/<int:project_id>')
