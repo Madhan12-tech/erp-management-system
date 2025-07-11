@@ -5,27 +5,15 @@
   <title>Projects | Ducting ERP</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .readonly-input {
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
-    }
-    body {
-      background: #f9f9f9;
-      font-family: 'Segoe UI', sans-serif;
-    }
+    body { background: #f9f9f9; font-family: 'Segoe UI', sans-serif; }
     .modal-header { background-color: #007bff; color: white; }
     .modal-footer button { min-width: 100px; }
     .table-responsive { max-height: 500px; overflow-y: auto; }
-    .toast-container {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 9999;
-    }
+    .readonly-input { background-color: #f2f2f2; border: 1px solid #ccc; }
+    .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; }
   </style>
 </head>
 <body>
-
 <div class="container py-4">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -41,12 +29,12 @@
       </div>
     {% endif %}
   {% endwith %}
-
-  <h2 class="mb-4 text-primary">📁 Project Management</h2>
+<h2 class="mb-4 text-primary">📁 Project Management</h2>
 
   <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProjectModal">
     ➕ Add New Project
   </button>
+
   <!-- Add Project Modal -->
   <div class="modal fade" id="addProjectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -113,226 +101,242 @@
       </form>
     </div>
   </div>
+
   <!-- Project Table -->
-<div class="table-responsive mb-4">
-  <table class="table table-bordered table-hover bg-white">
-    <thead class="table-light">
-      <tr>
-        <th>Project Name</th>
-        <th>Vendor</th>
-        <th>Enquiry No</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for project in projects %}
-      <tr>
-        <td>{{ project.project_name }}</td>
-        <td>{{ project.vendor_name }}</td>
-        <td>{{ project.enquiry_no }}</td>
-        <td>{{ project.start_date }}</td>
-        <td>{{ project.end_date }}</td>
-        <td>{{ project.status }}</td>
-        <td>
-          <a href="/project/{{ project.id }}" class="btn btn-sm btn-info">Open</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered table-hover bg-white">
+      <thead class="table-light">
+        <tr>
+          <th>Project Name</th>
+          <th>Vendor</th>
+          <th>Enquiry No</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project in projects %}
+        <tr>
+          <td>{{ project.project_name }}</td>
+          <td>{{ project.vendor_name }}</td>
+          <td>{{ project.enquiry_no }}</td>
+          <td>{{ project.start_date }}</td>
+          <td>{{ project.end_date }}</td>
+          <td>{{ project.status }}</td>
+          <td>
+            <a href="/project/{{ project.id }}" class="btn btn-sm btn-info">Open</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-<!-- Selected Project Info -->
-{% if project %}
-<div class="row bg-light p-3 rounded mb-3 border">
-  <div class="col-md-3"><strong>📁 Project:</strong> {{ project.project_name }}</div>
-  <div class="col-md-3"><strong>🏷 Enquiry:</strong> {{ project.enquiry_no }}</div>
-  <div class="col-md-3"><strong>📅 Start:</strong> {{ project.start_date }}</div>
-  <div class="col-md-3"><strong>📅 End:</strong> {{ project.end_date }}</div>
-</div>
+  <!-- Selected Project Info -->
+  {% if project %}
+  <div class="row bg-light p-3 rounded mb-3 border">
+    <div class="col-md-3"><strong>📁 Project:</strong> {{ project.project_name }}</div>
+    <div class="col-md-3"><strong>🏷 Enquiry:</strong> {{ project.enquiry_no }}</div>
+    <div class="col-md-3"><strong>📅 Start:</strong> {{ project.start_date }}</div>
+    <div class="col-md-3"><strong>📅 End:</strong> {{ project.end_date }}</div>
+  </div>
 
-<!-- Project Action Buttons -->
-<div class="d-flex gap-2 mb-3 flex-wrap">
-  {% if project.status == 'new' %}
-  <form method="POST" action="/continue_to_measurement/{{ project.id }}">
-    <button type="submit" class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
-  </form>
-  {% endif %}
-  {% if project.status == 'preparation' %}
-  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal">
-    📐 Measurement Sheet
-  </button>
-  {% endif %}
-  <form method="POST" action="/submit_for_review/{{ project.id }}">
-    <button class="btn btn-secondary">🚧 Submit for Review</button>
-  </form>
-</div>
+  <!-- Project Action Buttons -->
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    {% if project.status == 'new' %}
+    <form method="POST" action="/continue_to_measurement/{{ project.id }}">
+      <button type="submit" class="btn btn-warning">📋 Save & Continue to Measurement Sheet</button>
+    </form>
+    {% endif %}
+    {% if project.status == 'preparation' %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#measurementSheetModal">
+      📐 Measurement Sheet
+    </button>
+    {% endif %}
+    <form method="POST" action="/submit_for_review/{{ project.id }}">
+      <button class="btn btn-secondary">🚧 Submit for Review</button>
+    </form>
+  </div>
 
   <!-- Left Side: Limited Duct Entry Form -->
-<div class="col-md-5">
-  <form method="POST" action="/add_duct">
-    <input type="hidden" name="project_id" value="{{ project.id }}">
-    <div class="card shadow-sm mb-3">
-      <div class="card-header bg-primary text-white">➕ Duct Entry</div>
-      <div class="card-body row g-2">
-        <div class="col-md-6">
-          <label>Duct No</label>
-          <input name="duct_no" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-          <label>Type</label>
-          <select name="duct_type" id="ductType" class="form-select" required>
-            <option value="">-- Select Type --</option>
-            <option value="ST">ST</option>
-            <option value="RED">RED</option>
-            <option value="OFFSET">OFFSET</option>
-            <option value="SHOE">SHOE</option>
-            <option value="ELB">ELB</option>
-            <option value="VANES">VANES</option>
-            <option value="DUM">DUM</option>
-          </select>
-        </div>
+  <div class="row">
+    <div class="col-md-5">
+      <form method="POST" action="/add_duct">
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-primary text-white">➕ Duct Entry</div>
+          <div class="card-body row g-2">
 
-        <div class="col-md-6">
-          <label>W1</label>
-          <input name="width1" id="width1" type="number" step="any" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-          <label>H1</label>
-          <input name="height1" id="height1" type="number" step="any" class="form-control" required>
-        </div>
+            <div class="col-md-6">
+              <label>Duct No</label>
+              <input name="duct_no" class="form-control" required>
+            </div>
 
-        <div class="col-md-6">
-          <label>Qty</label>
-          <input name="quantity" id="quantity" type="number" step="1" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-          <label>Length/Radius</label>
-          <input name="length_or_radius" id="length_or_radius" type="number" step="any" class="form-control" required>
-        </div>
+            <div class="col-md-6">
+              <label>Type</label>
+              <select name="duct_type" id="ductType" class="form-select" required>
+                <option value="">-- Select Type --</option>
+                <option value="ST">ST</option>
+                <option value="RED">RED</option>
+                <option value="OFFSET">OFFSET</option>
+                <option value="SHOE">SHOE</option>
+                <option value="ELB">ELB</option>
+                <option value="VANES">VANES</option>
+                <option value="DUM">DUM</option>
+              </select>
+            </div>
 
-        <div class="col-md-6">
-          <label>Deg/Offset</label>
-          <input name="degree_or_offset" id="degree_or_offset" type="number" step="any" class="form-control">
-        </div>
+            <div class="col-md-6">
+              <label>W1</label>
+              <input name="width1" id="width1" type="number" step="any" class="form-control" required>
+            </div>
 
-        <div class="col-md-6 factor-field d-none">
-          <label>Factor</label>
-          <input name="factor" id="factor" type="number" step="0.01" class="form-control" value="1.0">
-        </div>
+            <div class="col-md-6">
+              <label>H1</label>
+              <input name="height1" id="height1" type="number" step="any" class="form-control" required>
+            </div>
 
-        <!-- Auto-calculated fields -->
-        <div class="col-md-6">
-          <label>Gauge</label>
-          <input name="gauge" id="gauge" class="form-control readonly-input" readonly>
+            <div class="col-md-6">
+              <label>Qty</label>
+              <input name="quantity" id="quantity" type="number" step="1" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label>Length/Radius</label>
+              <input name="length_or_radius" id="length_or_radius" type="number" step="any" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label>Deg/Offset</label>
+              <input name="degree_or_offset" id="degree_or_offset" type="number" step="any" class="form-control">
+            </div>
+
+            <div class="col-md-6 factor-field d-none">
+              <label>Factor</label>
+              <input name="factor" id="factor" type="number" step="0.01" class="form-control" value="1.0">
+            </div>
+
+            <!-- Auto-calculated fields (read-only) -->
+            <div class="col-md-6">
+              <label>Gauge</label>
+              <input name="gauge" id="gauge" class="form-control readonly-input" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label>Area</label>
+              <input name="area" id="area" class="form-control readonly-input" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label>Nuts</label>
+              <input name="nuts_bolts" id="nuts_bolts" class="form-control readonly-input" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label>Cleat</label>
+              <input name="cleat" id="cleat" class="form-control readonly-input" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label>Gasket</label>
+              <input name="gasket" id="gasket" class="form-control readonly-input" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label>Corner</label>
+              <input name="corner_pieces" id="corner_pieces" class="form-control readonly-input" readonly>
+            </div>
+          </div>
+          <div class="card-footer text-end">
+            <button type="submit" class="btn btn-success">➕ Add Entry</button>
+          </div>
         </div>
-        <div class="col-md-6">
-          <label>Area</label>
-          <input name="area" id="area" class="form-control readonly-input" readonly>
-        </div>
-        <div class="col-md-6">
-          <label>Nuts</label>
-          <input name="nuts_bolts" id="nuts_bolts" class="form-control readonly-input" readonly>
-        </div>
-        <div class="col-md-6">
-          <label>Cleat</label>
-          <input name="cleat" id="cleat" class="form-control readonly-input" readonly>
-        </div>
-        <div class="col-md-6">
-          <label>Gasket</label>
-          <input name="gasket" id="gasket" class="form-control readonly-input" readonly>
-        </div>
-        <div class="col-md-6">
-          <label>Corner</label>
-          <input name="corner_pieces" id="corner_pieces" class="form-control readonly-input" readonly>
+      </form>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
+        <div class="card-body table-responsive p-0" style="max-height: 520px; overflow-y: auto;">
+          <table class="table table-sm table-striped m-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th>Duct</th><th>Type</th><th>W1</th><th>H1</th>
+                <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th>
+                <th>Area</th><th>Nuts</th><th>Cleat</th>
+                <th>Gasket</th><th>Corner</th><th>🛠</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set total_qty = 0 %}
+              {% set total_area = 0 %}
+              {% set total_nuts = 0 %}
+              {% set total_cleat = 0 %}
+              {% set total_gasket = 0 %}
+              {% set total_corner = 0 %}
+              {% for entry in entries %}
+              <tr>
+                <td>{{ entry.duct_no }}</td>
+                <td>{{ entry.duct_type }}</td>
+                <td>{{ entry.width1 }}</td>
+                <td>{{ entry.height1 }}</td>
+                <td>{{ entry.length_or_radius }}</td>
+                <td>{{ entry.quantity }}</td>
+                <td>{{ entry.degree_or_offset }}</td>
+                <td>{{ entry.gauge }}</td>
+                <td>{{ "%.2f"|format((entry.area or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.nuts_bolts or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.cleat or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.gasket or 0)|float) }}</td>
+                <td>{{ "%.2f"|format((entry.corner_pieces or 0)|float) }}</td>
+                <td>
+                  <a href="/edit_duct/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
+                  <form action="{{ url_for('delete_duct', entry_id=entry.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">🗑️</button>
+                  </form>
+                </td>
+              </tr>
+              {% set total_qty = total_qty + (entry.quantity or 0)|float %}
+              {% set total_area = total_area + (entry.area or 0)|float %}
+              {% set total_nuts = total_nuts + (entry.nuts_bolts or 0)|float %}
+              {% set total_cleat = total_cleat + (entry.cleat or 0)|float %}
+              {% set total_gasket = total_gasket + (entry.gasket or 0)|float %}
+              {% set total_corner = total_corner + (entry.corner_pieces or 0)|float %}
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light fw-bold">
+              <tr>
+                <td colspan="5" class="text-end">TOTAL:</td>
+                <td>{{ total_qty }}</td>
+                <td></td><td></td>
+                <td>{{ "%.2f"|format(total_area) }}</td>
+                <td>{{ "%.2f"|format(total_nuts) }}</td>
+                <td>{{ "%.2f"|format(total_cleat) }}</td>
+                <td>{{ "%.2f"|format(total_gasket) }}</td>
+                <td>{{ "%.2f"|format(total_corner) }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
-      <div class="card-footer text-end">
-        <button type="submit" class="btn btn-success">➕ Add Entry</button>
+
+      <!-- Table Footer Actions -->
+      <div class="mt-3 d-flex flex-wrap gap-2">
+        <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
+        <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
+        <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print</button>
+        <form method="POST" action="/submit_all/{{ project.id }}">
+          <button class="btn btn-success">📨 Submit All & Move to Production</button>
+        </form>
       </div>
     </div>
-  </form>
-</div>
-<!-- Right Side: Live Table -->
-<div class="col-md-7">
-  <div class="card shadow-sm">
-    <div class="card-header bg-secondary text-white">📊 Duct Entries</div>
-    <div class="card-body table-responsive p-0" style="max-height: 520px; overflow-y: auto;">
-      <table class="table table-sm table-striped m-0">
-        <thead class="table-light sticky-top">
-          <tr>
-            <th>Duct</th><th>Type</th><th>W1</th><th>H1</th>
-            <th>Len</th><th>Qty</th><th>Deg</th><th>Gauge</th>
-            <th>Area</th><th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>🛠</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set total_qty = 0 %}
-          {% set total_area = 0 %}
-          {% set total_nuts = 0 %}
-          {% set total_cleat = 0 %}
-          {% set total_gasket = 0 %}
-          {% set total_corner = 0 %}
-          {% for entry in entries %}
-          <tr>
-            <td>{{ entry.duct_no }}</td>
-            <td>{{ entry.duct_type }}</td>
-            <td>{{ entry.width1 }}</td>
-            <td>{{ entry.height1 }}</td>
-            <td>{{ entry.length_or_radius }}</td>
-            <td>{{ entry.quantity }}</td>
-            <td>{{ entry.degree_or_offset }}</td>
-            <td>{{ entry.gauge }}</td>
-            <td>{{ "%.2f"|format((entry.area or 0)|float) }}</td>
-            <td>{{ "%.2f"|format((entry.nuts_bolts or 0)|float) }}</td>
-            <td>{{ "%.2f"|format((entry.cleat or 0)|float) }}</td>
-            <td>{{ "%.2f"|format((entry.gasket or 0)|float) }}</td>
-            <td>{{ "%.2f"|format((entry.corner_pieces or 0)|float) }}</td>
-            <td>
-              <a href="/edit_duct/{{ entry.id }}" class="btn btn-sm btn-warning">✏️</a>
-              <form action="{{ url_for('delete_duct', entry_id=entry.id) }}" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">🗑️</button>
-              </form>
-            </td>
-          </tr>
-          {% set total_qty = total_qty + (entry.quantity or 0)|float %}
-          {% set total_area = total_area + (entry.area or 0)|float %}
-          {% set total_nuts = total_nuts + (entry.nuts_bolts or 0)|float %}
-          {% set total_cleat = total_cleat + (entry.cleat or 0)|float %}
-          {% set total_gasket = total_gasket + (entry.gasket or 0)|float %}
-          {% set total_corner = total_corner + (entry.corner_pieces or 0)|float %}
-          {% endfor %}
-        </tbody>
-        <tfoot class="table-light fw-bold">
-          <tr>
-            <td colspan="5" class="text-end">TOTAL:</td>
-            <td>{{ total_qty }}</td>
-            <td></td><td></td>
-            <td>{{ "%.2f"|format(total_area) }}</td>
-            <td>{{ "%.2f"|format(total_nuts) }}</td>
-            <td>{{ "%.2f"|format(total_cleat) }}</td>
-            <td>{{ "%.2f"|format(total_gasket) }}</td>
-            <td>{{ "%.2f"|format(total_corner) }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-<!-- Table Footer Actions -->
-<div class="mt-3 d-flex flex-wrap gap-2">
-  <a href="/export_excel/{{ project.id }}" class="btn btn-outline-primary">📤 Export Excel</a>
-  <a href="/export_pdf/{{ project.id }}" class="btn btn-outline-secondary">🧾 Export PDF</a>
-  <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print</button>
-  <form method="POST" action="/submit_all/{{ project.id }}">
-    <button class="btn btn-success">📨 Submit All & Move to Production</button>
-  </form>
-</div>
+  </div> <!-- row end -->
+{% endif %} <!-- project if block -->
 
-<!-- ✅ Auto Calculation + Factor Visibility -->
+  <!-- ✅ Auto Calculation & Vendor Details Autofill Script -->
 <script>
 function setupAutoCalculation(prefix = '') {
   const get = (id) => parseFloat(document.getElementById(prefix + id)?.value || 0);
@@ -413,38 +417,38 @@ function setupFactorField(typeId, fieldClass) {
   }
 }
 
+function setupVendorAutoFill() {
+  const vendorSelect = document.getElementById('vendorSelect');
+  const gstInput = document.getElementById('vendorGst');
+  const addrInput = document.getElementById('vendorAddress');
+
+  if (vendorSelect && gstInput && addrInput) {
+    vendorSelect.addEventListener('change', function () {
+      const selected = this.options[this.selectedIndex];
+      const gst = selected.getAttribute('data-gst') || '';
+      const addr = selected.getAttribute('data-address') || '';
+      gstInput.value = gst;
+      addrInput.value = addr;
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   setupAutoCalculation('');
   setupAutoCalculation('Modal');
   setupFactorField('ductType', '.factor-field');
   setupFactorField('ductTypeModal', '.factor-field-modal');
-  // ✅ Vendor GST & Address Autofill
-const vendorSelect = document.getElementById('vendorSelect');
-const gstField = document.getElementById('vendorGst');
-const addressField = document.getElementById('vendorAddress');
-
-if (vendorSelect) {
-  vendorSelect.addEventListener('change', function () {
-    const selected = vendorSelect.options[vendorSelect.selectedIndex];
-    gstField.value = selected.dataset.gst || '';
-    addressField.value = selected.dataset.address || '';
-  });
-}
+  setupVendorAutoFill();
 });
 </script>
 
-<!-- ✅ Bootstrap + jQuery -->
+  <!-- ✅ jQuery and Bootstrap Bundle (Popper included) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-{% endif %}  <!-- close the project info block -->
-</div> <!-- End container -->
 
-  <!-- ✅ jQuery (before Bootstrap) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- ✅ Bootstrap JS bundle (includes Popper.js) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  
+</div> <!-- End main container -->
 </body>
 </html>
+
+  
+  
