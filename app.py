@@ -10,6 +10,20 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 
+# ✅ Safe conversion functions
+def safe_float(val, default=0.0):
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
+def safe_int(val, default=0):
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
 app = Flask(__name__)
 app.secret_key = 'secretkey'
 
@@ -386,65 +400,79 @@ def add_measurement():
 # ---------- ✅ Add Duct Entry ----------
 @app.route('/add_duct', methods=['POST'])
 def add_duct():
-    from math import pi
+    def safe_float(val, default=0.0):
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return default
 
-    # Get form values
+    def safe_int(val, default=0):
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return default
+
     project_id = request.form['project_id']
     duct_no = request.form['duct_no']
     duct_type = request.form['duct_type'].upper()
-    factor = float(request.form.get('factor', 1))
-    width1 = float(request.form.get('width1', 0))
-    height1 = float(request.form.get('height1', 0))
-    width2 = float(request.form.get('width2', 0))
-    height2 = float(request.form.get('height2', 0))
-    length = float(request.form.get('length_or_radius', 0))
-    quantity = int(request.form.get('quantity', 0))
-    degree = float(request.form.get('degree_or_offset', 0))
+    factor = safe_float(request.form.get('factor'))
+    width1 = safe_float(request.form.get('width1'))
+    height1 = safe_float(request.form.get('height1'))
+    width2 = safe_float(request.form.get('width2'))
+    height2 = safe_float(request.form.get('height2'))
+    length_or_radius = safe_float(request.form.get('length_or_radius'))
+    quantity = safe_int(request.form.get('quantity'))
+    degree_or_offset = safe_float(request.form.get('degree_or_offset'))
+    gauge = ""
 
-    # Area Calculation (in square meters)
+    # ✅ AREA calculation based on duct_type
     area = 0
     if duct_type == 'ST':
-        area = 2 * (width1 + height1) / 1000 * (length / 1000) * quantity
+        area = 2 * (width1 + height1) / 1000 * (length_or_radius / 1000) * quantity
     elif duct_type == 'RED':
-        area = (width1 + height1 + width2 + height2) / 1000 * (length / 1000) * quantity * factor
+        area = (width1 + height1 + width2 + height2) / 1000 * (length_or_radius / 1000) * quantity * factor
     elif duct_type == 'DUM':
-        area = (width1 * height1) / 1_000_000 * quantity
+        area = (width1 * height1) / 1000000 * quantity
     elif duct_type == 'OFFSET':
-        area = (width1 + height1 + width2 + height2) / 1000 * ((length + degree) / 1000) * quantity * factor
+        area = (width1 + height1 + width2 + height2) / 1000 * ((length_or_radius + degree_or_offset) / 1000) * quantity * factor
     elif duct_type == 'SHOE':
-        area = (width1 + height1) * 2 / 1000 * (length / 1000) * quantity * factor
+        area = (width1 + height1) * 2 / 1000 * (length_or_radius / 1000) * quantity * factor
     elif duct_type == 'VANES':
-        area = width1 / 1000 * (2 * pi * (width1 / 1000) / 4) * quantity
+        area = width1 / 1000 * (2 * 3.1416 * (width1 / 1000) / 4) * quantity
     elif duct_type == 'ELB':
-        area = 2 * (width1 + height1) / 1000 * ((height1 / 2 / 1000) + (length / 1000) * (pi * (degree / 180))) * quantity * factor
+        area = 2 * (width1 + height1) / 1000 * ((height1 / 2 / 1000) + (length_or_radius / 1000) * (3.1416 * (degree_or_offset / 180))) * quantity * factor
     area = round(area, 2)
 
-    # Gauge logic
-    gauge = '18g'
+    # ✅ Gauge Logic
     if width1 <= 751 and height1 <= 751:
         gauge = '24g'
     elif width1 <= 1201 and height1 <= 1201:
         gauge = '22g'
     elif width1 <= 1800 and height1 <= 1800:
         gauge = '20g'
+    else:
+        gauge = '18g'
 
-    # Nuts & Bolts
+    # ✅ Nuts, Cleat, Gasket, Corner Calculations
     nuts_bolts = round(quantity * 4, 2)
 
-    # Cleats based on gauge
-    cleat_factor = {'24g': 4, '22g': 8, '20g': 10, '18g': 12}.get(gauge, 12)
-    cleat = round(quantity * cleat_factor, 2)
+    cleat_val = 12
+    if gauge == '24g':
+        cleat_val = 4
+    elif gauge == '22g':
+        cleat_val = 8
+    elif gauge == '20g':
+        cleat_val = 10
+    cleat = round(quantity * cleat_val, 2)
 
-    # Gasket (in meters)
     gasket = round((width1 + height1 + width2 + height2) / 1000 * quantity, 2)
 
-    # Corner pieces
-    corner_pieces = 0 if duct_type == 'DUM' else round(quantity * 8, 2)
+    corner_pieces = 0 if duct_type == 'DUM' else quantity * 8
 
-    # Weight (assumed as 0.035 * area)
-    weight = round(area * 0.035, 2)
+    # ✅ Example weight based on area (can be customized further)
+    weight = round(area * 7.85, 2)
 
-    # Insert into DB
+    # ✅ Insert into database
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''
@@ -452,15 +480,13 @@ def add_duct():
             project_id, duct_no, duct_type, factor,
             width1, height1, width2, height2,
             length_or_radius, quantity, degree_or_offset,
-            gauge, area, weight,
-            nuts_bolts, cleat, gasket, corner_pieces
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            gauge, area, weight, nuts_bolts, cleat, gasket, corner_pieces
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         project_id, duct_no, duct_type, factor,
         width1, height1, width2, height2,
-        length, quantity, degree,
-        gauge, area, weight,
-        nuts_bolts, cleat, gasket, corner_pieces
+        length_or_radius, quantity, degree_or_offset,
+        gauge, area, weight, nuts_bolts, cleat, gasket, corner_pieces
     ))
     conn.commit()
     conn.close()
