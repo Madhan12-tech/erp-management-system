@@ -555,25 +555,26 @@ def update_duct(id):
 
 
 # ---------- ✅ Delete Duct Entry ----------
-@app.route('/delete_duct/<int:id>', methods=['POST'])
-def delete_duct(id):
-    conn = get_db()
+@app.route("/delete_duct/<int:entry_id>", methods=["POST"])
+def delete_duct(entry_id):
+    conn = sqlite3.connect("database.db")
     cur = conn.cursor()
 
-    cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
-    row = cur.fetchone()
+    # Get project_id before deletion
+    cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (entry_id,))
+    result = cur.fetchone()
 
-    if not row:
-        conn.close()
-        return "Entry not found", 404
+    if result:
+        project_id = result[0]
+        cur.execute("DELETE FROM duct_entries WHERE id = ?", (entry_id,))
+        conn.commit()
+        flash("Entry deleted successfully", "success")
+    else:
+        flash("Entry not found", "danger")
 
-    project_id = row['project_id']
-
-    cur.execute("DELETE FROM duct_entries WHERE id = ?", (id,))
-    conn.commit()
     conn.close()
+    return redirect(url_for("open_project", project_id=project_id))
 
-    return redirect(url_for('production', project_id=project_id))
 
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
