@@ -694,13 +694,30 @@ def export_pdf(project_id):
                      mimetype='application/pdf')
 
 
-@app.route('/export_excel/<int:project_id>')
+@app.route("/export_excel/<int:project_id>")
 def export_excel(project_id):
-    conn = get_db()
-    df = pd.read_sql_query("SELECT * FROM entries WHERE project_id = ?", conn, params=(project_id,))
-    output_path = f"duct_project_{project_id}.xlsx"
-    df.to_excel(output_path, index=False)
-    return send_file(output_path, as_attachment=True)
+    try:
+        conn = sqlite3.connect("database.db")
+        query = "SELECT * FROM duct_entries WHERE project_id = ?"
+        df = pd.read_sql_query(query, conn, params=(project_id,))
+        conn.close()
+
+        if df.empty:
+            return "No data available for this project.", 404
+
+        file_path = f"project_{project_id}_entries.xlsx"
+        df.to_excel(file_path, index=False)
+
+        return send_file(file_path, as_attachment=True)
+
+    except Exception as e:
+        return f"Error exporting data: {e}", 500
+
+    finally:
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+
+
 
 
 # ---------- ✅ Submit Project for Review ----------
