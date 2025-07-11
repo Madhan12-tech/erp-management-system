@@ -269,12 +269,12 @@
               </form>
             </td>
           </tr>
-          {% set total.qty = total.qty + (entry.quantity or 0) %}
-          {% set total.area = total.area + (entry.area or 0) %}
-          {% set total.nuts = total.nuts + (entry.nuts_bolts or 0) %}
-          {% set total.cleat = total.cleat + (entry.cleat or 0) %}
-          {% set total.gasket = total.gasket + (entry.gasket or 0) %}
-          {% set total.corner = total.corner + (entry.corner_pieces or 0) %}
+          {% set total_area = total_area + (entry.area|float or 0) %}
+          {% set total_nuts = total_nuts + (entry.nuts_bolts|float or 0) %}
+          {% set total_cleat = total_cleat + (entry.cleat|float or 0) %}
+          {% set total_gasket = total_gasket + (entry.gasket|float or 0) %}
+          {% set total_corner = total_corner + (entry.corner_pieces|float or 0) %}
+          {% set total_weight = total_weight + (entry.weight|float or 0) %}
           {% endfor %}
         </tbody>
         <tfoot class="table-light fw-bold">
