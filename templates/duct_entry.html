@@ -1,189 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Duct Entry</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
-    body.dark-mode {
-      background-color: #121212;
-      color: white;
-    }
-    .dark-mode .table, .dark-mode input, .dark-mode select {
-      color: white;
-      background-color: #333;
-      border-color: #555;
-    }
-    th, td {
-      text-align: center;
-      vertical-align: middle;
-    }
-    .sticky-total {
-      position: sticky;
-      bottom: 0;
-      background: #e0e0e0;
-      z-index: 2;
-    }
-    @media (max-width: 768px) {
-      .row-flex {
-        flex-direction: column;
-      }
-    }
-    @media (min-width: 769px) {
-      .row-flex {
-        display: flex;
-        gap: 15px;
-      }
-    }
-    .form-section { flex: 1; min-width: 280px; }
-    .table-section { flex: 3; overflow-x: auto; }
+    .readonly-input { background-color: #f1f1f1; }
+    th, td { text-align: center; vertical-align: middle; }
+    .row-flex { display: flex; gap: 15px; flex-wrap: wrap; }
+    .form-section { flex: 1; min-width: 300px; }
+    .table-section { flex: 2; min-width: 600px; overflow-x: auto; }
   </style>
 </head>
 <body>
-  <div class="container-fluid p-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6>Project: {{ project.vendor_name }} | Location: {{ project.location }} | Status: {{ project.status }}</h6>
-      <button class="btn btn-sm btn-secondary" onclick="toggleDarkMode()">Toggle Dark Mode</button>
-    </div>
+<div class="container-fluid p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6>Project: {{ project[1] }} | Entries</h6>
+  </div>
+  <div class="row-flex">
+    <!-- Entry Form -->
+    <div class="form-section">
+      <form method="POST" action="{{ url_for('add_duct') }}">
+        <input type="hidden" name="project_id" value="{{ project_id }}"/>
+        {% if edit_entry %}
+        <input type="hidden" name="id" value="{{ edit_entry[0] }}"/>
+        {% endif %}
 
-    <div class="row-flex">
-      <!-- Duct Entry Form -->
-      <div class="form-section">
-        <form method="POST" action="{{ url_for('add_duct') }}">
-          <input type="hidden" name="project_id" value="{{ project.id }}">
-          {% if edit_entry %}<input type="hidden" name="id" value="{{ edit_entry.id }}">{% endif %}
-
-          <div class="mb-2"><label>Duct No</label>
-            <input type="text" name="duct_no" class="form-control" required value="{{ edit_entry.duct_no if edit_entry else '' }}">
-          </div>
-
-          <div class="mb-2"><label>Type</label>
-            <select class="form-control" name="duct_type" id="duct_type" onchange="toggleFields()" required>
-              {% for type in ['ST','RED','DUM','OFFSET','SHOE','VANES','ELB'] %}
-                <option value="{{ type }}" {% if edit_entry and edit_entry.duct_type == type %}selected{% endif %}>{{ type }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="mb-2"><label>Width1</label>
-            <input type="number" name="width1" id="width1" step="0.01" class="form-control" required value="{{ edit_entry.width1 if edit_entry else '' }}" oninput="copyToSecond('width')">
-          </div>
-
-          <div class="mb-2"><label>Height1</label>
-            <input type="number" name="height1" id="height1" step="0.01" class="form-control" required value="{{ edit_entry.height1 if edit_entry else '' }}" oninput="copyToSecond('height')">
-          </div>
-
-          <div class="mb-2"><label>Width2</label>
-            <input type="number" name="width2" id="width2" step="0.01" class="form-control" value="{{ edit_entry.width2 if edit_entry else '' }}">
-          </div>
-
-          <div class="mb-2"><label>Height2</label>
-            <input type="number" name="height2" id="height2" step="0.01" class="form-control" value="{{ edit_entry.height2 if edit_entry else '' }}">
-          </div>
-
-          <div class="mb-2"><label>Length/Radius</label>
-            <input type="number" name="length_or_radius" step="0.01" class="form-control" required value="{{ edit_entry.length_or_radius if edit_entry else '' }}">
-          </div>
-
-          <div class="mb-2"><label>Quantity</label>
-            <input type="number" name="quantity" class="form-control" required value="{{ edit_entry.quantity if edit_entry else '' }}">
-          </div>
-
-          <div class="mb-2" id="degreeDiv" style="display:none;"><label>Degree/Offset</label>
-            <input type="number" name="degree_or_offset" step="0.01" class="form-control" value="{{ edit_entry.degree_or_offset if edit_entry else '' }}">
-          </div>
-
-          <div class="mb-2" id="factorDiv" style="display:none;"><label>Factor</label>
-            <input type="number" name="factor" step="0.1" class="form-control" value="{{ edit_entry.factor if edit_entry else 1.0 }}">
-          </div>
-
-          <button type="submit" class="btn btn-primary mt-2">{{ 'Update' if edit_entry else 'Add' }}</button>
-        </form>
-
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="alert alert-info mt-2">{{ messages[0] }}</div>
-          {% endif %}
-        {% endwith %}
-      </div>
-
-      <!-- Duct Entry Table -->
-      <div class="table-section">
-        <div class="d-flex justify-content-end mb-2 gap-2">
-          <a href="{{ url_for('export_excel', project_id=project.id) }}" class="btn btn-success btn-sm">Excel</a>
-          <a href="{{ url_for('export_pdf', project_id=project.id) }}" class="btn btn-danger btn-sm">PDF</a>
-          <button onclick="window.print()" class="btn btn-outline-primary btn-sm">Print</button>
-          <form method="POST" action="{{ url_for('submit_all', project_id=project.id) }}" class="d-inline">
-            <button type="submit" class="btn btn-warning btn-sm">Submit All</button>
-          </form>
+        <div class="mb-2"><label>Duct No</label>
+          <input type="text" name="duct_no" id="duct_no" class="form-control" required
+                 value="{{ edit_entry[2] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>Type</label>
+          <select name="duct_type" id="duct_type" class="form-select" required>
+            {% for t in ['ST','RED','DUM','OFFSET','SHOE','VANES','ELB'] %}
+            <option value="{{t}}" {% if edit_entry and edit_entry[3]==t %}selected{% endif %}>{{t}}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2"><label>W1 (mm)</label>
+          <input type="number" name="width1" id="width1" step="0.01" class="form-control" required
+                 value="{{ edit_entry[4] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>H1 (mm)</label>
+          <input type="number" name="height1" id="height1" step="0.01" class="form-control" required
+                 value="{{ edit_entry[5] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>W2 (mm)</label>
+          <input type="number" name="width2" id="width2" step="0.01" class="form-control"
+                 value="{{ edit_entry[6] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>H2 (mm)</label>
+          <input type="number" name="height2" id="height2" step="0.01" class="form-control"
+                 value="{{ edit_entry[7] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>Length/Radius (mm)</label>
+          <input type="number" name="length_or_radius" id="length_or_radius" step="0.01" class="form-control" required
+                 value="{{ edit_entry[8] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>Quantity</label>
+          <input type="number" name="quantity" id="quantity" class="form-control" required
+                 value="{{ edit_entry[9] if edit_entry else '' }}"/>
+        </div>
+        <div class="mb-2"><label>Degree/Offset</label>
+          <input type="number" name="degree_or_offset" id="degree_or_offset" step="0.01" class="form-control"
+                 value="{{ edit_entry[10] if edit_entry else '' }}"/>
         </div>
 
-        <table class="table table-bordered table-sm">
-          <thead class="table-light sticky-top">
-            <tr>
-              <th>#</th><th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
-              <th>Len</th><th>Qty</th><th>Deg/Off</th><th>Gauge</th>
-              <th>24g</th><th>22g</th><th>20g</th><th>18g</th>
-              <th>Nuts</th><th>Cleat</th><th>Gasket</th><th>Corner</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for entry in entries %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ entry.duct_no }}</td>
-              <td>{{ entry.duct_type }}</td>
-              <td>{{ entry.width1 }}</td>
-              <td>{{ entry.height1 }}</td>
-              <td>{{ entry.width2 }}</td>
-              <td>{{ entry.height2 }}</td>
-              <td>{{ entry.length_or_radius }}</td>
-              <td>{{ entry.quantity }}</td>
-              <td>{{ entry.degree_or_offset }}</td>
-              <td>{{ entry.gauge }}</td>
-              <td>{{ '%.2f'|format(entry.area_24g) }}</td>
-              <td>{{ '%.2f'|format(entry.area_22g) }}</td>
-              <td>{{ '%.2f'|format(entry.area_20g) }}</td>
-              <td>{{ '%.2f'|format(entry.area_18g) }}</td>
-              <td>{{ entry.nuts }}</td>
-              <td>{{ entry.cleat }}</td>
-              <td>{{ '%.2f'|format(entry.gasket) }}</td>
-              <td>{{ entry.corner }}</td>
-              <td>
-                <a href="{{ url_for('edit_duct', id=entry.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                <form method="POST" action="{{ url_for('delete_duct', id=entry.id) }}" style="display:inline-block;">
-                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this entry?')">Delete</button>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+        <!-- Live calculation outputs -->
+        <div class="mb-2"><label>Area (sq.m)</label>
+          <input type="text" id="calculated_area" class="form-control readonly-input" readonly/>
+        </div>
+        <div class="mb-2"><label>Nuts</label>
+          <input type="text" id="calculated_nuts" class="form-control readonly-input" readonly/>
+        </div>
+        <div class="mb-2"><label>Cleat</label>
+          <input type="text" id="calculated_cleat" class="form-control readonly-input" readonly/>
+        </div>
+        <div class="mb-2"><label>Gasket (m)</label>
+          <input type="text" id="calculated_gasket" class="form-control readonly-input" readonly/>
+        </div>
+        <div class="mb-2"><label>Corner Pieces</label>
+          <input type="text" id="calculated_corner" class="form-control readonly-input" readonly/>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">{{ edit_entry and 'Update' or 'Add' }}</button>
+      </form>
+    </div>
+
+    <!-- Entries Table -->
+    <div class="table-section">
+      <table class="table table-bordered table-sm">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Duct</th><th>Type</th><th>W1</th><th>H1</th><th>W2</th><th>H2</th>
+            <th>Len</th><th>Qty</th><th>Gauge</th><th>Area</th><th>Nuts</th><th>Cleat</th>
+            <th>Gasket</th><th>Corner</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in entries %}
+          <tr>
+            <td>{{loop.index}}</td>
+            <td>{{e[2]}}</td><td>{{e[3]}}</td><td>{{e[4]}}</td><td>{{e[5]}}</td>
+            <td>{{e[6]}}</td><td>{{e[7]}}</td><td>{{e[8]}}</td><td>{{e[9]}}</td>
+            <td>{{e[12]}}</td><td>{{'%.2f'%e[13]}}</td><td>{{e[14]}}</td><td>{{e[15]}}</td>
+            <td>{{'%.2f'%e[16]}}</td><td>{{e[17]}}</td>
+            <td>
+              <a href="{{ url_for('edit_duct', id=e[0]) }}" class="btn btn-sm btn-warning">Edit</a>
+              <a href="{{ url_for('delete_duct', id=e[0]) }}" class="btn btn-sm btn-danger"
+                 onclick="return confirm('Delete this entry?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light fw-bold">
+          <tr>
+            <td colspan="8" class="text-end">Totals:</td>
+            <td>{{total_qty}}</td><td></td><td>{{'%.2f'%total_area}}</td>
+            <td>{{total_bolts}}</td><td>{{total_cleat}}</td><td>{{'%.2f'%total_gasket}}</td><td>{{total_corner}}</td><td></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
+</div>
 
-  <script>
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark-mode");
-    }
+<script>
+function calculateFields() {
+  const toNum = id => parseFloat(document.getElementById(id).value) || 0;
+  const w1 = toNum('width1'), h1 = toNum('height1'),
+        w2 = toNum('width2'), h2 = toNum('height2'),
+        len = toNum('length_or_radius'), qty = toNum('quantity'),
+        deg = toNum('degree_or_offset');
+  const type = document.getElementById('duct_type').value;
 
-    function toggleFields() {
-      const type = document.getElementById("duct_type").value;
-      document.getElementById("factorDiv").style.display = ["RED", "OFFSET", "SHOE", "ELB"].includes(type) ? "block" : "none";
-      document.getElementById("degreeDiv").style.display = ["OFFSET", "ELB"].includes(type) ? "block" : "none";
-    }
+  let area = 0;
+  if (type === 'ST') {
+    area = 2*(w1+h1)/1000*(len/1000)*qty;
+  } else if (type === 'RED') {
+    area = (w1+h1+w2+h2)/1000*(len/1000)*qty;
+  } else if (type === 'DUM') {
+    area = w1*h1/1e6*qty;
+  } else if (type === 'OFFSET') {
+    area = (w1+h1+w2+h2)/1000*((len+deg)/1000)*qty;
+  } else if (type === 'SHOE') {
+    area = (w1+h1)*2/1000*(len/1000)*qty;
+  } else if (type === 'VANES') {
+    area = w1/1000*(2*3.14*(w1/1000)/4)*qty;
+  } else if (type === 'ELB') {
+    area = 2*(w1+h1)/1000*((h1/2/1000)+(len/1000)*(3.14*(deg/180)))*qty;
+  }
 
-    function copyToSecond(dim) {
-      if (dim === 'width') {
-        document.getElementById("width2").value = document.getElementById("width1").value;
-      }
-      if (dim === 'height') {
-        document.getElementById("height2").value = document.getElementById("height1").value;
-      }
-    }
+  const nuts = qty*4;
+  const cleat = qty * 8;
+  const gasket = ((w1+h1+w2+h2)/1000)*qty;
+  const corner = (type==='DUM')?0:qty*8;
 
-    window.onload = toggleFields;
-  </script>
+  document.getElementById('calculated_area').value = area.toFixed(2);
+  document.getElementById('calculated_nuts').value = nuts;
+  document.getElementById('calculated_cleat').value = cleat;
+  document.getElementById('calculated_gasket').value = gasket.toFixed(2);
+  document.getElementById('calculated_corner').value = corner;
+}
+
+['width1','height1','width2','height2','length_or_radius','quantity','degree_or_offset','duct_type']
+  .forEach(id => document.getElementById(id).addEventListener('input', calculateFields));
+
+window.onload = calculateFields;
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
