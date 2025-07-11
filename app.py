@@ -630,6 +630,7 @@ def approve_project(project_id):
 
 
 # ---------- ✅ View Production Status ----------
+
 @app.route("/production/<int:project_id>")
 def production(project_id):
     conn = get_db()
@@ -650,16 +651,16 @@ def production(project_id):
     total_area = 0
     total_weight = 0
 
-    # Calculate and update area/weight for each duct
+    # ✅ Calculate and update area/weight for each duct
     for duct in ducts:
         try:
             width = float(duct["width1"])
             height = float(duct["height1"])
             qty = int(duct["quantity"])
             area = round(width * height * qty, 2)
-            weight = round(area * 0.035, 2)  # assume 0.035 as gauge factor
+            weight = round(area * 0.035, 2)  # Assume 0.035 as gauge factor
 
-            # Update the duct entry
+            # Update duct entry with calculated area and weight
             cur.execute("""
                 UPDATE duct_entries
                 SET area = ?, weight = ?
@@ -671,36 +672,31 @@ def production(project_id):
         except Exception as e:
             print("Calculation error:", e)
 
-    # Update project's total sqm
+    # ✅ Update project's total sqm
     cur.execute("UPDATE projects SET total_sqm = ? WHERE id = ?", (total_area, project_id))
+    conn.commit()
 
-    # Create production_progress table if not exists
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS production_progress (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER UNIQUE,
-            sheet_cutting REAL DEFAULT 0,
-            plasma_fabrication REAL DEFAULT 0,
-            boxing_assembly REAL DEFAULT 0,
-            FOREIGN KEY(project_id) REFERENCES projects(id)
-        )
-    ''')
-
-    # Fetch or insert production_progress
+    # ✅ Fetch production progress or initialize it
     cur.execute("SELECT * FROM production_progress WHERE project_id = ?", (project_id,))
     progress = cur.fetchone()
+
     if not progress:
-        cur.execute("INSERT INTO production_progress (project_id) VALUES (?)", (project_id,))
+        cur.execute("""
+            INSERT INTO production_progress (project_id, sheet_cutting_sqm, plasma_fabrication_sqm, boxing_assembly_sqm)
+            VALUES (?, 0, 0, 0)
+        """, (project_id,))
         conn.commit()
         cur.execute("SELECT * FROM production_progress WHERE project_id = ?", (project_id,))
         progress = cur.fetchone()
 
-    conn.commit()
     conn.close()
 
-    return render_template("production.html", project=project, progress=progress, ducts=ducts,
-                           total_area=total_area, total_weight=total_weight)
-
+    return render_template("production.html",
+                           project=project,
+                           ducts=ducts,
+                           progress=progress,
+                           total_area=total_area,
+                           total_weight=total_weight)
 
 # ---------- ✅ Update Production Progress ----------
 @app.route("/update_production/<int:project_id>", methods=["POST"])
