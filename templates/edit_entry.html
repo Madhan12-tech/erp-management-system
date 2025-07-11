@@ -1,55 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Edit Duct Entry</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background-color: #f5f7fa;
-    }
-    .card {
-      max-width: 900px;
-      margin: auto;
-    }
-  </style>
 </head>
 <body>
-<div class="container py-5">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      ✏️ Edit Duct Entry
+<div class="container mt-5">
+  <h3>Edit Duct Entry</h3>
+  <form method="POST">
+    <div class="mb-3">
+      <label>Duct No</label>
+      <input type="text" name="duct_no" value="{{ duct['duct_no'] }}" class="form-control" required>
     </div>
-    <form method="POST" action="/edit/{{ entry.id }}">
-      <input type="hidden" name="project_id" value="{{ entry.project_id }}">
-      <div class="card-body row g-3">
-        <div class="col-md-4"><label>Duct No</label><input name="duct_no" value="{{ entry.duct_no }}" class="form-control" required></div>
-        <div class="col-md-4"><label>Duct Type</label><input name="duct_type" value="{{ entry.duct_type }}" class="form-control" required></div>
-        <div class="col-md-4"><label>Factor</label><input name="factor" value="{{ entry.factor }}" class="form-control"></div>
-
-        <div class="col-md-3"><label>Width 1</label><input name="width1" value="{{ entry.width1 }}" type="number" step="any" class="form-control" required></div>
-        <div class="col-md-3"><label>Height 1</label><input name="height1" value="{{ entry.height1 }}" type="number" step="any" class="form-control" required></div>
-        <div class="col-md-3"><label>Width 2</label><input name="width2" value="{{ entry.width2 }}" type="number" step="any" class="form-control"></div>
-        <div class="col-md-3"><label>Height 2</label><input name="height2" value="{{ entry.height2 }}" type="number" step="any" class="form-control"></div>
-
-        <div class="col-md-4"><label>Length or Radius</label><input name="length_or_radius" value="{{ entry.length_or_radius }}" type="number" step="any" class="form-control" required></div>
-        <div class="col-md-4"><label>Quantity</label><input name="quantity" value="{{ entry.quantity }}" type="number" class="form-control" required></div>
-        <div class="col-md-4"><label>Degree or Offset</label><input name="degree_or_offset" value="{{ entry.degree_or_offset }}" class="form-control"></div>
-
-        <div class="col-md-4"><label>Gauge</label><input name="gauge" value="{{ entry.gauge }}" class="form-control" required></div>
-        <div class="col-md-4"><label>Area</label><input name="area" value="{{ entry.area }}" class="form-control"></div>
-        <div class="col-md-4"><label>Nuts & Bolts</label><input name="nuts_bolts" value="{{ entry.nuts_bolts }}" class="form-control"></div>
-
-        <div class="col-md-4"><label>Cleat</label><input name="cleat" value="{{ entry.cleat }}" class="form-control"></div>
-        <div class="col-md-4"><label>Gasket</label><input name="gasket" value="{{ entry.gasket }}" class="form-control"></div>
-        <div class="col-md-4"><label>Corner Pieces</label><input name="corner_pieces" value="{{ entry.corner_pieces }}" class="form-control"></div>
+    <div class="row">
+      <div class="col">
+        <label>Width</label>
+        <input type="number" name="width1" step="0.01" value="{{ duct['width1'] }}" class="form-control" required>
       </div>
-      <div class="card-footer text-end">
-        <a href="/project/{{ entry.project_id }}" class="btn btn-secondary">❌ Cancel</a>
-        <button type="submit" class="btn btn-success">💾 Update Entry</button>
+      <div class="col">
+        <label>Height</label>
+        <input type="number" name="height1" step="0.01" value="{{ duct['height1'] }}" class="form-control" required>
       </div>
-    </form>
-  </div>
+    </div>
+    <div class="mb-3 mt-3">
+      <label>Length/Radius</label>
+      <input type="number" name="length_or_radius" step="0.01" value="{{ duct['length_or_radius'] }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>Quantity</label>
+      <input type="number" name="quantity" value="{{ duct['quantity'] }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>Factor</label>
+      <input type="text" name="factor" value="{{ duct['factor'] }}" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label>Gauge</label>
+      <input type="text" name="gauge" value="{{ duct['gauge'] }}" class="form-control">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="{{ url_for('production', project_id=duct['project_id']) }}" class="btn btn-secondary">Cancel</a>
+  </form>
 </div>
 </body>
 </html>
