@@ -438,22 +438,51 @@ def api_ducts(project_id):
     return jsonify(entries)
 
 
-@app.route('/edit_duct/<int:id>', methods=['GET'])
+@app.route('/edit_duct/<int:id>', methods=['GET', 'POST'])
 def edit_duct(id):
     conn = get_db()
+    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
+
+    # Fetch the duct entry
     cur.execute("SELECT * FROM duct_entries WHERE id = ?", (id,))
     duct = cur.fetchone()
+
     if not duct:
+        flash("Entry not found", "danger")
+        return redirect(url_for('projects'))
+
+    if request.method == 'POST':
+        # Update logic
+        duct_no = request.form['duct_no']
+        width1 = request.form['width1']
+        height1 = request.form['height1']
+        length_or_radius = request.form['length_or_radius']
+        quantity = request.form['quantity']
+        factor = request.form['factor']
+        gauge = request.form.get('gauge', '')
+
+        try:
+            area = round(float(width1) * float(height1) * int(quantity), 2)
+            weight = round(area * 0.035, 2)
+        except:
+            area = 0
+            weight = 0
+
+        cur.execute('''
+            UPDATE duct_entries
+            SET duct_no = ?, width1 = ?, height1 = ?, length_or_radius = ?, quantity = ?, factor = ?, gauge = ?, area = ?, weight = ?
+            WHERE id = ?
+        ''', (duct_no, width1, height1, length_or_radius, quantity, factor, gauge, area, weight, id))
+        conn.commit()
         conn.close()
-        return "Entry not found", 404
 
-    # You may need project details to pass into the template
-    cur.execute("SELECT * FROM projects WHERE id = ?", (duct['project_id'],))
-    project = cur.fetchone()
+        flash("Entry updated", "success")
+        return redirect(url_for('production', project_id=duct['project_id']))
+
     conn.close()
+    return render_template('edit_entry.html', duct=duct)
 
-    return render_template("edit_duct.html", duct=duct, project=project)
 
 @app.route('/update_duct/<int:id>', methods=['POST'])
 def update_duct(id):
