@@ -399,14 +399,15 @@ def add_duct():
     degree_or_offset = request.form['degree_or_offset']
     gauge = request.form.get('gauge', '')  # Optional
 
-    # ✅ Weight calculation logic
+    # ✅ Weight Calculation
     try:
         w = float(width1)
         h = float(height1)
         q = int(quantity)
-        gauge_factor = 0.035  # Adjust as needed
-        weight = round(w * h * q * gauge_factor, 2)
+        area = round(w * h * q, 2)
+        weight = round(area * 0.035, 2)  # Gauge factor
     except:
+        area = 0
         weight = 0
 
     conn = get_db()
@@ -415,17 +416,18 @@ def add_duct():
         INSERT INTO duct_entries (
             project_id, duct_no, duct_type, factor,
             width1, height1, width2, height2,
-            length_or_radius, quantity, degree_or_offset, gauge, weight
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            length_or_radius, quantity, degree_or_offset, gauge, area, weight
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         project_id, duct_no, duct_type, factor,
         width1, height1, width2, height2,
-        length_or_radius, quantity, degree_or_offset, gauge, weight
+        length_or_radius, quantity, degree_or_offset, gauge, area, weight
     ))
-
     conn.commit()
     conn.close()
-    return redirect(url_for('production', project_id=project_id))
+
+    # 🔁 Redirect back to the same project page (entry form + live table)
+    return redirect(url_for('project_page', project_id=project_id))
 # ---------- ✅ Live Duct Table API ----------
 @app.route('/api/ducts/<int:project_id>')
 def api_ducts(project_id):
