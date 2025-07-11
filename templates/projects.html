@@ -316,7 +316,7 @@
 {% endif %} <!-- project if block -->
 
   <!-- ✅ Auto Calculation & Vendor Details Autofill Script -->
-<script>
+ <script>
 function setupAutoCalculation(prefix = '') {
   const get = (id) => parseFloat(document.getElementById(prefix + id)?.value || 0);
   const set = (id, val) => {
@@ -419,8 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
   setupFactorField('ductTypeModal', '.factor-field-modal');
   setupVendorAutoFill();
 });
-</script>
-
+ </script>
   <!-- ✅ jQuery and Bootstrap Bundle (Popper included) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
