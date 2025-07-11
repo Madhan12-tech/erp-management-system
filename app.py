@@ -399,13 +399,13 @@ def add_duct():
     degree_or_offset = request.form['degree_or_offset']
     gauge = request.form.get('gauge', '')  # Optional
 
-    # ✅ Weight Calculation
+    # ✅ Weight and Area calculation
     try:
         w = float(width1)
         h = float(height1)
         q = int(quantity)
         area = round(w * h * q, 2)
-        weight = round(area * 0.035, 2)  # Gauge factor
+        weight = round(area * 0.035, 2)  # gauge factor
     except:
         area = 0
         weight = 0
@@ -426,8 +426,8 @@ def add_duct():
     conn.commit()
     conn.close()
 
-    # 🔁 Redirect back to the same project page (entry form + live table)
-    return redirect(url_for('project_page', project_id=project_id))
+    # ✅ Correct endpoint here
+    return redirect(url_for('open_project', project_id=project_id))
 # ---------- ✅ Live Duct Table API ----------
 @app.route('/api/ducts/<int:project_id>')
 def api_ducts(project_id):
