@@ -1,6 +1,6 @@
 services:
-  - type: web
-    name: erp-management-system
+  - name: erp-management-system
+    type: web
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
