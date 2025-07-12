@@ -1,9 +1,9 @@
 services:
-  - name: erp-management-system
-    type: web
+  - type: web
+    name: erp-management-system
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: python app.py
     envVars:
       - key: FLASK_ENV
         value: production
