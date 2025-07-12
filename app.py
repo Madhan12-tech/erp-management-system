@@ -210,11 +210,38 @@ def migrate_production_progress():
 
 
 # ✅ Call this once when app starts (or trigger from route)
+# ✅ Call this once when app starts
 init_db()
 migrate_add_weight_column()
 migrate_add_area_column()
 migrate_duct_entries()
 migrate_production_progress()
+
+# ✅ Auto-run DB setup on first request (for deployed environments like Render)
+@app.before_first_request
+def setup_database():
+    print("🔧 Running database migrations...")
+    init_db()
+    migrate_duct_entries()
+    migrate_production_progress()
+
+# ✅ Optional debug route to confirm table exists
+@app.route('/check_db')
+def check_db():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM duct_entries LIMIT 1")
+        return "✅ duct_entries table exists"
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+# ✅ Main entry point (for local testing only)
+if __name__ == "__main__":
+    init_db()
+    migrate_duct_entries()
+    migrate_production_progress()
+    app.run(debug=True)
  
 
 
