@@ -1,6 +1,6 @@
-num2words
 Flask
 gunicorn
+num2words
 reportlab
 openpyxl
 xlsxwriter
