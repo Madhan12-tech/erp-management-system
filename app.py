@@ -4,43 +4,24 @@ from io import BytesIO
 import sqlite3
 import os
 import pandas as pd
-
+import math
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
-
-# ✅ Safe conversion functions
-def safe_float(val, default=0.0):
-    try:
-        return float(val)
-    except (ValueError, TypeError):
-        return default
-
-def safe_int(val, default=0):
-    try:
-        return int(val)
-    except (ValueError, TypeError):
-        return default
-
+from num2words import num2words
 
 app = Flask(__name__)
 app.secret_key = 'secretkey'
-
-# ✅ Database Connection
 def get_db():
     conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-# ✅ Initialize DB
 def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    
-
-    # Projects Table
     cur.execute('''
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +44,6 @@ def init_db():
         )
     ''')
 
-    # Duct Entries Table
     cur.execute('''
         CREATE TABLE IF NOT EXISTS duct_entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,16 +59,16 @@ def init_db():
             quantity INTEGER,
             degree_or_offset TEXT,
             gauge TEXT,
-            area REAL,
+            area REAL DEFAULT 0,
             nuts_bolts TEXT,
             cleat TEXT,
             gasket TEXT,
             corner_pieces TEXT,
+            weight REAL DEFAULT 0,
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )
     ''')
 
-    # Vendors Table
     cur.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +81,6 @@ def init_db():
         )
     ''')
 
-    # Vendor Contacts
     cur.execute('''
         CREATE TABLE IF NOT EXISTS vendor_contacts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,7 +92,6 @@ def init_db():
         )
     ''')
 
-    # Users Table
     cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,13 +103,21 @@ def init_db():
         )
     ''')
 
-    # Default admin user
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS production_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            sheet_cutting_sqm REAL DEFAULT 0,
+            plasma_fabrication_sqm REAL DEFAULT 0,
+            boxing_assembly_sqm REAL DEFAULT 0
+        )
+    ''')
+
     cur.execute('''
         INSERT OR IGNORE INTO users (email, name, role, contact, password)
         VALUES (?, ?, ?, ?, ?)
     ''', ("admin@ducting.com", "Admin", "Admin", "9999999999", "admin123"))
 
-    # Dummy vendor & contact
     cur.execute('''
         INSERT OR IGNORE INTO vendors (id, name, gst, address, bank_name, account_number, ifsc)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -145,105 +131,10 @@ def init_db():
     conn.commit()
     conn.close()
 
-
-# ✅ One-time migration: Add 'weight' column to duct_entries if missing
-def migrate_add_weight_column():
-    conn = get_db()
-    cur = conn.cursor()
-    try:
-        cur.execute("SELECT weight FROM duct_entries LIMIT 1")
-    except sqlite3.OperationalError:
-        cur.execute("ALTER TABLE duct_entries ADD COLUMN weight REAL DEFAULT 0")
-        conn.commit()
-        print("✅ 'weight' column added to duct_entries")
-    conn.close()
-
-# ✅ One-time migration: Add 'area' column to duct_entries if missing
-def migrate_add_area_column():
-    conn = get_db()
-    cur = conn.cursor()
-    try:
-        cur.execute("SELECT area FROM duct_entries LIMIT 1")
-    except sqlite3.OperationalError:
-        cur.execute("ALTER TABLE duct_entries ADD COLUMN area REAL DEFAULT 0")
-        conn.commit()
-        print("✅ 'area' column added to duct_entries")
-    conn.close()
-
-def migrate_duct_entries():
-    conn = get_db()
-    cur = conn.cursor()
-
-    # Add 'area' column if not exists
-    try:
-        cur.execute("SELECT area FROM duct_entries LIMIT 1")
-    except sqlite3.OperationalError:
-        cur.execute("ALTER TABLE duct_entries ADD COLUMN area REAL DEFAULT 0")
-        print("✅ Added 'area' column to duct_entries")
-
-    # Add 'weight' column if not exists
-    try:
-        cur.execute("SELECT weight FROM duct_entries LIMIT 1")
-    except sqlite3.OperationalError:
-        cur.execute("ALTER TABLE duct_entries ADD COLUMN weight REAL DEFAULT 0")
-        print("✅ Added 'weight' column to duct_entries")
-
-    conn.commit()
-    conn.close()
-
-def migrate_production_progress():
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS production_progress (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            sheet_cutting_sqm REAL DEFAULT 0,
-            plasma_fabrication_sqm REAL DEFAULT 0,
-            boxing_assembly_sqm REAL DEFAULT 0
-        )
-    ''')
-    print("✅ Ensured 'production_progress' table exists")
-    conn.commit()
-    conn.close()
-
-
-# ✅ Call this once when app starts (or trigger from route)
-# ✅ Call this once when app starts
-init_db()
-migrate_add_weight_column()
-migrate_add_area_column()
-migrate_duct_entries()
-migrate_production_progress()
-
-# ✅ Auto-run DB setup on first request (for deployed environments like Render)
 @app.before_first_request
 def setup_database():
-    print("🔧 Running database migrations...")
+    print("🔧 Initializing DB...")
     init_db()
-    migrate_duct_entries()
-    migrate_production_progress()
-
-# ✅ Optional debug route to confirm table exists
-@app.route('/check_db')
-def check_db():
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM duct_entries LIMIT 1")
-        return "✅ duct_entries table exists"
-    except Exception as e:
-        return f"❌ Error: {str(e)}"
-
-# ✅ Main entry point (for local testing only)
-if __name__ == "__main__":
-    init_db()
-    migrate_duct_entries()
-    migrate_production_progress()
-    app.run(debug=True)
- 
-
 
 # ---------- ✅ Login ----------
 @app.route('/', methods=['GET', 'POST'])
@@ -268,14 +159,12 @@ def login():
 
     return render_template("login.html")
 
-
 # ---------- ✅ Logout ----------
 @app.route('/logout')
 def logout():
     session.clear()
     flash("🔒 You have been logged out.", "success")
     return redirect(url_for('login'))
-
 
 # ---------- ✅ Dashboard ----------
 @app.route('/dashboard')
@@ -284,8 +173,6 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template("dashboard.html", user=session['user'])
 
-
-# ---------- ✅ Vendor Registration ----------
 @app.route('/vendor_registration', methods=['GET', 'POST'])
 def vendor_registration():
     if request.method == 'POST':
@@ -321,10 +208,6 @@ def vendor_registration():
     return render_template('vendor_registration.html')
 
 
-
-
-
-# ---------- ✅ Vendor Info API (for auto-fill) ----------
 @app.route('/api/vendor/<int:vendor_id>')
 def get_vendor_info(vendor_id):
     conn = get_db()
@@ -336,16 +219,14 @@ def get_vendor_info(vendor_id):
     else:
         return {}, 404
 
-
-# ---------- ✅ Project List Page ----------
 @app.route('/projects')
 def projects():
     conn = get_db()
-    c = conn.cursor()
-    c.execute("SELECT * FROM projects ORDER BY id DESC")
-    projects = c.fetchall()
-    c.execute("SELECT * FROM vendors ORDER BY id DESC")
-    vendors = c.fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM projects ORDER BY id DESC")
+    projects = cur.fetchall()
+    cur.execute("SELECT * FROM vendors ORDER BY id DESC")
+    vendors = cur.fetchall()
     conn.close()
 
     project = projects[0] if projects else None
@@ -357,7 +238,6 @@ def projects():
                            enquiry_id="ENQ" + str(datetime.now().timestamp()).replace(".", ""))
 
 
-# ---------- ✅ Create Project (Popup Form) ----------
 @app.route('/create_project', methods=['POST'])
 def create_project():
     if 'user' not in session:
@@ -404,7 +284,6 @@ def create_project():
         return "Bad Request", 400
 
 
-# ---------- ✅ Save Measurement Sheet (Popup) ----------
 @app.route('/add_measurement', methods=['POST'])
 def add_measurement():
     project_id = request.form['project_id']
@@ -423,11 +302,9 @@ def add_measurement():
     conn.commit()
     return '', 200
 
-
-# ---------- ✅ Add Duct Entry ----------
-
 @app.route('/add_duct', methods=['POST'])
 def add_duct():
+    import math
     project_id = request.form['project_id']
     duct_no = request.form['duct_no']
     duct_type = request.form['duct_type'].upper()
@@ -440,7 +317,7 @@ def add_duct():
     deg = float(request.form.get('degree_or_offset') or 0)
     factor = float(request.form.get('factor') or 1.0)
 
-    # Backend Calculations
+    # Calculate area based on type
     area = 0
     if duct_type == 'ST':
         area = 2 * (w1 + h1) / 1000 * (length / 1000) * qty
@@ -466,7 +343,6 @@ def add_duct():
     elif w1 <= 1800 and h1 <= 1800:
         gauge = '20g'
 
-    # Other parts
     nuts_bolts = qty * 4
 
     cleat_factor = 12
@@ -481,8 +357,7 @@ def add_duct():
     gasket = (w1 + h1 + w2 + h2) / 1000 * qty
     corner_pieces = 0 if duct_type == 'DUM' else qty * 8
 
-    # Insert into DB (example using SQLite)
-    conn = sqlite3.connect('your_db.db')
+    conn = get_db()
     cur = conn.cursor()
     cur.execute('''
         INSERT INTO duct_entries (
@@ -501,37 +376,23 @@ def add_duct():
 
     flash("Duct entry added successfully!", "success")
     return redirect(url_for('open_project', project_id=project_id))
-    
-
-# ---------- ✅ Live Duct Table API ----------
-@app.route('/api/ducts/<int:project_id>')
-def api_ducts(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
-    entries = [dict(row) for row in cur.fetchall()]
-    return jsonify(entries)
-
 
 
 @app.route("/edit_duct/<int:entry_id>", methods=["GET", "POST"])
 def edit_duct(entry_id):
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
-
-    # Fetch the entry
     cur.execute("SELECT * FROM duct_entries WHERE id = ?", (entry_id,))
     entry = cur.fetchone()
 
     if not entry:
         flash("Entry not found", "danger")
-        return redirect(url_for("home"))  # or wherever you want to go on failure
+        return redirect(url_for("projects"))
 
     project_id = entry["project_id"]
 
     if request.method == "POST":
-        # Get updated data from the form
         data = {
             "duct_no": request.form.get("duct_no"),
             "duct_type": request.form.get("duct_type"),
@@ -551,7 +412,6 @@ def edit_duct(entry_id):
             "corner_pieces": request.form.get("corner_pieces")
         }
 
-        # Update DB
         cur.execute("""
             UPDATE duct_entries SET
               duct_no = :duct_no,
@@ -575,67 +435,17 @@ def edit_duct(entry_id):
         conn.commit()
         conn.close()
         flash("Entry updated successfully", "success")
-        return redirect(url_for('open_project', project_id=project_id))  # ✅ correct route
+        return redirect(url_for('open_project', project_id=project_id))
 
     conn.close()
     return render_template("edit_duct_entry.html", entry=entry)
 
 
-@app.route('/update_duct/<int:id>', methods=['POST'])
-def update_duct(id):
+@app.route("/delete_duct/<int:entry_id>", methods=["POST"])
+def delete_duct(entry_id):
     conn = get_db()
     cur = conn.cursor()
 
-    # Collect form data
-    duct_no = request.form['duct_no']
-    duct_type = request.form['duct_type']
-    factor = request.form['factor']
-    width1 = request.form['width1']
-    height1 = request.form['height1']
-    width2 = request.form['width2']
-    height2 = request.form['height2']
-    length_or_radius = request.form['length_or_radius']
-    quantity = request.form['quantity']
-    degree_or_offset = request.form['degree_or_offset']
-    gauge = request.form.get('gauge', '')
-
-    try:
-        w = float(width1)
-        h = float(height1)
-        q = int(quantity)
-        area = round(w * h * q, 2)
-        weight = round(area * 0.035, 2)
-    except:
-        area = 0
-        weight = 0
-
-    cur.execute("""
-        UPDATE duct_entries
-        SET duct_no = ?, duct_type = ?, factor = ?, width1 = ?, height1 = ?,
-            width2 = ?, height2 = ?, length_or_radius = ?, quantity = ?, 
-            degree_or_offset = ?, gauge = ?, area = ?, weight = ?
-        WHERE id = ?
-    """, (
-        duct_no, duct_type, factor, width1, height1, width2, height2,
-        length_or_radius, quantity, degree_or_offset, gauge, area, weight, id
-    ))
-
-    # Get project_id to redirect
-    cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (id,))
-    row = cur.fetchone()
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for('production', project_id=row['project_id']))
-
-
-# ---------- ✅ Delete Duct Entry ----------
-@app.route("/delete_duct/<int:entry_id>", methods=["POST"])
-def delete_duct(entry_id):
-    conn = sqlite3.connect("database.db")
-    cur = conn.cursor()
-
-    # Get project_id before deletion
     cur.execute("SELECT project_id FROM duct_entries WHERE id = ?", (entry_id,))
     result = cur.fetchone()
 
@@ -649,7 +459,6 @@ def delete_duct(entry_id):
 
     conn.close()
     return redirect(url_for("open_project", project_id=project_id))
-
 
 @app.route('/export_pdf/<int:project_id>')
 def export_pdf(project_id):
@@ -667,8 +476,6 @@ def export_pdf(project_id):
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-
-    # ✅ Fetch project info
     c.execute("""
         SELECT client_name, site_location, engineer_name, mobile, start_date, end_date
         FROM projects WHERE id = ?
@@ -681,19 +488,16 @@ def export_pdf(project_id):
     start_date = proj[4] if proj else ""
     end_date = proj[5] if proj else ""
 
-    # ✅ Company Logo
     logo_path = os.path.join("static", "logo.png")
     if os.path.exists(logo_path):
         p.drawImage(logo_path, 50, height - 80, width=80, preserveAspectRatio=True, mask='auto')
 
-    # ✅ Company Details
     p.setFont("Helvetica-Bold", 16)
     p.drawString(200, height - 50, "Vanes Engineering Pvt Ltd")
     p.setFont("Helvetica", 10)
-    p.drawString(200, height - 65, "No. 23, Industrial Estate, Chennai, Tamil Nadu - 600058")
+    p.drawString(200, height - 65, "No. 23, Industrial Estate, Chennai")
     p.drawString(200, height - 78, "Email: info@vanesengineering.com | Phone: +91-98765-43210")
 
-    # ✅ Project Header
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, height - 110, f"Client: {client_name}")
     p.drawString(300, height - 110, f"Site: {site_location}")
@@ -701,7 +505,6 @@ def export_pdf(project_id):
     p.drawString(300, height - 125, f"Mobile: {mobile}")
     p.drawString(50, height - 140, f"Duration: {start_date} to {end_date}")
 
-    # ✅ Fetch duct entries
     c.execute("""
         SELECT duct_no, duct_type, width1, height1, quantity, area, weight
         FROM duct_entries WHERE project_id = ?
@@ -709,7 +512,6 @@ def export_pdf(project_id):
     entries = c.fetchall()
     conn.close()
 
-    # ✅ Table Data
     data = [["Duct No", "Type", "Width", "Height", "Qty", "Area", "Weight"]]
     total_qty = total_area = total_weight = 0
 
@@ -726,7 +528,6 @@ def export_pdf(project_id):
 
     data.append(["", "", "", "Total", total_qty, round(total_area, 2), round(total_weight, 2)])
 
-    # ✅ Draw table
     table = Table(data, colWidths=[60, 55, 50, 50, 50, 60, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -738,7 +539,6 @@ def export_pdf(project_id):
     table.wrapOn(p, width, height)
     table.drawOn(p, 50, height - 190 - 25 * len(data))
 
-    # ✅ Convert area and weight to words
     def convert_to_words(value):
         try:
             int_part = int(value)
@@ -750,12 +550,10 @@ def export_pdf(project_id):
     area_words = convert_to_words(round(total_area, 2))
     weight_words = convert_to_words(round(total_weight, 2))
 
-    # ✅ Display totals in words
     p.setFont("Helvetica-Bold", 10)
-    p.drawString(50, height - 210 - 25 * len(data), f"Total Area in Words: {area_words} square meters")
-    p.drawString(50, height - 225 - 25 * len(data), f"Total Weight in Words: {weight_words} kilograms")
+    p.drawString(50, height - 210 - 25 * len(data), f"Total Area in Words: {area_words} sq.m")
+    p.drawString(50, height - 225 - 25 * len(data), f"Total Weight in Words: {weight_words} kg")
 
-    # ✅ Signature lines
     p.setFont("Helvetica", 10)
     p.drawString(50, 80, "Engineer Signature: __________________")
     p.drawString(300, 80, "Client Signature: __________________")
@@ -793,122 +591,32 @@ def export_excel(project_id):
             os.remove(file_path)
 
 
-
-
-# ---------- ✅ Submit Project for Review ----------
-@app.route('/submit_for_review/<int:project_id>', methods=['POST'])
-def submit_for_review(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE projects SET status = 'under_review' WHERE id = ?", (project_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('projects'))
-
-
-# ---------- ✅ Submit Measurement Sheet for Approval (AJAX) ----------
-@app.route('/submit_measurement/<int:project_id>', methods=['POST'])
-def submit_measurement(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE projects SET status = 'preparation' WHERE id = ?", (project_id,))
-    conn.commit()
-    conn.close()
-    return '', 200
-
-# ---------- ✅ Open Project View ----------
-@app.route('/project/<int:project_id>')
-def open_project(project_id):
-    conn = get_db()
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-
-    # ✅ Fetch selected project
-    cur.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
-    project = cur.fetchone()
-
-    # ✅ Attach vendor name
-    if project:
-        cur.execute("SELECT name FROM vendors WHERE id = ?", (project["vendor_id"],))
-        vendor = cur.fetchone()
-        project = dict(project)
-        project["vendor_name"] = vendor["name"] if vendor else ""
-
-    # ✅ All projects for top list
-    cur.execute("""
-        SELECT projects.*, vendors.name AS vendor_name
-        FROM projects
-        JOIN vendors ON projects.vendor_id = vendors.id
-    """)
-    projects = cur.fetchall()
-
-    # ✅ All vendors for dropdown
-    cur.execute("SELECT * FROM vendors")
-    vendors = cur.fetchall()
-
-    # ✅ Duct entries
-    cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
-    entries = cur.fetchall()
-
-    conn.close()
-
-    return render_template(
-        "projects.html",
-        project=project,
-        entries=entries,
-        projects=projects,
-        vendors=vendors
-    )
-
-
-
-
-
-
-# ---------- ✅ Approve Project (Final Step) ----------
-@app.route('/approve_project/<int:project_id>', methods=['POST'])
-def approve_project(project_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE projects SET status = 'approved' WHERE id = ?", (project_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('projects'))
-
-
-
-# ---------- ✅ View Production Status ----------
-
 @app.route("/production/<int:project_id>")
 def production(project_id):
     conn = get_db()
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Fetch project
     cur.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
     project = cur.fetchone()
     if not project:
         flash("Project not found", "danger")
         return redirect(url_for('projects'))
 
-    # Fetch all duct entries for the project
     cur.execute("SELECT * FROM duct_entries WHERE project_id = ?", (project_id,))
     ducts = cur.fetchall()
 
     total_area = 0
     total_weight = 0
 
-    # ✅ Calculate and update area/weight for each duct
     for duct in ducts:
         try:
             width = float(duct["width1"])
             height = float(duct["height1"])
             qty = int(duct["quantity"])
             area = round(width * height * qty, 2)
-            weight = round(area * 0.035, 2)  # Assume 0.035 as gauge factor
+            weight = round(area * 0.035, 2)
 
-            # Update duct entry with calculated area and weight
             cur.execute("""
                 UPDATE duct_entries
                 SET area = ?, weight = ?
@@ -920,11 +628,9 @@ def production(project_id):
         except Exception as e:
             print("Calculation error:", e)
 
-    # ✅ Update project's total sqm
     cur.execute("UPDATE projects SET total_sqm = ? WHERE id = ?", (total_area, project_id))
     conn.commit()
 
-    # ✅ Fetch production progress or initialize it
     cur.execute("SELECT * FROM production_progress WHERE project_id = ?", (project_id,))
     progress = cur.fetchone()
 
@@ -946,7 +652,7 @@ def production(project_id):
                            total_area=total_area,
                            total_weight=total_weight)
 
-# ---------- ✅ Update Production Progress ----------
+
 @app.route("/update_production/<int:project_id>", methods=["POST"])
 def update_production(project_id):
     sheet_cutting = float(request.form.get("sheet_cutting") or 0)
@@ -963,7 +669,6 @@ def update_production(project_id):
     conn.commit()
     conn.close()
     return redirect(url_for('production', project_id=project_id))
-
 
 # ---------- ✅ View All Projects in Production ----------
 @app.route("/production_overview")
@@ -1019,6 +724,6 @@ def delete_project(project_id):
     return redirect(url_for('projects'))
 
 
-
+# ---------- ✅ Run App ----------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
